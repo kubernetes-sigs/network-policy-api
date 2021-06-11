@@ -16,7 +16,7 @@ agreed upon by the Kubernetes community
 Each new Object should have it's own directory, following directory naming 
 conventions seen in [`kubernetes/kubernetes`.](https://github.com/kubernetes/kubernetes) Specifically the directory name 
 should be **lowercase** and **descriptive**. The directory structure should 
-roughly represent weather or not the new object will augment the existing [network policy API](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#networkpolicy-v1-networking-k8s-io) (`network-policy-api/docs/userstories/v1/<newobject>/`) or create a 
+roughly represent whether or not the new object will augment the existing [network policy API](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#networkpolicy-v1-networking-k8s-io) (`network-policy-api/docs/userstories/v1/<newobject>/`) or create a 
 new set of APIs (`network-policy-api/docs/userstories/v2/<newobject>/`). 
 If there is some doubt as to which bucket the new object will fall into, the new 
 directory should be made outside of either subdirectory (`network-policy-api/docs/userstories/<newobject>/`) and a final 
@@ -67,7 +67,7 @@ Also, here are a few points that need to be addressed:
 
 ### Resources:
 
-* Relavant previous discussions on the story if there are any 
+* Relevant previous discussions on the story if there are any 
   [i.e link to new story PR]
 * Mockups: [Here goes a URL to or the name of the mockup(s) in inVision];
 
@@ -77,7 +77,7 @@ Also, here are a few points that need to be addressed:
 [Some complementary notes if necessary:]
 
 * > Here goes a quote from an email
-* Here goes whatever useful information can exist…
+* Here goes whatever useful information can exist.
 ```
 
 ## Wrapping up
