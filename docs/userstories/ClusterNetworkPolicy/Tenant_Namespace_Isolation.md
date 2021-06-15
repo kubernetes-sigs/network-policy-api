@@ -1,8 +1,9 @@
 ### Summary
 
-As a cluster admin, I want to isolate all the tenants (modeled as Namespaces)
-in my cluster from each other. This means that all across-Namespace traffic is
-denied if each tenant is assigned a single Namespace.
+As a cluster admin, I want to isolate all the tenants (modeled as Namespaces or
+as groups of Namespaces) in my cluster from each other. This means that all 
+across-Tenant traffic is denied unless a special exception is configured. The 
+next 2 sections describe the target tenancy model that is desired.
 
 ### Description
 
@@ -10,13 +11,42 @@ Many enterprises are creating shared Kubernetes clusters that are managed by a
 centralized platform team. Each internal team that wants to run their workloads
 gets assigned a Namespace on the shared clusters. Naturally, the platform team
 will want to make sure that, inter-namespace traffic between these tenants is
-denied, so that the tenant won't interfere with each other in unwanted way.
+denied, so that the tenant won't interfere with each other in an unwanted way.
 
 This cluster security posture could be achieved by applying a deny inter-Namespace
 traffic policy to all the tenant Namespaces, with certain exceptions. Exceptions
 may include: don't deny traffic from tenant Namespaces to kube-system Namespace,
 or don't drop communication between tenant 1 and tenant 2 as requested by both
 tenants.
+
+### Tenancy Model
+
+The following figure describes the target tenancy model that should be supported. Note 
+that there are multiple other aspects and features needed for a full multitenancy solution.
+Here we only focus on the requirements for Cluster scoped network policies in order to support 
+the network level aspects of this sort ot multitenancy solution. Of course an implementation
+can also choose to simpler version of this solution such as limiting a tenant always to a single 
+namespace only and that would be a sub-set of this solution.
+
+<p align="center">
+  <img src="Tenancy-ns-isolation.png" height="500" width="900"/>
+</p>
+
+In the example shown in the figure, there are 3 categories of namespaces in the target solution: 
+1) Core Kubernetes control plane namespaces such as kube-system or kube-node-lease. 2) Cluster services that are 
+implemented via add-ons such as Istio for service mesh or Prmoetheus for cluster monitoring as well 
+as Kubernetes vendor distro specific namespaces as shownb in the figure 
+3) True application tenant namespaces that run the end user applications on a per-tenant basis isolated from 
+each other within the same cluster.
+
+Using the example of Tenant T1 in this case, it is comprised of 2 Kubernetes namespaces that are 
+labeled with a unique cluster admin configiured label that uniquely identifies these to be part of 
+Tenant T1. Pods belonging to this tenant can only communicate with other pods in the same tenant
+namespaces plus additionally can initiate connections to the kube-dns pod from the kube-system
+namespace, some select cluster add-on services from the add-on namespaces and occasionally can also
+initiate connections to public services provided by other tenants such as T3 in this example. These desired
+communication paths are illustrated using arrows in the above figure and other communication paths need to 
+be blocked. Such a solution should be implementable via the target cluster scoped network policies.
 
 ### Acceptance Criteria
 
