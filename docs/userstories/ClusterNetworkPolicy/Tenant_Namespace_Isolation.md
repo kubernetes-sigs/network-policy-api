@@ -41,12 +41,16 @@ each other within the same cluster.
 
 Using the example of Tenant T1 in this case, it is comprised of 2 Kubernetes namespaces that are 
 labeled with a unique cluster admin configiured label that uniquely identifies these to be part of 
-Tenant T1. Pods belonging to this tenant can only communicate with other pods in the same tenant
-namespaces plus additionally can initiate connections to the kube-dns pod from the kube-system
-namespace, some select cluster add-on services from the add-on namespaces and occasionally can also
-initiate connections to public services provided by other tenants such as T3 in this example. These desired
-communication paths are illustrated using arrows in the above figure and other communication paths need to 
-be blocked. Such a solution should be implementable via the target cluster scoped network policies.
+Tenant T1. Pods belonging to this tenant can only communicate with (1) Other pods anywhere within the same tenant T1's 2
+namespaces (2) specific pods in the kube-system namespace (such as only initiating connections 
+to pods backing the kube-dns service) (3) some select cluster add-on services from the add-on services namespaces as 
+determined by the cluster admin (such as access to/ from specific pods in istio-system or namespace) and (4) 
+connections to "public services" provided by specific other tenants determined by the cluster admin such as T3 
+in this figure. An example of such a "public service" could be an enterprise wide security scanning service 
+provided by central enterprise IT running as tenant T3 and exposed as a Kubernetes service to other tenants 
+within the cluster. These desired communication paths are illustrated using arrows in the above figure and 
+all other communication paths need to  be blocked by the cl;uster admin. Such a solution should be implementable 
+via the target cluster scoped network policies.
 
 ### Acceptance Criteria
 
