@@ -1,0 +1,18 @@
+name: Kind Ovn Cyclonus
+on:
+  workflow_dispatch:
+#  schedule:
+    # See https://crontab.guru/#0_2_*_*_0:
+    #   At 02:00 on Sunday.
+#    - cron: '0 2 * * 0'
+
+jobs:
+  test-kind-ovn-kubernetes:
+    name: Run Cyclonus on KinD/Ovn
+    timeout-minutes: 250
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Cyclonus
+        working-directory: hack/kind
+        run: CNI=ovn-kubernetes RUN_FROM_SOURCE=true ./run-cyclonus.sh
