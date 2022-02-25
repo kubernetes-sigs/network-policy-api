@@ -1,60 +1,129 @@
-project_name: cyclonus
+project_name: sig-network-policy-api
 release:
   github:
-    owner: mattfenwick
-    name: Cyclonus
+    owner: astoycos
+    name: Sig-network-policy-api
+  name_template: '{{.Tag}}'
+# scoop:
+#   name: cyclonus
+#   commit_author:
+#     name: goreleaserbot
+#     email: goreleaser@carlosbecker.com
+#   commit_msg_template: Scoop update for {{ .ProjectName }} version {{ .Tag }}
 builds:
-  - id: cyclonus
-    goos:
-      - linux
-      - windows
-      - darwin
-    goarch:
-      - amd64
-    env:
-      - CGO_ENABLED=0
-    main: cmd/cyclonus/main.go
-    ldflags: -s -w
-      -X github.com/mattfenwick/cyclonus/pkg/cli.version={{.Version}}
-      -X github.com/mattfenwick/cyclonus/pkg/cli.gitSHA={{.Commit}}
-      -X github.com/mattfenwick/cyclonus/pkg/cli.buildTime={{.Date}}
-      -extldflags "-static"
-    flags: -tags netgo -installsuffix netgo
-    binary: "cyclonus"
-    hooks: {}
-dockers:
-  -
-    goos: linux
-    goarch: amd64
-    goarm: ''
-    ids:
-      - cyclonus
-    image_templates:
-      - "mfenwick100/cyclonus:latest"
-      - "mfenwick100/cyclonus:{{ .Tag }}"
-    skip_push: false
-    dockerfile: cmd/cyclonus/Dockerfile
-#    build_flag_templates:
-#      - "--label=org.opencontainers.image.created={{.Date}}"
-#      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#      - "--label=org.opencontainers.image.version={{.Version}}"
-#      - "--pull"
-#      - "--platform=linux/arm64"
+- id: cyclonus
+  goos:
+  - linux
+  - windows
+  - darwin
+  goarch:
+  - amd64
+  goarm:
+  - "6"
+  gomips:
+  - hardfloat
+  targets:
+  - linux_amd64
+  - windows_amd64
+  - darwin_amd64
+  dir: ./cyclonus
+  main: ./cmd/cyclonus/main.go
+  binary: cyclonus
+  env:
+  - CGO_ENABLED=0
+  builder: go
+  gobinary: go
+  ldflags:
+  - -s -w -X github.com/mattfenwick/cyclonus/pkg/cli.version={{.Version}} -X github.com/mattfenwick/cyclonus/pkg/cli.gitSHA={{.Commit}}
+    -X github.com/mattfenwick/cyclonus/pkg/cli.buildTime={{.Date}} -extldflags "-static"
+  flags:
+  - -tags
+  - netgo
+  - -installsuffix
+  - netgo
 archives:
-  - id: cyclonus
-    builds:
-      - cyclonus
-    format: tar.gz
-    format_overrides:
-      - goos: windows
-        format: zip
-    wrap_in_directory: true
-    name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-    files:
-      - LICENCE*
-      - README*
-      - CHANGELOG*
+- id: cyclonus
+  builds:
+  - cyclonus
+  name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end
+    }}'
+  format: tar.gz
+  format_overrides:
+  - goos: windows
+    format: zip
+  wrap_in_directory: "true"
+  files:
+  - src: LICENCE*
+  - src: README*
+  - src: CHANGELOG*
+snapshot:
+  name_template: '{{ .Version }}-SNAPSHOT-{{ .ShortCommit }}'
 checksum:
-  name_template: "cyclonus_{{ .RawVersion }}_checksums.txt"
+  name_template: cyclonus_{{ .RawVersion }}_checksums.txt
   algorithm: sha256
+dockers:
+- ids:
+  - cyclonus
+  goos: linux
+  goarch: amd64
+  dockerfile: cyclonus/cmd/cyclonus/Dockerfile
+  image_templates:
+  - mfenwick100/cyclonus:latest
+  - mfenwick100/cyclonus:{{ .Tag }}
+  skip_push: "false"
+  use: docker
+dist: dist
+env_files:
+  github_token: ~/.config/goreleaser/github_token
+  gitlab_token: ~/.config/goreleaser/gitlab_token
+  gitea_token: ~/.config/goreleaser/gitea_token
+source:
+  name_template: '{{ .ProjectName }}-{{ .Version }}'
+  format: tar.gz
+gomod:
+  gobinary: go
+announce:
+  twitter:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL
+      }}'
+  reddit:
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    url_template: '{{ .ReleaseURL }}'
+  slack:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL
+      }}'
+    username: GoReleaser
+  discord:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL
+      }}'
+    author: GoReleaser
+    color: "3888754"
+    icon_url: https://goreleaser.com/static/avatar.png
+  teams:
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL
+      }}'
+    color: '#2D313E'
+    icon_url: https://goreleaser.com/static/avatar.png
+  smtp:
+    subject_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    body_template: 'You can view details from: {{ .ReleaseURL }}'
+  mattermost:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL
+      }}'
+    title_template: '{{ .ProjectName }} {{ .Tag }} is out!'
+    username: GoReleaser
+  linkedin:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL
+      }}'
+  telegram:
+    message_template: '{{ .ProjectName }} {{ .Tag }} is out! Check it out at {{ .ReleaseURL
+      }}'
+  webhook:
+    message_template: '{ "message": "{{ .ProjectName }} {{ .Tag }} is out! Check it
+      out at {{ .ReleaseURL }}"}'
+    content_type: application/json; charset=utf-8
+github_urls:
+  download: https://github.com
+gitlab_urls:
+  download: https://gitlab.com
