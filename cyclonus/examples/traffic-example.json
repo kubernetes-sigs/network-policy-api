@@ -1,0 +1,65 @@
+[
+  {
+    "Source": {
+      "Internal": {
+        "PodLabels": {},
+        "NamespaceLabels": {},
+        "Namespace": "default"
+      },
+      "IP": "192.168.1.10"
+    },
+    "Destination": {
+      "Internal": {
+        "PodLabels": {},
+        "NamespaceLabels": {},
+        "Namespace": "default"
+      },
+      "IP": "192.168.1.10"
+    },
+    "Protocol": "TCP",
+    "ResolvedPort": 80,
+    "ResolvedPortName": "serve-80-tcp"
+  },
+  {
+    "Source": {
+      "Internal": {
+        "PodLabels": {"pod": "a"},
+        "NamespaceLabels": {"ns": "z"},
+        "Namespace": "z"
+      },
+      "IP": "192.168.1.13"
+    },
+    "Destination": {
+      "Internal": {
+        "PodLabels": {"pod": "b"},
+        "NamespaceLabels": {"ns": "x"},
+        "Namespace": "x"
+      },
+      "IP": "192.168.1.14"
+    },
+    "Protocol": "TCP",
+    "ResolvedPort": 80,
+    "ResolvedPortName": "serve-80-tcp"
+  },
+  {
+    "Source": {
+      "Internal": {
+        "PodLabels": {"app": "foo"},
+        "NamespaceLabels": {"ns": "default"},
+        "Namespace": "default"
+      },
+      "IP": "192.168.1.99"
+    },
+    "Destination": {
+      "Internal": {
+        "PodLabels": {"app": "web"},
+        "NamespaceLabels": {"ns": "default"},
+        "Namespace": "default"
+      },
+      "IP": "192.168.1.100"
+    },
+    "Protocol": "TCP",
+    "ResolvedPort": 80,
+    "ResolvedPortName": "serve-80-tcp"
+  }
+]

@@ -1,1 +1,5 @@
+ignore/
+
 .idea/
+
+dist/

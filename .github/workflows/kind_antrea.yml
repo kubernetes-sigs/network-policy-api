@@ -1,0 +1,17 @@
+name: Kind Antrea Cyclonus
+on:
+  workflow_dispatch:
+#  schedule:
+    # See https://crontab.guru/#0_0_*_*_0:
+    #   At 00:00 on Sunday.
+#    - cron: '0 0 * * 0'
+
+jobs:
+  test-kind-antrea:
+    name: Run Cyclonus on KinD/Antrea
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Cyclonus
+        working-directory: hack/kind
+        run: CNI=antrea RUN_FROM_SOURCE=true ./run-cyclonus.sh

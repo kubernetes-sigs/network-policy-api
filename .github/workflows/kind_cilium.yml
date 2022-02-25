@@ -1,0 +1,16 @@
+name: Kind Cilium Cyclonus
+on:
+  workflow_dispatch:
+#  schedule:
+    # At 03:00 on Sunday.
+#    - cron: '0 3 * * 0'
+
+jobs:
+  test-kind-cilium:
+    name: Run Cyclonus on KinD/Cilium
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Cyclonus
+        working-directory: hack/kind
+        run: CNI=cilium RUN_FROM_SOURCE=true ./run-cyclonus.sh

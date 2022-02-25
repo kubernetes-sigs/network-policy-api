@@ -1,0 +1,16 @@
+name: Kind Calico Cyclonus
+on:
+  workflow_dispatch:
+#  schedule:
+    # At 01:00 on Sunday.
+#    - cron: '0 1 * * 0'
+
+jobs:
+  test-kind-calico:
+    name: Run Cyclonus on KinD/Calico
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Cyclonus
+        working-directory: hack/kind
+        run: CNI=calico RUN_FROM_SOURCE=true ./run-cyclonus.sh
