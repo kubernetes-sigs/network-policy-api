@@ -1,0 +1,7 @@
+apiVersion: policy.networking.k8s.io.policy.networking.k8s.io/v1alpha1
+kind: AdminNetworkPolicy
+metadata:
+  name: adminnetworkpolicy-sample
+spec:
+  # Add fields here
+  foo: bar
