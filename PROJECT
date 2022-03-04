@@ -1,0 +1,5 @@
+domain: policy.networking.k8s.io
+layout: go.kubebuilder.io/v3
+projectName: network-policy-api
+repo: github.com/kubernetes-sigs/network-policy-api
+version: "3"
