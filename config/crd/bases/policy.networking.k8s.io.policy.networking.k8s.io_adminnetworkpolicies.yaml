@@ -53,20 +53,24 @@ spec:
                     action:
                       description: 'Action specifies whether this rule must pass,
                         allow or deny traffic. Allow: allows the selected traffic
-                        Deny: denies the selected traffic Pass: allows the selected
-                        traffic to skip and remaining positive priority (non-zero)
-                        ANP rules and be delegated by K8''s Network Policy. This field
-                        is mandatory.'
+                        Deny: denies the selected traffic Pass: instructs the selected
+                        traffic to skip any remaining positive priority ANP rules,
+                        and then pass execution to any NetworkPolicies that select
+                        the pod. If the pod is not selected by any NetworkPolicies
+                        then execution is passed to any Priority=0 ANP rules that
+                        select the pod, whereupon the traffic is allowed if not dropped
+                        by any Priority=0 ANP rules. This field is mandatory.'
                       type: string
                     name:
                       description: Name is an identifier for this rule, that should
                         be no more than 100 characters in length.
+                      maxLength: 100
                       type: string
                     ports:
                       description: Ports allows for matching on traffic based on port
                         and protocols. This field is mandatory.
                       properties:
-                        allports:
+                        allPorts:
                           description: AllPorts cannot be "false" when it is set AllPorts
                             allows the user to select all ports for all protocols,
                             thus not selecting traffic based on L4 principles. If
@@ -82,7 +86,7 @@ spec:
                             description: AdminNetworkPolicyPort describes a port to
                               select
                             properties:
-                              endport:
+                              endPort:
                                 description: If set, indicates that the range of ports
                                   from port to endPort, inclusive, should be allowed
                                   by the policy. This field cannot be defined if the
@@ -102,7 +106,9 @@ spec:
                                   specified protocol AND port will be matched.
                                 x-kubernetes-int-or-string: true
                               protocol:
-                                default: TCP
+                                allOf:
+                                - default: TCP
+                                - default: TCP
                                 description: The protocol (TCP, UDP, or SCTP) which
                                   traffic must match. If not specified, this field
                                   defaults to TCP.
@@ -121,12 +127,13 @@ spec:
                       items:
                         description: AdminNetworkPolicyPeer defines an in-cluster
                           peer to allow traffic to/from. Exactly one of the selector
-                          pointers should be set for a given peer.
+                          pointers should be set for a given peer. If a consumer observes
+                          none of its fields are set, they should assume an unknown
+                          option has been specified and fail closed.
                         properties:
-                          namespacedpods:
-                            description: NamespaceSetAndPod defines a flexible way
-                              to select Namespaces and pods in a cluster. The `Namespaces`
-                              and `Pods` fields are required and must not be empty.
+                          namespacedPods:
+                            description: NamespacedPods defines a way to select a
+                              specific set of pods in in a set of namespaces
                             properties:
                               namespaces:
                                 description: Namespaces is used to select a set of
@@ -185,7 +192,7 @@ spec:
                                           "value". The requirements are ANDed.
                                         type: object
                                     type: object
-                                  notsamelabels:
+                                  notSameLabels:
                                     description: NotSameLabels is used to select a
                                       set of Namespaces that do not have a set of
                                       label(s). To be selected a Namespace must have
@@ -194,12 +201,12 @@ spec:
                                     items:
                                       type: string
                                     type: array
-                                  notself:
+                                  notSelf:
                                     description: NotSelf cannot be "false" when it
                                       is set. if NotSelf is "true" then all pods not
                                       in the subject's Namespace are selected.
                                     type: boolean
-                                  samelabels:
+                                  sameLabels:
                                     description: SameLabels is used to select a set
                                       of Namespaces that share the same values for
                                       a set of labels. To be selected a Namespace
@@ -217,8 +224,8 @@ spec:
                                     type: boolean
                                 type: object
                               pods:
-                                description: Namespaces is used to select a set of
-                                  Pods in the set of Namespaces. It must must be defined
+                                description: Pods is used to select a set of Pods
+                                  in the set of Namespaces. It must must be defined
                                   and non-empty.
                                 properties:
                                   podselector:
@@ -282,11 +289,8 @@ spec:
                             - pods
                             type: object
                           namespaces:
-                            description: NamespaceSet defines a flexible way to select
-                              Namespaces in a cluster. Exactly one of the selectors
-                              should be set.  If a consumer observes none of its fields
-                              are set, they should assume an option they are not aware
-                              of has been specified and fail closed.
+                            description: Namespaces defines a way to select a set
+                              of Namespaces
                             properties:
                               namespaceSelector:
                                 description: NamespaceSelector is a labelSelector
@@ -338,7 +342,7 @@ spec:
                                       The requirements are ANDed.
                                     type: object
                                 type: object
-                              notsamelabels:
+                              notSameLabels:
                                 description: NotSameLabels is used to select a set
                                   of Namespaces that do not have a set of label(s).
                                   To be selected a Namespace must have none of the
@@ -347,12 +351,12 @@ spec:
                                 items:
                                   type: string
                                 type: array
-                              notself:
+                              notSelf:
                                 description: NotSelf cannot be "false" when it is
                                   set. if NotSelf is "true" then all pods not in the
                                   subject's Namespace are selected.
                                 type: boolean
-                              samelabels:
+                              sameLabels:
                                 description: SameLabels is used to select a set of
                                   Namespaces that share the same values for a set
                                   of labels. To be selected a Namespace must have
@@ -392,10 +396,13 @@ spec:
                     action:
                       description: 'Action specifies whether this rule must pass,
                         allow or deny traffic. Allow: allows the selected traffic
-                        Deny: denies the selected traffic Pass: allows the selected
-                        traffic to skip and remaining positive priority (non-zero)
-                        ANP rules and be delegated by K8''s Network Policy. This field
-                        is mandatory.'
+                        Deny: denies the selected traffic Pass: instructs the selected
+                        traffic to skip any remaining positive priority ANP rules,
+                        and then pass execution to any NetworkPolicies that select
+                        the pod. If the pod is not selected by any NetworkPolicies
+                        then execution is passed to any Priority=0 ANP rules that
+                        select the pod, whereupon the traffic is allowed if not dropped
+                        by any Priority=0 ANP rules. This field is mandatory.'
                       type: string
                     from:
                       description: List of sources from which traffic will be allowed/denied/passed
@@ -408,12 +415,13 @@ spec:
                       items:
                         description: AdminNetworkPolicyPeer defines an in-cluster
                           peer to allow traffic to/from. Exactly one of the selector
-                          pointers should be set for a given peer.
+                          pointers should be set for a given peer. If a consumer observes
+                          none of its fields are set, they should assume an unknown
+                          option has been specified and fail closed.
                         properties:
-                          namespacedpods:
-                            description: NamespaceSetAndPod defines a flexible way
-                              to select Namespaces and pods in a cluster. The `Namespaces`
-                              and `Pods` fields are required and must not be empty.
+                          namespacedPods:
+                            description: NamespacedPods defines a way to select a
+                              specific set of pods in in a set of namespaces
                             properties:
                               namespaces:
                                 description: Namespaces is used to select a set of
@@ -472,7 +480,7 @@ spec:
                                           "value". The requirements are ANDed.
                                         type: object
                                     type: object
-                                  notsamelabels:
+                                  notSameLabels:
                                     description: NotSameLabels is used to select a
                                       set of Namespaces that do not have a set of
                                       label(s). To be selected a Namespace must have
@@ -481,12 +489,12 @@ spec:
                                     items:
                                       type: string
                                     type: array
-                                  notself:
+                                  notSelf:
                                     description: NotSelf cannot be "false" when it
                                       is set. if NotSelf is "true" then all pods not
                                       in the subject's Namespace are selected.
                                     type: boolean
-                                  samelabels:
+                                  sameLabels:
                                     description: SameLabels is used to select a set
                                       of Namespaces that share the same values for
                                       a set of labels. To be selected a Namespace
@@ -504,8 +512,8 @@ spec:
                                     type: boolean
                                 type: object
                               pods:
-                                description: Namespaces is used to select a set of
-                                  Pods in the set of Namespaces. It must must be defined
+                                description: Pods is used to select a set of Pods
+                                  in the set of Namespaces. It must must be defined
                                   and non-empty.
                                 properties:
                                   podselector:
@@ -569,11 +577,8 @@ spec:
                             - pods
                             type: object
                           namespaces:
-                            description: NamespaceSet defines a flexible way to select
-                              Namespaces in a cluster. Exactly one of the selectors
-                              should be set.  If a consumer observes none of its fields
-                              are set, they should assume an option they are not aware
-                              of has been specified and fail closed.
+                            description: Namespaces defines a way to select a set
+                              of Namespaces
                             properties:
                               namespaceSelector:
                                 description: NamespaceSelector is a labelSelector
@@ -625,7 +630,7 @@ spec:
                                       The requirements are ANDed.
                                     type: object
                                 type: object
-                              notsamelabels:
+                              notSameLabels:
                                 description: NotSameLabels is used to select a set
                                   of Namespaces that do not have a set of label(s).
                                   To be selected a Namespace must have none of the
@@ -634,12 +639,12 @@ spec:
                                 items:
                                   type: string
                                 type: array
-                              notself:
+                              notSelf:
                                 description: NotSelf cannot be "false" when it is
                                   set. if NotSelf is "true" then all pods not in the
                                   subject's Namespace are selected.
                                 type: boolean
-                              samelabels:
+                              sameLabels:
                                 description: SameLabels is used to select a set of
                                   Namespaces that share the same values for a set
                                   of labels. To be selected a Namespace must have
@@ -660,12 +665,13 @@ spec:
                     name:
                       description: Name is an identifier for this rule, that should
                         be no more than 100 characters in length.
+                      maxLength: 100
                       type: string
                     ports:
                       description: Ports allows for matching on traffic based on port
                         and protocols. This field is mandatory.
                       properties:
-                        allports:
+                        allPorts:
                           description: AllPorts cannot be "false" when it is set AllPorts
                             allows the user to select all ports for all protocols,
                             thus not selecting traffic based on L4 principles. If
@@ -681,7 +687,7 @@ spec:
                             description: AdminNetworkPolicyPort describes a port to
                               select
                             properties:
-                              endport:
+                              endPort:
                                 description: If set, indicates that the range of ports
                                   from port to endPort, inclusive, should be allowed
                                   by the policy. This field cannot be defined if the
@@ -701,7 +707,9 @@ spec:
                                   specified protocol AND port will be matched.
                                 x-kubernetes-int-or-string: true
                               protocol:
-                                default: TCP
+                                allOf:
+                                - default: TCP
+                                - default: TCP
                                 description: The protocol (TCP, UDP, or SCTP) which
                                   traffic must match. If not specified, this field
                                   defaults to TCP.
@@ -722,16 +730,18 @@ spec:
                   of "0" will be evaluated after all positive priority AdminNetworkPolicies
                   and standard NetworkPolicies. This field is NOT optional.
                 format: int32
+                maximum: 1000
+                minimum: 0
                 type: integer
               subject:
-                description: Subject defines the objects to which this AdminNetworkPolicy
+                description: Subject defines the pods to which this AdminNetworkPolicy
                   applies. This field is NOT optional.
                 properties:
-                  namespaceandpodselector:
+                  namespaceAndPodSelector:
                     description: NamespacedPodSubject allows the user to select a
                       given set of pod(s) in selected namespace(s)
                     properties:
-                      namespaceselector:
+                      namespaceSelector:
                         description: This field follows standard label selector semantics;
                           if present but empty, it selects all Namespaces.
                         properties:
@@ -777,7 +787,7 @@ spec:
                               only "value". The requirements are ANDed.
                             type: object
                         type: object
-                      podselector:
+                      podSelector:
                         description: Used to explicitly select pods within a namespace;
                           if present but empty, it selects all Pods.
                         properties:
@@ -824,10 +834,10 @@ spec:
                             type: object
                         type: object
                     required:
-                    - namespaceselector
-                    - podselector
+                    - namespaceSelector
+                    - podSelector
                     type: object
-                  namespaceselector:
+                  namespaceSelector:
                     description: A label selector is a label query over a set of resources.
                       The result of matchLabels and matchExpressions are ANDed. An
                       empty label selector matches all objects. A null label selector
@@ -874,9 +884,6 @@ spec:
                           "value". The requirements are ANDed.
                         type: object
                     type: object
-                required:
-                - namespaceandpodselector
-                - namespaceselector
                 type: object
             required:
             - priority
