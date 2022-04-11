@@ -42,8 +42,7 @@ spec:
                   A total of 100 rules will be allowed per each network policy instance,
                   this rule count will be calculated as the total summation of the
                   Ingress and Egress rules in a single AdminNetworkPolicy Instance.
-                  If this field is empty then this AdminNetworkPolicy has no effect
-                  on egress traffic.
+                  ANPs with no egress rules do not affect egress traffic.
                 items:
                   description: AdminNetworkPolicyEgressRule describes an action to
                     take on a particular set of traffic originating from pods selected
@@ -100,10 +99,9 @@ spec:
                                 - type: integer
                                 - type: string
                                 description: The port on the given protocol. This
-                                  can either be a numerical or named port on a pod.
-                                  If this field is not provided, this matches no port
-                                  names and numbers. If present, only traffic on the
-                                  specified protocol AND port will be matched.
+                                  can either be a numerical or named port on a pod,
+                                  only traffic on the specified protocol AND port
+                                  will be matched.
                                 x-kubernetes-int-or-string: true
                               protocol:
                                 allOf:
@@ -113,17 +111,17 @@ spec:
                                   traffic must match. If not specified, this field
                                   defaults to TCP.
                                 type: string
+                            required:
+                            - port
                             type: object
+                          minItems: 1
                           type: array
                       type: object
                     to:
                       description: List of destinations to which traffic will be allowed/denied/passed
                         from the entities selected by this AdminNetworkPolicyRule.
                         Items in this list are combined using a logical OR operation.
-                        If this field is empty, this rule matches no destinations.
-                        If this field is present and contains at least one item, this
-                        rule allows/denies/passes traffic to the defined AdminNetworkPolicyPeer(s)
-                        If it is empty no traffic is matched by the AdminNetworkPolicyEgressRule.
+                        This field must be defined and contain at least one item.
                       items:
                         description: AdminNetworkPolicyPeer defines an in-cluster
                           peer to allow traffic to/from. Exactly one of the selector
@@ -137,7 +135,7 @@ spec:
                             properties:
                               namespaces:
                                 description: Namespaces is used to select a set of
-                                  Namespaces.  It must be defined and non-empty.
+                                  Namespaces.
                                 properties:
                                   namespaceSelector:
                                     description: NamespaceSelector is a labelSelector
@@ -225,10 +223,9 @@ spec:
                                 type: object
                               pods:
                                 description: Pods is used to select a set of Pods
-                                  in the set of Namespaces. It must must be defined
-                                  and non-empty.
+                                  in the set of Namespaces.
                                 properties:
-                                  podselector:
+                                  podSelector:
                                     description: PodSelector is a labelSelector used
                                       to select Pods, This field is NOT optional,
                                       follows standard label selector semantics and
@@ -282,7 +279,7 @@ spec:
                                         type: object
                                     type: object
                                 required:
-                                - podselector
+                                - podSelector
                                 type: object
                             required:
                             - namespaces
@@ -373,6 +370,7 @@ spec:
                                 type: boolean
                             type: object
                         type: object
+                      minItems: 1
                       type: array
                   required:
                   - action
@@ -385,8 +383,7 @@ spec:
                   A total of 100 rules will be allowed per each network policy instance,
                   this rule count will be calculated as the total summation of the
                   Ingress and Egress rules in a single AdminNetworkPolicy Instance.
-                  If this field is empty then this AdminNetworkPolicy has no effect
-                  on ingress traffic.
+                  ANPs with no ingress rules do not affect ingress traffic.
                 items:
                   description: AdminNetworkPolicyIngressRule describes an action to
                     take on a particular set of traffic destined for pods selected
@@ -401,17 +398,13 @@ spec:
                         and then pass execution to any NetworkPolicies that select
                         the pod. If the pod is not selected by any NetworkPolicies
                         then execution is passed to any Priority=0 ANP rules that
-                        select the pod, whereupon the traffic is allowed if not dropped
-                        by any Priority=0 ANP rules. This field is mandatory.'
+                        select the pod. This field is mandatory.'
                       type: string
                     from:
-                      description: List of sources from which traffic will be allowed/denied/passed
-                        to the entities selected by this AdminNetworkPolicyRule. Items
-                        in this list are combined using a logical OR operation. If
-                        this field is empty, this rule matches no sources. If this
-                        field is present and contains at least one item, this rule
-                        allows/denies/passes traffic from the defined AdminNetworkPolicyPeer(s)
-                        If it is empty no traffic is matched by the AdminNetworkPolicyIngressRule.
+                      description: List of sources whose traffic this AdminNetworkPolicyRule
+                        applies to. Items in this list are combined using a logical
+                        OR operation. This field must be defined and contain at least
+                        one item.
                       items:
                         description: AdminNetworkPolicyPeer defines an in-cluster
                           peer to allow traffic to/from. Exactly one of the selector
@@ -425,7 +418,7 @@ spec:
                             properties:
                               namespaces:
                                 description: Namespaces is used to select a set of
-                                  Namespaces.  It must be defined and non-empty.
+                                  Namespaces.
                                 properties:
                                   namespaceSelector:
                                     description: NamespaceSelector is a labelSelector
@@ -513,10 +506,9 @@ spec:
                                 type: object
                               pods:
                                 description: Pods is used to select a set of Pods
-                                  in the set of Namespaces. It must must be defined
-                                  and non-empty.
+                                  in the set of Namespaces.
                                 properties:
-                                  podselector:
+                                  podSelector:
                                     description: PodSelector is a labelSelector used
                                       to select Pods, This field is NOT optional,
                                       follows standard label selector semantics and
@@ -570,7 +562,7 @@ spec:
                                         type: object
                                     type: object
                                 required:
-                                - podselector
+                                - podSelector
                                 type: object
                             required:
                             - namespaces
@@ -661,6 +653,7 @@ spec:
                                 type: boolean
                             type: object
                         type: object
+                      minItems: 1
                       type: array
                     name:
                       description: Name is an identifier for this rule, that should
@@ -701,10 +694,9 @@ spec:
                                 - type: integer
                                 - type: string
                                 description: The port on the given protocol. This
-                                  can either be a numerical or named port on a pod.
-                                  If this field is not provided, this matches no port
-                                  names and numbers. If present, only traffic on the
-                                  specified protocol AND port will be matched.
+                                  can either be a numerical or named port on a pod,
+                                  only traffic on the specified protocol AND port
+                                  will be matched.
                                 x-kubernetes-int-or-string: true
                               protocol:
                                 allOf:
@@ -714,7 +706,10 @@ spec:
                                   traffic must match. If not specified, this field
                                   defaults to TCP.
                                 type: string
+                            required:
+                            - port
                             type: object
+                          minItems: 1
                           type: array
                       type: object
                   required:
@@ -728,14 +723,14 @@ spec:
                   positive priority, "1" corresponds to the highest importance, while
                   higher priorities have lower importance. An ANP with a priority
                   of "0" will be evaluated after all positive priority AdminNetworkPolicies
-                  and standard NetworkPolicies. This field is NOT optional.
+                  and standard NetworkPolicies.
                 format: int32
                 maximum: 1000
                 minimum: 0
                 type: integer
               subject:
                 description: Subject defines the pods to which this AdminNetworkPolicy
-                  applies. This field is NOT optional.
+                  applies.
                 properties:
                   namespaceAndPodSelector:
                     description: NamespacedPodSubject allows the user to select a
@@ -743,7 +738,7 @@ spec:
                     properties:
                       namespaceSelector:
                         description: This field follows standard label selector semantics;
-                          if present but empty, it selects all Namespaces.
+                          if empty, it selects all Namespaces.
                         properties:
                           matchExpressions:
                             description: matchExpressions is a list of label selector
@@ -789,7 +784,7 @@ spec:
                         type: object
                       podSelector:
                         description: Used to explicitly select pods within a namespace;
-                          if present but empty, it selects all Pods.
+                          if empty, it selects all Pods.
                         properties:
                           matchExpressions:
                             description: matchExpressions is a list of label selector
@@ -890,11 +885,9 @@ spec:
             - subject
             type: object
           status:
-            description: ANPStatus is the status to be reported by the implementation,
-              this is not standardized in alpha and consumers should report what they
-              see fit in relation to their AdminNetworkPolicy implementation
+            description: Status is the status to be reported by the implementation.
             properties:
-              status:
+              conditions:
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -964,8 +957,11 @@ spec:
                   type: object
                 type: array
             required:
-            - status
+            - conditions
             type: object
+        required:
+        - metadata
+        - spec
         type: object
     served: true
     storage: true

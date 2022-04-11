@@ -27,43 +27,41 @@ import (
 // AdminNetworkPolicy is the Schema for the adminnetworkpolicies API
 type AdminNetworkPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.ObjectMeta `json:"metadata"`
 
 	// Specification of the desired behavior of AdminNetworkPolicy.
-	Spec AdminNetworkPolicySpec `json:"spec,omitempty"`
+	Spec AdminNetworkPolicySpec `json:"spec"`
 
-	// ANPStatus is the status to be reported by the implementation, this is not
-	// standardized in alpha and consumers should report what they see fit in
-	// relation to their AdminNetworkPolicy implementation
+	// Status is the status to be reported by the implementation.
 	// +optional
 	Status AdminNetworkPolicyStatus `json:"status,omitempty"`
 }
 
 // AdminNetworkPolicyStatus defines the observed state of AdminNetworkPolicy
 type AdminNetworkPolicyStatus struct {
-	Conditions []metav1.Condition `json:"status"`
+	Conditions []metav1.Condition `json:"conditions"`
 }
 
-// AdminNetworkPolicySubject defines what objects the policy selects.
+// AdminNetworkPolicySubject defines what resources the policy applies to.
 // Exactly one of the `NamespaceSelector` or `NamespaceAndPodSelector` pointers
 // should be set.
 type AdminNetworkPolicySubject struct {
 	// +optional
-	NamespaceSelector *metav1.LabelSelector `json:"namespaceSelector"`
+	NamespaceSelector *metav1.LabelSelector `json:"namespaceSelector,omitempty"`
 	// +optional
-	NamespaceAndPodSelector *NamespacedPodSubject `json:"namespaceAndPodSelector"`
+	NamespaceAndPodSelector *NamespacedPodSubject `json:"namespaceAndPodSelector,omitempty"`
 }
 
 // NamespacedPodSubject allows the user to select a given set of pod(s) in
 // selected namespace(s)
 type NamespacedPodSubject struct {
-	// This field follows standard label selector semantics; if present but empty,
+	// This field follows standard label selector semantics; if empty,
 	// it selects all Namespaces.
-	NamespaceSelector *metav1.LabelSelector `json:"namespaceSelector"`
+	NamespaceSelector metav1.LabelSelector `json:"namespaceSelector"`
 
-	// Used to explicitly select pods within a namespace; if present but empty,
+	// Used to explicitly select pods within a namespace; if empty,
 	// it selects all Pods.
-	PodSelector *metav1.LabelSelector `json:"podSelector"`
+	PodSelector metav1.LabelSelector `json:"podSelector"`
 }
 
 // AdminNetworkPolicySpec defines the desired state of AdminNetworkPolicy
@@ -72,21 +70,18 @@ type AdminNetworkPolicySpec struct {
 	// "1" corresponds to the highest importance, while higher priorities have
 	// lower importance. An ANP with a priority of "0" will be evaluated after all
 	// positive priority AdminNetworkPolicies and standard NetworkPolicies.
-	// This field is NOT optional.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1000
 	Priority *int32 `json:"priority"`
 
 	// Subject defines the pods to which this AdminNetworkPolicy applies.
-	// This field is NOT optional.
 	Subject AdminNetworkPolicySubject `json:"subject"`
 
 	// List of Ingress rules to be applied to the selected objects.
 	// A total of 100 rules will be allowed per each network policy instance,
 	// this rule count will be calculated as the total summation of the
 	// Ingress and Egress rules in a single AdminNetworkPolicy Instance.
-	// If this field is empty then this AdminNetworkPolicy has no effect on
-	// ingress traffic.
+	// ANPs with no ingress rules do not affect ingress traffic.
 	// +optional
 	Ingress []AdminNetworkPolicyIngressRule `json:"ingress,omitempty"`
 
@@ -94,8 +89,7 @@ type AdminNetworkPolicySpec struct {
 	// A total of 100 rules will be allowed per each network policy instance,
 	// this rule count will be calculated as the total summation of the
 	// Ingress and Egress rules in a single AdminNetworkPolicy Instance.
-	// If this field is empty then this AdminNetworkPolicy has no effect on
-	// egress traffic.
+	// ANPs with no egress rules do not affect egress traffic.
 	// +optional
 	Egress []AdminNetworkPolicyEgressRule `json:"egress,omitempty"`
 }
@@ -116,21 +110,18 @@ type AdminNetworkPolicyIngressRule struct {
 	// Pass: instructs the selected traffic to skip any remaining positive priority
 	// ANP rules, and then pass execution to any NetworkPolicies that select the pod.
 	// If the pod is not selected by any NetworkPolicies then execution
-	// is passed to any Priority=0 ANP rules that select the pod, whereupon the traffic
-	// is allowed if not dropped by any Priority=0 ANP rules.
+	// is passed to any Priority=0 ANP rules that select the pod.
 	// This field is mandatory.
-	Action AdminNetPolRuleAction `json:"action"`
+	Action AdminNetworkPolicyRuleAction `json:"action"`
 
 	// Ports allows for matching on traffic based on port and protocols.
 	// This field is mandatory.
 	Ports AdminNetworkPolicyPorts `json:"ports"`
 
-	// List of sources from which traffic will be allowed/denied/passed to the entities
-	// selected by this AdminNetworkPolicyRule. Items in this list are combined using a logical OR
-	// operation. If this field is empty, this rule matches no sources.
-	// If this field is present and contains at least one item, this rule
-	// allows/denies/passes traffic from the defined AdminNetworkPolicyPeer(s)
-	// If it is empty no traffic is matched by the AdminNetworkPolicyIngressRule.
+	// List of sources whose traffic this AdminNetworkPolicyRule applies to.
+	// Items in this list are combined using a logical OR
+	// operation. This field must be defined and contain at least one item.
+	// +kubebuilder:validation:MinItems=1
 	From []AdminNetworkPolicyPeer `json:"from"`
 }
 
@@ -153,7 +144,7 @@ type AdminNetworkPolicyEgressRule struct {
 	// is passed to any Priority=0 ANP rules that select the pod, whereupon the traffic
 	// is allowed if not dropped by any Priority=0 ANP rules.
 	// This field is mandatory.
-	Action AdminNetPolRuleAction `json:"action"`
+	Action AdminNetworkPolicyRuleAction `json:"action"`
 
 	// Ports allows for matching on traffic based on port and protocols.
 	// This field is mandatory.
@@ -161,15 +152,13 @@ type AdminNetworkPolicyEgressRule struct {
 
 	// List of destinations to which traffic will be allowed/denied/passed from the entities
 	// selected by this AdminNetworkPolicyRule. Items in this list are combined using a logical OR
-	// operation. If this field is empty, this rule matches no destinations.
-	// If this field is present and contains at least one item, this rule
-	// allows/denies/passes traffic to the defined AdminNetworkPolicyPeer(s)
-	// If it is empty no traffic is matched by the AdminNetworkPolicyEgressRule.
+	// operation. This field must be defined and contain at least one item.
+	// +kubebuilder:validation:MinItems=1
 	To []AdminNetworkPolicyPeer `json:"to"`
 }
 
-// AdminNetworkPolicyPorts handles selection of traffic based on port(s).
-// Exactly one of the fields must be defined.
+// AdminNetworkPolicyPorts handles selection of traffic based on destination
+// port(s). Exactly one of the fields must be defined.
 type AdminNetworkPolicyPorts struct {
 	// AllPorts cannot be "false" when it is set
 	// AllPorts allows the user to select all ports for all protocols, thus not
@@ -183,6 +172,7 @@ type AdminNetworkPolicyPorts struct {
 	// least one item, and this rule allows/denies/passes traffic only if the traffic
 	// matches at least one port in the list.
 	// +optional
+	// +kubebuilder:validation:MinItems=1
 	List []AdminNetworkPolicyPort `json:"list,omitempty"`
 }
 
@@ -195,11 +185,8 @@ type AdminNetworkPolicyPort struct {
 	Protocol *v1.Protocol `json:"protocol,omitempty"`
 
 	// The port on the given protocol. This can either be a numerical or named
-	// port on a pod. If this field is not provided, this matches no port names and
-	// numbers.
-	// If present, only traffic on the specified protocol AND port will be matched.
-	// +optional
-	Port *intstr.IntOrString `json:"port,omitempty"`
+	// port on a pod, only traffic on the specified protocol AND port will be matched.
+	Port intstr.IntOrString `json:"port"`
 
 	// If set, indicates that the range of ports from port to endPort, inclusive,
 	// should be allowed by the policy. This field cannot be defined if the port field
@@ -209,18 +196,18 @@ type AdminNetworkPolicyPort struct {
 	EndPort *int32 `json:"endPort,omitempty"`
 }
 
-// AdminNetPolRuleAction string describes the AdminNetworkPolicy action type.
+// AdminNetworkPolicyRuleAction string describes the AdminNetworkPolicy action type.
 // +enum
-type AdminNetPolRuleAction string
+type AdminNetworkPolicyRuleAction string
 
 const (
 	// RuleActionPass enables admins to provide exceptions to ClusterNetworkPolicies and delegate this rule to
 	// K8s NetworkPolicies.
-	AdminNetPolRuleActionPass AdminNetPolRuleAction = "Pass"
+	AdminNetworkPolicyRuleActionPass AdminNetworkPolicyRuleAction = "Pass"
 	// RuleActionDeny enables admins to deny specific traffic.
-	AdminNetPolRuleActionDeny AdminNetPolRuleAction = "Deny"
+	AdminNetworkPolicyRuleActionDeny AdminNetworkPolicyRuleAction = "Deny"
 	// RuleActionAllow enables admins to specifically allow certain traffic.
-	AdminNetPolRuleActionAllow AdminNetPolRuleAction = "Allow"
+	AdminNetworkPolicyRuleActionAllow AdminNetworkPolicyRuleAction = "Allow"
 )
 
 // AdminNetworkPolicyPeer defines an in-cluster peer to allow traffic to/from.
@@ -280,18 +267,16 @@ type PodSet struct {
 	// PodSelector is a labelSelector used to select Pods, This field is NOT optional,
 	// follows standard label selector semantics and if present but empty, it selects
 	// all Pods.
-	PodSelector *metav1.LabelSelector `json:"podselector"`
+	PodSelector *metav1.LabelSelector `json:"podSelector"`
 }
 
 // NamespaceSetAndPod defines a flexible way to select Namespaces and pods in a
 // cluster. The `Namespaces` and `PodSelector` fields are required.
 type NamespaceAndPodSet struct {
-	// Namespaces is used to select a set of Namespaces.  It must be defined and
-	// non-empty.
+	// Namespaces is used to select a set of Namespaces.
 	Namespaces NamespaceSet `json:"namespaces"`
 
-	// Pods is used to select a set of Pods in the set of Namespaces. It must
-	// must be defined and non-empty.
+	// Pods is used to select a set of Pods in the set of Namespaces.
 	Pods PodSet `json:"pods"`
 }
 
