@@ -6,21 +6,21 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: adminnetworkpolicies.policy.networking.k8s.io.policy.networking.k8s.io
+  name: baselineadminnetworkpolicies.policy.networking.k8s.io.policy.networking.k8s.io
 spec:
   group: policy.networking.k8s.io.policy.networking.k8s.io
   names:
-    kind: AdminNetworkPolicy
-    listKind: AdminNetworkPolicyList
-    plural: adminnetworkpolicies
-    singular: adminnetworkpolicy
+    kind: BaselineAdminNetworkPolicy
+    listKind: BaselineAdminNetworkPolicyList
+    plural: baselineadminnetworkpolicies
+    singular: baselineadminnetworkpolicy
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: AdminNetworkPolicy is the Schema for the adminnetworkpolicies
-          API
+        description: BaselineAdminNetworkPolicy is a cluster level resource that is
+          part of the adminNetworkPolicy api.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -35,13 +35,13 @@ spec:
           metadata:
             type: object
           spec:
-            description: Specification of the desired behavior of AdminNetworkPolicy.
+            description: Specification of the desired behavior of BaselineAdminNetworkPolicy.
             properties:
               egress:
                 description: List of Egress rules to be applied to the selected objects
-                  BEFORE any NetworkPolicy or BaslineAdminNetworkPolicy rules have
-                  been applied. A total of 100 rules will be allowed per each ANP
-                  instance. ANPs with no egress rules do not affect egress traffic.
+                  AFTER all AdminNetworkPolicy and NetworkPolicy rules have been applied.
+                  A total of 100 Egress rules will be allowed per each BANP instance.
+                  ANPs with no egress rules do not affect egress traffic.
                 items:
                   description: AdminNetworkPolicyEgressRule describes an action to
                     take on a particular set of traffic originating from pods selected
@@ -379,9 +379,9 @@ spec:
                 type: array
               ingress:
                 description: List of Ingress rules to be applied to the selected objects
-                  BEFORE any NetworkPolicy or BaslineAdminNetworkPolicy rules have
-                  been applied. A total of 100 rules will be allowed per each ANP
-                  instance. ANPs with no ingress rules do not affect ingress traffic.
+                  AFTER all AdminNetworkPolicy and NetworkPolicy rules have been applied.
+                  A total of 100 Ingress rules will be allowed per each BANP instance.
+                  BANPs with no ingress rules do not affect ingress traffic.
                 items:
                   description: AdminNetworkPolicyIngressRule describes an action to
                     take on a particular set of traffic destined for pods selected
@@ -717,16 +717,8 @@ spec:
                   type: object
                 maxItems: 100
                 type: array
-              priority:
-                description: Priority is an int32 value bound to 0 - 1000, the lowest
-                  positive priority, "1" corresponds to the highest importance, while
-                  higher priorities have lower importance.
-                format: int32
-                maximum: 1000
-                minimum: 0
-                type: integer
               subject:
-                description: Subject defines the pods to which this AdminNetworkPolicy
+                description: Subject defines the pods to which this BaselineAdminNetworkPolicy
                   applies.
                 properties:
                   namespaceAndPodSelector:
@@ -878,7 +870,6 @@ spec:
                     type: object
                 type: object
             required:
-            - priority
             - subject
             type: object
           status:

@@ -1,0 +1,20 @@
+# permissions for end users to view baselineadminnetworkpolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: baselineadminnetworkpolicy-viewer-role
+rules:
+- apiGroups:
+  - batch.policy.networking.k8s.io
+  resources:
+  - baselineadminnetworkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - batch.policy.networking.k8s.io
+  resources:
+  - baselineadminnetworkpolicies/status
+  verbs:
+  - get
