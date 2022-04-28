@@ -30,10 +30,12 @@ type AdminNetworkPolicyStatus struct {
 // Exactly one of the `NamespaceSelector` or `NamespaceAndPodSelector` pointers
 // should be set.
 type AdminNetworkPolicySubject struct {
+	// Namespaces is used to select pods via namespace selectors
 	// +optional
-	NamespaceSelector *metav1.LabelSelector `json:"namespaceSelector,omitempty"`
+	Namespaces *metav1.LabelSelector `json:"namespaceSelector,omitempty"`
+	// Pods is used to select pods via namespace AND pod selectors
 	// +optional
-	NamespaceAndPodSelector *NamespacedPodSubject `json:"namespaceAndPodSelector,omitempty"`
+	Pods *NamespacedPodSubject `json:"namespaceAndPodSelector,omitempty"`
 }
 
 // NamespacedPodSubject allows the user to select a given set of pod(s) in
@@ -98,23 +100,26 @@ type AdminNetworkPolicyPeer struct {
 	// NamespacedPods defines a way to select a specific set of pods in
 	// in a set of namespaces
 	// +optional
-	NamespacedPods *NamespaceAndPodSet `json:"namespacedPods,omitempty"`
+	Pods *NamespaceAndPodSet `json:"namespacedPods,omitempty"`
 }
+
+type NamespaceRelation string
+
+const (
+	NamespaceSame    NamespaceRelation = "Same"
+	NamespaceNotSame NamespaceRelation = "NotSame"
+)
 
 // NamespaceSet defines a flexible way to select Namespaces in a cluster.
 // Exactly one of the selectors should be set.  If a consumer observes none of
 // its fields are set, they should assume an unknown option has been specified
 // and fail closed.
 type NamespaceSet struct {
-	// Self cannot be "false" when it is set.
-	// If Self is "true" then all pods in the subject's namespace are selected.
+	// Related provides a mechanism for selecting namespaces. It can be set to
+	// "Same" to select all pods in the subject's namespace, and set to "NotSame"
+	// to select all pods not in the subject's namespace.
 	// +optional
-	Self *bool `json:"self,omitempty"`
-
-	// NotSelf cannot be "false" when it is set.
-	// if NotSelf is "true" then all pods not in the subject's Namespace are selected.
-	// +optional
-	NotSelf *bool `json:"notSelf,omitempty"`
+	Related *NamespaceRelation `json:"notSelf,omitempty"`
 
 	// NamespaceSelector is a labelSelector used to select Namespaces, This field
 	// follows standard label selector semantics; if present but empty, it selects

@@ -51,7 +51,9 @@ spec:
                     action:
                       description: 'Action specifies whether this rule must pass,
                         allow or deny traffic. Allow: allows the selected traffic
-                        Deny: denies the selected traffic Pass: instructs the selected
+                        (even if it would otherwise have been denied by NetworkPolicy)
+                        Deny: denies the selected traffic (even if it would otherwise
+                        have been denied by NetworkPolicy) Pass: instructs the selected
                         traffic to skip any remaining ANP rules, and then pass execution
                         to any NetworkPolicies that select the pod. If the pod is
                         not selected by any NetworkPolicies then execution is passed
@@ -198,10 +200,12 @@ spec:
                                       type: string
                                     type: array
                                   notSelf:
-                                    description: NotSelf cannot be "false" when it
-                                      is set. if NotSelf is "true" then all pods not
-                                      in the subject's Namespace are selected.
-                                    type: boolean
+                                    description: Related provides a mechanism for
+                                      selecting namespaces. It can be set to "Same"
+                                      to select all pods in the subject's namespace,
+                                      and set to "NotSame" to select all pods not
+                                      in the subject's namespace.
+                                    type: string
                                   sameLabels:
                                     description: SameLabels is used to select a set
                                       of Namespaces that share the same values for
@@ -213,11 +217,6 @@ spec:
                                     items:
                                       type: string
                                     type: array
-                                  self:
-                                    description: Self cannot be "false" when it is
-                                      set. If Self is "true" then all pods in the
-                                      subject's namespace are selected.
-                                    type: boolean
                                 type: object
                               pods:
                                 description: Pods is used to select a set of Pods
@@ -347,10 +346,11 @@ spec:
                                   type: string
                                 type: array
                               notSelf:
-                                description: NotSelf cannot be "false" when it is
-                                  set. if NotSelf is "true" then all pods not in the
-                                  subject's Namespace are selected.
-                                type: boolean
+                                description: Related provides a mechanism for selecting
+                                  namespaces. It can be set to "Same" to select all
+                                  pods in the subject's namespace, and set to "NotSame"
+                                  to select all pods not in the subject's namespace.
+                                type: string
                               sameLabels:
                                 description: SameLabels is used to select a set of
                                   Namespaces that share the same values for a set
@@ -361,11 +361,6 @@ spec:
                                 items:
                                   type: string
                                 type: array
-                              self:
-                                description: Self cannot be "false" when it is set.
-                                  If Self is "true" then all pods in the subject's
-                                  namespace are selected.
-                                type: boolean
                             type: object
                         type: object
                       minItems: 1
@@ -481,10 +476,12 @@ spec:
                                       type: string
                                     type: array
                                   notSelf:
-                                    description: NotSelf cannot be "false" when it
-                                      is set. if NotSelf is "true" then all pods not
-                                      in the subject's Namespace are selected.
-                                    type: boolean
+                                    description: Related provides a mechanism for
+                                      selecting namespaces. It can be set to "Same"
+                                      to select all pods in the subject's namespace,
+                                      and set to "NotSame" to select all pods not
+                                      in the subject's namespace.
+                                    type: string
                                   sameLabels:
                                     description: SameLabels is used to select a set
                                       of Namespaces that share the same values for
@@ -496,11 +493,6 @@ spec:
                                     items:
                                       type: string
                                     type: array
-                                  self:
-                                    description: Self cannot be "false" when it is
-                                      set. If Self is "true" then all pods in the
-                                      subject's namespace are selected.
-                                    type: boolean
                                 type: object
                               pods:
                                 description: Pods is used to select a set of Pods
@@ -630,10 +622,11 @@ spec:
                                   type: string
                                 type: array
                               notSelf:
-                                description: NotSelf cannot be "false" when it is
-                                  set. if NotSelf is "true" then all pods not in the
-                                  subject's Namespace are selected.
-                                type: boolean
+                                description: Related provides a mechanism for selecting
+                                  namespaces. It can be set to "Same" to select all
+                                  pods in the subject's namespace, and set to "NotSame"
+                                  to select all pods not in the subject's namespace.
+                                type: string
                               sameLabels:
                                 description: SameLabels is used to select a set of
                                   Namespaces that share the same values for a set
@@ -644,11 +637,6 @@ spec:
                                 items:
                                   type: string
                                 type: array
-                              self:
-                                description: Self cannot be "false" when it is set.
-                                  If Self is "true" then all pods in the subject's
-                                  namespace are selected.
-                                type: boolean
                             type: object
                         type: object
                       minItems: 1
@@ -722,8 +710,8 @@ spec:
                   applies.
                 properties:
                   namespaceAndPodSelector:
-                    description: NamespacedPodSubject allows the user to select a
-                      given set of pod(s) in selected namespace(s)
+                    description: Pods is used to select pods via namespace AND pod
+                      selectors
                     properties:
                       namespaceSelector:
                         description: This field follows standard label selector semantics;
@@ -822,10 +810,7 @@ spec:
                     - podSelector
                     type: object
                   namespaceSelector:
-                    description: A label selector is a label query over a set of resources.
-                      The result of matchLabels and matchExpressions are ANDed. An
-                      empty label selector matches all objects. A null label selector
-                      matches no objects.
+                    description: Namespaces is used to select pods via namespace selectors
                     properties:
                       matchExpressions:
                         description: matchExpressions is a list of label selector

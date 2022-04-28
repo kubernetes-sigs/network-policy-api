@@ -42,7 +42,7 @@ type AdminNetworkPolicySpec struct {
 	// lower importance.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1000
-	Priority *int32 `json:"priority"`
+	Priority int32 `json:"priority"`
 
 	// Subject defines the pods to which this AdminNetworkPolicy applies.
 	Subject AdminNetworkPolicySubject `json:"subject"`
@@ -106,8 +106,8 @@ type AdminNetworkPolicyEgressRule struct {
 	Name string `json:"name,omitempty"`
 
 	// Action specifies whether this rule must pass, allow or deny traffic.
-	// Allow: allows the selected traffic
-	// Deny: denies the selected traffic
+	// Allow: allows the selected traffic (even if it would otherwise have been denied by NetworkPolicy)
+	// Deny: denies the selected traffic (even if it would otherwise have been denied by NetworkPolicy)
 	// Pass: instructs the selected traffic to skip any remaining ANP rules, and
 	// then pass execution to any NetworkPolicies that select the pod.
 	// If the pod is not selected by any NetworkPolicies then execution
