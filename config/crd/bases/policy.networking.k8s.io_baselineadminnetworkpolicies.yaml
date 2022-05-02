@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: baselineadminnetworkpolicies.policy.networking.k8s.io.policy.networking.k8s.io
+  name: baselineadminnetworkpolicies.policy.networking.k8s.io
 spec:
-  group: policy.networking.k8s.io.policy.networking.k8s.io
+  group: policy.networking.k8s.io
   names:
     kind: BaselineAdminNetworkPolicy
     listKind: BaselineAdminNetworkPolicyList
@@ -38,9 +38,9 @@ spec:
             description: Specification of the desired behavior of BaselineAdminNetworkPolicy.
             properties:
               egress:
-                description: List of Egress rules to be applied to the selected objects
+                description: List of Egress rules to be applied to the selected pods
                   AFTER all AdminNetworkPolicy and NetworkPolicy rules have been applied.
-                  A total of 100 Egress rules will be allowed per each BANP instance.
+                  A total of 100 Egress rules will be allowed in each BANP instance.
                   ANPs with no egress rules do not affect egress traffic.
                 items:
                   description: AdminNetworkPolicyEgressRule describes an action to
@@ -61,62 +61,76 @@ spec:
                         field is mandatory.'
                       type: string
                     name:
-                      description: Name is an identifier for this rule, that should
-                        be no more than 100 characters in length.
+                      description: Name is an identifier for this rule, that may be
+                        no more than 100 characters in length.
                       maxLength: 100
                       type: string
                     ports:
-                      description: Ports allows for matching on traffic based on port
-                        and protocols. This field is mandatory.
-                      properties:
-                        allPorts:
-                          description: AllPorts cannot be "false" when it is set AllPorts
-                            allows the user to select all ports for all protocols,
-                            thus not selecting traffic based on L4 principles. If
-                            "true" then all ports are selected for all protocols.
-                          type: boolean
-                        list:
-                          description: The list of ports to allow/deny/pass traffic
-                            on, each item in this list is combined using a logical
-                            OR. When this field is present it should contain at least
-                            one item, and this rule allows/denies/passes traffic only
-                            if the traffic matches at least one port in the list.
-                          items:
-                            description: AdminNetworkPolicyPort describes a port to
-                              select
+                      description: Ports allows for matching traffic based on port
+                        and protocols. If Ports is empty or missing then traffic is
+                        not filtered via port.
+                      items:
+                        description: AdminNetworkPolicyPort describes how to select
+                          network ports on pod(s). Exactly one field must be set.
+                        maxProperties: 1
+                        minProperties: 1
+                        properties:
+                          namedPort:
+                            description: NamedPort selects a port on a pod(s) based
+                              on name.
+                            type: string
+                          port:
+                            description: Port selects a port on a pod(s) based on
+                              number.
                             properties:
-                              endPort:
-                                description: If set, indicates that the range of ports
-                                  from port to endPort, inclusive, should be allowed
-                                  by the policy. This field cannot be defined if the
-                                  port field is not defined or if the port field is
-                                  defined as a named (string) port. The endPort must
-                                  be equal or greater than port.
+                              number:
+                                description: Number defines a network port value.
                                 format: int32
+                                maximum: 65535
+                                minimum: 1
                                 type: integer
-                              port:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                description: The port on the given protocol. This
-                                  can either be a numerical or named port on a pod,
-                                  only traffic on the specified protocol AND port
-                                  will be matched.
-                                x-kubernetes-int-or-string: true
                               protocol:
-                                allOf:
-                                - default: TCP
-                                - default: TCP
+                                default: TCP
                                 description: The protocol (TCP, UDP, or SCTP) which
-                                  traffic must match. If not specified, this field
-                                  defaults to TCP.
+                                  traffic must match. If not specified, traffic is
+                                  not filtered by protocol.
                                 type: string
                             required:
-                            - port
+                            - number
                             type: object
-                          minItems: 1
-                          type: array
-                      type: object
+                          portRange:
+                            description: PortRange selects a portrange on a pod(s)
+                              based on provided start and end values.
+                            properties:
+                              end:
+                                description: End defines a network port that is the
+                                  end of a portrange, the End value must be greater
+                                  than Start.
+                                format: int32
+                                maximum: 65535
+                                minimum: 2
+                                type: integer
+                              protocol:
+                                default: TCP
+                                description: The protocol (TCP, UDP, or SCTP) which
+                                  traffic must match. If not specified, traffic is
+                                  not filtered by protocol.
+                                type: string
+                              start:
+                                description: Start defines a network port that is
+                                  the start of a portrange, the Start value must be
+                                  less than End.
+                                format: int32
+                                maximum: 65534
+                                minimum: 1
+                                type: integer
+                            required:
+                            - end
+                            - start
+                            type: object
+                        type: object
+                      maxItems: 100
+                      type: array
                     to:
                       description: List of destinations to which traffic will be allowed/denied/passed
                         from the entities selected by this AdminNetworkPolicyRule.
@@ -125,23 +139,140 @@ spec:
                       items:
                         description: AdminNetworkPolicyPeer defines an in-cluster
                           peer to allow traffic to/from. Exactly one of the selector
-                          pointers should be set for a given peer. If a consumer observes
-                          none of its fields are set, they should assume an unknown
+                          pointers must be set for a given peer. If a consumer observes
+                          none of its fields are set, they must assume an unknown
                           option has been specified and fail closed.
+                        maxProperties: 1
+                        minProperties: 1
                         properties:
-                          namespacedPods:
+                          namespaces:
+                            description: Namespaces defines a way to select a set
+                              of Namespaces.
+                            maxProperties: 1
+                            minProperties: 1
+                            properties:
+                              notSameLabels:
+                                description: NotSameLabels is used to select a set
+                                  of Namespaces that do not have a set of label(s).
+                                  To be selected a Namespace must have none of the
+                                  labels defined in NotSameLabels. If NotSameLabels
+                                  is empty then nothing is selected.
+                                items:
+                                  type: string
+                                maxItems: 100
+                                type: array
+                              related:
+                                description: Related provides a mechanism for selecting
+                                  namespaces. It can be set to "Self" to select all
+                                  pods in the subject's namespace, and set to "NotSelf"
+                                  to select all pods not in the subject's namespace.
+                                type: string
+                              sameLabels:
+                                description: SameLabels is used to select a set of
+                                  Namespaces that share the same values for a set
+                                  of labels. To be selected a Namespace must have
+                                  all of the labels defined in SameLabels, and they
+                                  must all have the same value as the subject of this
+                                  policy. If Samelabels is Empty then nothing is selected.
+                                items:
+                                  type: string
+                                maxItems: 100
+                                type: array
+                              selector:
+                                description: Selector is a labelSelector used to select
+                                  Namespaces, This field follows standard label selector
+                                  semantics; if present but empty, it selects all
+                                  Namespaces.
+                                properties:
+                                  matchExpressions:
+                                    description: matchExpressions is a list of label
+                                      selector requirements. The requirements are
+                                      ANDed.
+                                    items:
+                                      description: A label selector requirement is
+                                        a selector that contains values, a key, and
+                                        an operator that relates the key and values.
+                                      properties:
+                                        key:
+                                          description: key is the label key that the
+                                            selector applies to.
+                                          type: string
+                                        operator:
+                                          description: operator represents a key's
+                                            relationship to a set of values. Valid
+                                            operators are In, NotIn, Exists and DoesNotExist.
+                                          type: string
+                                        values:
+                                          description: values is an array of string
+                                            values. If the operator is In or NotIn,
+                                            the values array must be non-empty. If
+                                            the operator is Exists or DoesNotExist,
+                                            the values array must be empty. This array
+                                            is replaced during a strategic merge patch.
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - key
+                                      - operator
+                                      type: object
+                                    type: array
+                                  matchLabels:
+                                    additionalProperties:
+                                      type: string
+                                    description: matchLabels is a map of {key,value}
+                                      pairs. A single {key,value} in the matchLabels
+                                      map is equivalent to an element of matchExpressions,
+                                      whose key field is "key", the operator is "In",
+                                      and the values array contains only "value".
+                                      The requirements are ANDed.
+                                    type: object
+                                type: object
+                            type: object
+                          pods:
                             description: NamespacedPods defines a way to select a
-                              specific set of pods in in a set of namespaces
+                              set of pods in in a set of namespaces.
                             properties:
                               namespaces:
                                 description: Namespaces is used to select a set of
                                   Namespaces.
+                                maxProperties: 1
+                                minProperties: 1
                                 properties:
-                                  namespaceSelector:
-                                    description: NamespaceSelector is a labelSelector
-                                      used to select Namespaces, This field follows
-                                      standard label selector semantics; if present
-                                      but empty, it selects all Namespaces.
+                                  notSameLabels:
+                                    description: NotSameLabels is used to select a
+                                      set of Namespaces that do not have a set of
+                                      label(s). To be selected a Namespace must have
+                                      none of the labels defined in NotSameLabels.
+                                      If NotSameLabels is empty then nothing is selected.
+                                    items:
+                                      type: string
+                                    maxItems: 100
+                                    type: array
+                                  related:
+                                    description: Related provides a mechanism for
+                                      selecting namespaces. It can be set to "Self"
+                                      to select all pods in the subject's namespace,
+                                      and set to "NotSelf" to select all pods not
+                                      in the subject's namespace.
+                                    type: string
+                                  sameLabels:
+                                    description: SameLabels is used to select a set
+                                      of Namespaces that share the same values for
+                                      a set of labels. To be selected a Namespace
+                                      must have all of the labels defined in SameLabels,
+                                      and they must all have the same value as the
+                                      subject of this policy. If Samelabels is Empty
+                                      then nothing is selected.
+                                    items:
+                                      type: string
+                                    maxItems: 100
+                                    type: array
+                                  selector:
+                                    description: Selector is a labelSelector used
+                                      to select Namespaces, This field follows standard
+                                      label selector semantics; if present but empty,
+                                      it selects all Namespaces.
                                     properties:
                                       matchExpressions:
                                         description: matchExpressions is a list of
@@ -190,37 +321,12 @@ spec:
                                           "value". The requirements are ANDed.
                                         type: object
                                     type: object
-                                  notSameLabels:
-                                    description: NotSameLabels is used to select a
-                                      set of Namespaces that do not have a set of
-                                      label(s). To be selected a Namespace must have
-                                      none of the labels defined in NotSameLabels.
-                                      If NotSameLabels is empty then nothing is selected.
-                                    items:
-                                      type: string
-                                    type: array
-                                  notSelf:
-                                    description: Related provides a mechanism for
-                                      selecting namespaces. It can be set to "Same"
-                                      to select all pods in the subject's namespace,
-                                      and set to "NotSame" to select all pods not
-                                      in the subject's namespace.
-                                    type: string
-                                  sameLabels:
-                                    description: SameLabels is used to select a set
-                                      of Namespaces that share the same values for
-                                      a set of labels. To be selected a Namespace
-                                      must have all of the labels defined in SameLabels,
-                                      and they must all have the same value as the
-                                      subject of this policy. If Samelabels is Empty
-                                      then nothing is selected.
-                                    items:
-                                      type: string
-                                    type: array
                                 type: object
                               pods:
                                 description: Pods is used to select a set of Pods
                                   in the set of Namespaces.
+                                maxProperties: 1
+                                minProperties: 1
                                 properties:
                                   podSelector:
                                     description: PodSelector is a labelSelector used
@@ -282,100 +388,20 @@ spec:
                             - namespaces
                             - pods
                             type: object
-                          namespaces:
-                            description: Namespaces defines a way to select a set
-                              of Namespaces
-                            properties:
-                              namespaceSelector:
-                                description: NamespaceSelector is a labelSelector
-                                  used to select Namespaces, This field follows standard
-                                  label selector semantics; if present but empty,
-                                  it selects all Namespaces.
-                                properties:
-                                  matchExpressions:
-                                    description: matchExpressions is a list of label
-                                      selector requirements. The requirements are
-                                      ANDed.
-                                    items:
-                                      description: A label selector requirement is
-                                        a selector that contains values, a key, and
-                                        an operator that relates the key and values.
-                                      properties:
-                                        key:
-                                          description: key is the label key that the
-                                            selector applies to.
-                                          type: string
-                                        operator:
-                                          description: operator represents a key's
-                                            relationship to a set of values. Valid
-                                            operators are In, NotIn, Exists and DoesNotExist.
-                                          type: string
-                                        values:
-                                          description: values is an array of string
-                                            values. If the operator is In or NotIn,
-                                            the values array must be non-empty. If
-                                            the operator is Exists or DoesNotExist,
-                                            the values array must be empty. This array
-                                            is replaced during a strategic merge patch.
-                                          items:
-                                            type: string
-                                          type: array
-                                      required:
-                                      - key
-                                      - operator
-                                      type: object
-                                    type: array
-                                  matchLabels:
-                                    additionalProperties:
-                                      type: string
-                                    description: matchLabels is a map of {key,value}
-                                      pairs. A single {key,value} in the matchLabels
-                                      map is equivalent to an element of matchExpressions,
-                                      whose key field is "key", the operator is "In",
-                                      and the values array contains only "value".
-                                      The requirements are ANDed.
-                                    type: object
-                                type: object
-                              notSameLabels:
-                                description: NotSameLabels is used to select a set
-                                  of Namespaces that do not have a set of label(s).
-                                  To be selected a Namespace must have none of the
-                                  labels defined in NotSameLabels. If NotSameLabels
-                                  is empty then nothing is selected.
-                                items:
-                                  type: string
-                                type: array
-                              notSelf:
-                                description: Related provides a mechanism for selecting
-                                  namespaces. It can be set to "Same" to select all
-                                  pods in the subject's namespace, and set to "NotSame"
-                                  to select all pods not in the subject's namespace.
-                                type: string
-                              sameLabels:
-                                description: SameLabels is used to select a set of
-                                  Namespaces that share the same values for a set
-                                  of labels. To be selected a Namespace must have
-                                  all of the labels defined in SameLabels, and they
-                                  must all have the same value as the subject of this
-                                  policy. If Samelabels is Empty then nothing is selected.
-                                items:
-                                  type: string
-                                type: array
-                            type: object
                         type: object
+                      maxItems: 100
                       minItems: 1
                       type: array
                   required:
                   - action
-                  - ports
                   - to
                   type: object
                 maxItems: 100
                 type: array
               ingress:
-                description: List of Ingress rules to be applied to the selected objects
+                description: List of Ingress rules to be applied to the selected pods
                   AFTER all AdminNetworkPolicy and NetworkPolicy rules have been applied.
-                  A total of 100 Ingress rules will be allowed per each BANP instance.
+                  A total of 100 Ingress rules will be allowed in each BANP instance.
                   BANPs with no ingress rules do not affect ingress traffic.
                 items:
                   description: AdminNetworkPolicyIngressRule describes an action to
@@ -401,23 +427,140 @@ spec:
                       items:
                         description: AdminNetworkPolicyPeer defines an in-cluster
                           peer to allow traffic to/from. Exactly one of the selector
-                          pointers should be set for a given peer. If a consumer observes
-                          none of its fields are set, they should assume an unknown
+                          pointers must be set for a given peer. If a consumer observes
+                          none of its fields are set, they must assume an unknown
                           option has been specified and fail closed.
+                        maxProperties: 1
+                        minProperties: 1
                         properties:
-                          namespacedPods:
+                          namespaces:
+                            description: Namespaces defines a way to select a set
+                              of Namespaces.
+                            maxProperties: 1
+                            minProperties: 1
+                            properties:
+                              notSameLabels:
+                                description: NotSameLabels is used to select a set
+                                  of Namespaces that do not have a set of label(s).
+                                  To be selected a Namespace must have none of the
+                                  labels defined in NotSameLabels. If NotSameLabels
+                                  is empty then nothing is selected.
+                                items:
+                                  type: string
+                                maxItems: 100
+                                type: array
+                              related:
+                                description: Related provides a mechanism for selecting
+                                  namespaces. It can be set to "Self" to select all
+                                  pods in the subject's namespace, and set to "NotSelf"
+                                  to select all pods not in the subject's namespace.
+                                type: string
+                              sameLabels:
+                                description: SameLabels is used to select a set of
+                                  Namespaces that share the same values for a set
+                                  of labels. To be selected a Namespace must have
+                                  all of the labels defined in SameLabels, and they
+                                  must all have the same value as the subject of this
+                                  policy. If Samelabels is Empty then nothing is selected.
+                                items:
+                                  type: string
+                                maxItems: 100
+                                type: array
+                              selector:
+                                description: Selector is a labelSelector used to select
+                                  Namespaces, This field follows standard label selector
+                                  semantics; if present but empty, it selects all
+                                  Namespaces.
+                                properties:
+                                  matchExpressions:
+                                    description: matchExpressions is a list of label
+                                      selector requirements. The requirements are
+                                      ANDed.
+                                    items:
+                                      description: A label selector requirement is
+                                        a selector that contains values, a key, and
+                                        an operator that relates the key and values.
+                                      properties:
+                                        key:
+                                          description: key is the label key that the
+                                            selector applies to.
+                                          type: string
+                                        operator:
+                                          description: operator represents a key's
+                                            relationship to a set of values. Valid
+                                            operators are In, NotIn, Exists and DoesNotExist.
+                                          type: string
+                                        values:
+                                          description: values is an array of string
+                                            values. If the operator is In or NotIn,
+                                            the values array must be non-empty. If
+                                            the operator is Exists or DoesNotExist,
+                                            the values array must be empty. This array
+                                            is replaced during a strategic merge patch.
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - key
+                                      - operator
+                                      type: object
+                                    type: array
+                                  matchLabels:
+                                    additionalProperties:
+                                      type: string
+                                    description: matchLabels is a map of {key,value}
+                                      pairs. A single {key,value} in the matchLabels
+                                      map is equivalent to an element of matchExpressions,
+                                      whose key field is "key", the operator is "In",
+                                      and the values array contains only "value".
+                                      The requirements are ANDed.
+                                    type: object
+                                type: object
+                            type: object
+                          pods:
                             description: NamespacedPods defines a way to select a
-                              specific set of pods in in a set of namespaces
+                              set of pods in in a set of namespaces.
                             properties:
                               namespaces:
                                 description: Namespaces is used to select a set of
                                   Namespaces.
+                                maxProperties: 1
+                                minProperties: 1
                                 properties:
-                                  namespaceSelector:
-                                    description: NamespaceSelector is a labelSelector
-                                      used to select Namespaces, This field follows
-                                      standard label selector semantics; if present
-                                      but empty, it selects all Namespaces.
+                                  notSameLabels:
+                                    description: NotSameLabels is used to select a
+                                      set of Namespaces that do not have a set of
+                                      label(s). To be selected a Namespace must have
+                                      none of the labels defined in NotSameLabels.
+                                      If NotSameLabels is empty then nothing is selected.
+                                    items:
+                                      type: string
+                                    maxItems: 100
+                                    type: array
+                                  related:
+                                    description: Related provides a mechanism for
+                                      selecting namespaces. It can be set to "Self"
+                                      to select all pods in the subject's namespace,
+                                      and set to "NotSelf" to select all pods not
+                                      in the subject's namespace.
+                                    type: string
+                                  sameLabels:
+                                    description: SameLabels is used to select a set
+                                      of Namespaces that share the same values for
+                                      a set of labels. To be selected a Namespace
+                                      must have all of the labels defined in SameLabels,
+                                      and they must all have the same value as the
+                                      subject of this policy. If Samelabels is Empty
+                                      then nothing is selected.
+                                    items:
+                                      type: string
+                                    maxItems: 100
+                                    type: array
+                                  selector:
+                                    description: Selector is a labelSelector used
+                                      to select Namespaces, This field follows standard
+                                      label selector semantics; if present but empty,
+                                      it selects all Namespaces.
                                     properties:
                                       matchExpressions:
                                         description: matchExpressions is a list of
@@ -466,37 +609,12 @@ spec:
                                           "value". The requirements are ANDed.
                                         type: object
                                     type: object
-                                  notSameLabels:
-                                    description: NotSameLabels is used to select a
-                                      set of Namespaces that do not have a set of
-                                      label(s). To be selected a Namespace must have
-                                      none of the labels defined in NotSameLabels.
-                                      If NotSameLabels is empty then nothing is selected.
-                                    items:
-                                      type: string
-                                    type: array
-                                  notSelf:
-                                    description: Related provides a mechanism for
-                                      selecting namespaces. It can be set to "Same"
-                                      to select all pods in the subject's namespace,
-                                      and set to "NotSame" to select all pods not
-                                      in the subject's namespace.
-                                    type: string
-                                  sameLabels:
-                                    description: SameLabels is used to select a set
-                                      of Namespaces that share the same values for
-                                      a set of labels. To be selected a Namespace
-                                      must have all of the labels defined in SameLabels,
-                                      and they must all have the same value as the
-                                      subject of this policy. If Samelabels is Empty
-                                      then nothing is selected.
-                                    items:
-                                      type: string
-                                    type: array
                                 type: object
                               pods:
                                 description: Pods is used to select a set of Pods
                                   in the set of Namespaces.
+                                maxProperties: 1
+                                minProperties: 1
                                 properties:
                                   podSelector:
                                     description: PodSelector is a labelSelector used
@@ -558,160 +676,140 @@ spec:
                             - namespaces
                             - pods
                             type: object
-                          namespaces:
-                            description: Namespaces defines a way to select a set
-                              of Namespaces
-                            properties:
-                              namespaceSelector:
-                                description: NamespaceSelector is a labelSelector
-                                  used to select Namespaces, This field follows standard
-                                  label selector semantics; if present but empty,
-                                  it selects all Namespaces.
-                                properties:
-                                  matchExpressions:
-                                    description: matchExpressions is a list of label
-                                      selector requirements. The requirements are
-                                      ANDed.
-                                    items:
-                                      description: A label selector requirement is
-                                        a selector that contains values, a key, and
-                                        an operator that relates the key and values.
-                                      properties:
-                                        key:
-                                          description: key is the label key that the
-                                            selector applies to.
-                                          type: string
-                                        operator:
-                                          description: operator represents a key's
-                                            relationship to a set of values. Valid
-                                            operators are In, NotIn, Exists and DoesNotExist.
-                                          type: string
-                                        values:
-                                          description: values is an array of string
-                                            values. If the operator is In or NotIn,
-                                            the values array must be non-empty. If
-                                            the operator is Exists or DoesNotExist,
-                                            the values array must be empty. This array
-                                            is replaced during a strategic merge patch.
-                                          items:
-                                            type: string
-                                          type: array
-                                      required:
-                                      - key
-                                      - operator
-                                      type: object
-                                    type: array
-                                  matchLabels:
-                                    additionalProperties:
-                                      type: string
-                                    description: matchLabels is a map of {key,value}
-                                      pairs. A single {key,value} in the matchLabels
-                                      map is equivalent to an element of matchExpressions,
-                                      whose key field is "key", the operator is "In",
-                                      and the values array contains only "value".
-                                      The requirements are ANDed.
-                                    type: object
-                                type: object
-                              notSameLabels:
-                                description: NotSameLabels is used to select a set
-                                  of Namespaces that do not have a set of label(s).
-                                  To be selected a Namespace must have none of the
-                                  labels defined in NotSameLabels. If NotSameLabels
-                                  is empty then nothing is selected.
-                                items:
-                                  type: string
-                                type: array
-                              notSelf:
-                                description: Related provides a mechanism for selecting
-                                  namespaces. It can be set to "Same" to select all
-                                  pods in the subject's namespace, and set to "NotSame"
-                                  to select all pods not in the subject's namespace.
-                                type: string
-                              sameLabels:
-                                description: SameLabels is used to select a set of
-                                  Namespaces that share the same values for a set
-                                  of labels. To be selected a Namespace must have
-                                  all of the labels defined in SameLabels, and they
-                                  must all have the same value as the subject of this
-                                  policy. If Samelabels is Empty then nothing is selected.
-                                items:
-                                  type: string
-                                type: array
-                            type: object
                         type: object
+                      maxItems: 100
                       minItems: 1
                       type: array
                     name:
-                      description: Name is an identifier for this rule, that should
-                        be no more than 100 characters in length.
+                      description: Name is an identifier for this rule, that may be
+                        no more than 100 characters in length.
                       maxLength: 100
                       type: string
                     ports:
-                      description: Ports allows for matching on traffic based on port
-                        and protocols. This field is mandatory.
-                      properties:
-                        allPorts:
-                          description: AllPorts cannot be "false" when it is set AllPorts
-                            allows the user to select all ports for all protocols,
-                            thus not selecting traffic based on L4 principles. If
-                            "true" then all ports are selected for all protocols.
-                          type: boolean
-                        list:
-                          description: The list of ports to allow/deny/pass traffic
-                            on, each item in this list is combined using a logical
-                            OR. When this field is present it should contain at least
-                            one item, and this rule allows/denies/passes traffic only
-                            if the traffic matches at least one port in the list.
-                          items:
-                            description: AdminNetworkPolicyPort describes a port to
-                              select
+                      description: Ports allows for matching  traffic based on port
+                        and protocols. If Ports is empty or missing then traffic is
+                        not filtered via port.
+                      items:
+                        description: AdminNetworkPolicyPort describes how to select
+                          network ports on pod(s). Exactly one field must be set.
+                        maxProperties: 1
+                        minProperties: 1
+                        properties:
+                          namedPort:
+                            description: NamedPort selects a port on a pod(s) based
+                              on name.
+                            type: string
+                          port:
+                            description: Port selects a port on a pod(s) based on
+                              number.
                             properties:
-                              endPort:
-                                description: If set, indicates that the range of ports
-                                  from port to endPort, inclusive, should be allowed
-                                  by the policy. This field cannot be defined if the
-                                  port field is not defined or if the port field is
-                                  defined as a named (string) port. The endPort must
-                                  be equal or greater than port.
+                              number:
+                                description: Number defines a network port value.
                                 format: int32
+                                maximum: 65535
+                                minimum: 1
                                 type: integer
-                              port:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                description: The port on the given protocol. This
-                                  can either be a numerical or named port on a pod,
-                                  only traffic on the specified protocol AND port
-                                  will be matched.
-                                x-kubernetes-int-or-string: true
                               protocol:
-                                allOf:
-                                - default: TCP
-                                - default: TCP
+                                default: TCP
                                 description: The protocol (TCP, UDP, or SCTP) which
-                                  traffic must match. If not specified, this field
-                                  defaults to TCP.
+                                  traffic must match. If not specified, traffic is
+                                  not filtered by protocol.
                                 type: string
                             required:
-                            - port
+                            - number
                             type: object
-                          minItems: 1
-                          type: array
-                      type: object
+                          portRange:
+                            description: PortRange selects a portrange on a pod(s)
+                              based on provided start and end values.
+                            properties:
+                              end:
+                                description: End defines a network port that is the
+                                  end of a portrange, the End value must be greater
+                                  than Start.
+                                format: int32
+                                maximum: 65535
+                                minimum: 2
+                                type: integer
+                              protocol:
+                                default: TCP
+                                description: The protocol (TCP, UDP, or SCTP) which
+                                  traffic must match. If not specified, traffic is
+                                  not filtered by protocol.
+                                type: string
+                              start:
+                                description: Start defines a network port that is
+                                  the start of a portrange, the Start value must be
+                                  less than End.
+                                format: int32
+                                maximum: 65534
+                                minimum: 1
+                                type: integer
+                            required:
+                            - end
+                            - start
+                            type: object
+                        type: object
+                      maxItems: 100
+                      type: array
                   required:
                   - action
                   - from
-                  - ports
                   type: object
                 maxItems: 100
                 type: array
               subject:
                 description: Subject defines the pods to which this BaselineAdminNetworkPolicy
                   applies.
+                maxProperties: 1
+                minProperties: 1
                 properties:
-                  namespaceAndPodSelector:
+                  namespaces:
+                    description: Namespaces is used to select pods via namespace selectors.
+                    properties:
+                      matchExpressions:
+                        description: matchExpressions is a list of label selector
+                          requirements. The requirements are ANDed.
+                        items:
+                          description: A label selector requirement is a selector
+                            that contains values, a key, and an operator that relates
+                            the key and values.
+                          properties:
+                            key:
+                              description: key is the label key that the selector
+                                applies to.
+                              type: string
+                            operator:
+                              description: operator represents a key's relationship
+                                to a set of values. Valid operators are In, NotIn,
+                                Exists and DoesNotExist.
+                              type: string
+                            values:
+                              description: values is an array of string values. If
+                                the operator is In or NotIn, the values array must
+                                be non-empty. If the operator is Exists or DoesNotExist,
+                                the values array must be empty. This array is replaced
+                                during a strategic merge patch.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          - operator
+                          type: object
+                        type: array
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: matchLabels is a map of {key,value} pairs. A
+                          single {key,value} in the matchLabels map is equivalent
+                          to an element of matchExpressions, whose key field is "key",
+                          the operator is "In", and the values array contains only
+                          "value". The requirements are ANDed.
+                        type: object
+                    type: object
+                  pods:
                     description: Pods is used to select pods via namespace AND pod
-                      selectors
+                      selectors.
                     properties:
                       namespaceSelector:
                         description: This field follows standard label selector semantics;
@@ -808,50 +906,6 @@ spec:
                     required:
                     - namespaceSelector
                     - podSelector
-                    type: object
-                  namespaceSelector:
-                    description: Namespaces is used to select pods via namespace selectors
-                    properties:
-                      matchExpressions:
-                        description: matchExpressions is a list of label selector
-                          requirements. The requirements are ANDed.
-                        items:
-                          description: A label selector requirement is a selector
-                            that contains values, a key, and an operator that relates
-                            the key and values.
-                          properties:
-                            key:
-                              description: key is the label key that the selector
-                                applies to.
-                              type: string
-                            operator:
-                              description: operator represents a key's relationship
-                                to a set of values. Valid operators are In, NotIn,
-                                Exists and DoesNotExist.
-                              type: string
-                            values:
-                              description: values is an array of string values. If
-                                the operator is In or NotIn, the values array must
-                                be non-empty. If the operator is Exists or DoesNotExist,
-                                the values array must be empty. This array is replaced
-                                during a strategic merge patch.
-                              items:
-                                type: string
-                              type: array
-                          required:
-                          - key
-                          - operator
-                          type: object
-                        type: array
-                      matchLabels:
-                        additionalProperties:
-                          type: string
-                        description: matchLabels is a map of {key,value} pairs. A
-                          single {key,value} in the matchLabels map is equivalent
-                          to an element of matchExpressions, whose key field is "key",
-                          the operator is "In", and the values array contains only
-                          "value". The requirements are ANDed.
-                        type: object
                     type: object
                 type: object
             required:

@@ -37,22 +37,22 @@ type BaselineAdminNetworkPolicy struct {
 }
 
 // BaselineAdminNetworkPolicySpec defines the desired state of
-// BaselineAdminNetworkPolicy
+// BaselineAdminNetworkPolicy.
 type BaselineAdminNetworkPolicySpec struct {
 	// Subject defines the pods to which this BaselineAdminNetworkPolicy applies.
 	Subject AdminNetworkPolicySubject `json:"subject"`
 
-	// List of Ingress rules to be applied to the selected objects AFTER all
+	// List of Ingress rules to be applied to the selected pods AFTER all
 	// AdminNetworkPolicy and NetworkPolicy rules have been applied.
-	// A total of 100 Ingress rules will be allowed per each BANP instance.
+	// A total of 100 Ingress rules will be allowed in each BANP instance.
 	// BANPs with no ingress rules do not affect ingress traffic.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	Ingress []AdminNetworkPolicyIngressRule `json:"ingress,omitempty"`
 
-	// List of Egress rules to be applied to the selected objects AFTER all
+	// List of Egress rules to be applied to the selected pods AFTER all
 	// AdminNetworkPolicy and NetworkPolicy rules have been applied.
-	// A total of 100 Egress rules will be allowed per each BANP instance. ANPs
+	// A total of 100 Egress rules will be allowed in each BANP instance. ANPs
 	// with no egress rules do not affect egress traffic.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
@@ -63,7 +63,7 @@ type BaselineAdminNetworkPolicySpec struct {
 // set of traffic destined for pods selected by a BaselineAdminNetworkPolicy's
 // Subject field. The traffic must match both ports and from.
 type BaselineAdminNetworkPolicyIngressRule struct {
-	// Name is an identifier for this rule, that should be no more than 100 characters
+	// Name is an identifier for this rule, that may be no more than 100 characters
 	// in length.
 	// +optional
 	// +kubebuilder:validation:MaxLength=100
@@ -75,9 +75,10 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 	// This field is mandatory.
 	Action BaselineAdminNetworkPolicyRuleAction `json:"action"`
 
-	// Ports allows for matching on traffic based on port and protocols.
-	// This field is mandatory.
-	Ports AdminNetworkPolicyPorts `json:"ports"`
+	// Ports allows for matching traffic based on port and protocols.
+	// If Ports is empty or missing then traffic is not filtered via port.
+	// +optional
+	Ports []AdminNetworkPolicyPort `json:"ports,omitempty"`
 
 	// List of sources whose traffic this AdminNetworkPolicyRule applies to.
 	// Items in this list are combined using a logical OR
@@ -90,7 +91,7 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 // set of traffic originating from pods selected by a BaselineAdminNetworkPolicy's
 // Subject field. The traffic must match both ports and to.
 type BaselineAdminNetworkPolicyEgressRule struct {
-	// Name is an identifier for this rule, that should be no more than 100 characters
+	// Name is an identifier for this rule, that may be no more than 100 characters
 	// in length.
 	// +optional
 	// +kubebuilder:validation:MaxLength=100
@@ -102,9 +103,10 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 	// This field is mandatory.
 	Action BaselineAdminNetworkPolicyRuleAction `json:"action"`
 
-	// Ports allows for matching on traffic based on port and protocols.
-	// This field is mandatory.
-	Ports AdminNetworkPolicyPorts `json:"ports"`
+	// Ports allows for matching  traffic based on port and protocols.
+	// If Ports is empty or missing then traffic is not filtered via port.
+	// +optional
+	Ports []AdminNetworkPolicyPort `json:"ports,omitempty"`
 
 	// List of destinations to which traffic will be allowed/denied/passed from the entities
 	// selected by this AdminNetworkPolicyRule. Items in this list are combined using a logical OR
