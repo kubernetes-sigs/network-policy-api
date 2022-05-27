@@ -50,13 +50,13 @@ type NamespacedPodSubject struct {
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
 type AdminNetworkPolicyPort struct {
+	// Port selects a port on a pod(s) based on number.
+	// +optional
+	PortNumber *Port `json:"portNumber,omitempty"`
+
 	// NamedPort selects a port on a pod(s) based on name.
 	// +optional
 	NamedPort *string `json:"namedPort,omitempty"`
-
-	// Port selects a port on a pod(s) based on number.
-	// +optional
-	Port *Port `json:"port,omitempty"`
 
 	// PortRange selects a port range on a pod(s) based on provided start and end
 	// values.
@@ -65,24 +65,24 @@ type AdminNetworkPolicyPort struct {
 }
 
 type Port struct {
-	// The protocol (TCP, UDP, or SCTP) which traffic must match. If not specified,
-	// this field defaults to TCP.
+	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
+	// match. If not specified, this field defaults to TCP.
 	// +kubebuilder:default=TCP
-	Protocol *v1.Protocol `json:"protocol"`
+	Protocol v1.Protocol `json:"protocol"`
 
 	// Number defines a network port value.
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
-	Number int32 `json:"number"`
+	Port int32 `json:"port"`
 }
 
 // PortRange defines an inclusive range of ports from the the assigned Start value
 // to End value.
 type PortRange struct {
-	// The protocol (TCP, UDP, or SCTP) which traffic must match. If not specified,
-	// this field defaults to TCP.
+	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
+	// match. If not specified, this field defaults to TCP.
 	// +kubebuilder:default=TCP
-	Protocol *v1.Protocol `json:"protocol,omitempty"`
+	Protocol v1.Protocol `json:"protocol,omitempty"`
 
 	// Start defines a network port that is the start of a port range, the Start
 	// value must be less than End.
@@ -107,7 +107,7 @@ type AdminNetworkPolicyPeer struct {
 	// Namespaces defines a way to select a set of Namespaces.
 	// +optional
 	Namespaces *NamespacedPeer `json:"namespaces,omitempty"`
-	// NamespacedPods defines a way to select a set of pods in
+	// Pods defines a way to select a set of pods in
 	// in a set of namespaces.
 	// +optional
 	Pods *NamespacedPodPeer `json:"pods,omitempty"`
@@ -116,8 +116,8 @@ type AdminNetworkPolicyPeer struct {
 type NamespaceRelation string
 
 const (
-	NamespaceSame    NamespaceRelation = "Self"
-	NamespaceNotSame NamespaceRelation = "NotSelf"
+	NamespaceSelf    NamespaceRelation = "Self"
+	NamespaceNotSelf NamespaceRelation = "NotSelf"
 )
 
 // NamespacedPeer defines a flexible way to select Namespaces in a cluster.
@@ -127,9 +127,10 @@ const (
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
 type NamespacedPeer struct {
-	// Related provides a mechanism for selecting namespaces. It can be set to
-	// "Self" to select all pods in the subject's namespace, and set to "NotSelf"
-	// to select all pods not in the subject's namespace.
+	// Related provides a mechanism for selecting namespaces relative to the
+	// subject pod. A value of "Self" matches the subject pod's namespace,
+	// while a value of "NotSelf" matches namespaces other than the subject
+	// pod's namespace.
 	// +optional
 	Related *NamespaceRelation `json:"related,omitempty"`
 
@@ -165,5 +166,5 @@ type NamespacedPodPeer struct {
 	// PodSelector is a labelSelector used to select Pods, This field is NOT optional,
 	// follows standard label selector semantics and if present but empty, it selects
 	// all Pods.
-	PodSelector *metav1.LabelSelector `json:"podSelector"`
+	PodSelector metav1.LabelSelector `json:"podSelector"`
 }

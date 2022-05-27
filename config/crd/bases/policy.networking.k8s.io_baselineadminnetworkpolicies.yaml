@@ -20,7 +20,7 @@ spec:
     schema:
       openAPIV3Schema:
         description: BaselineAdminNetworkPolicy is a cluster level resource that is
-          part of the adminNetworkPolicy API.
+          part of the AdminNetworkPolicy API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -38,21 +38,21 @@ spec:
             description: Specification of the desired behavior of BaselineAdminNetworkPolicy.
             properties:
               egress:
-                description: List of Egress rules to be applied to the selected pods
-                  if they are not matched by any AdminNetworkPolicy or NetworkPolicy
-                  rules. A total of 100 Egress rules will be allowed in each BANP
-                  instance. BANPs with no egress rules do not affect egress traffic.
+                description: Egress is the list of Egress rules to be applied to the
+                  selected pods if they are not matched by any AdminNetworkPolicy
+                  or NetworkPolicy rules. A total of 100 Egress rules will be allowed
+                  in each BANP instance. BANPs with no egress rules do not affect
+                  egress traffic.
                 items:
                   description: AdminNetworkPolicyEgressRule describes an action to
                     take on a particular set of traffic originating from pods selected
-                    by a BaselineAdminNetworkPolicy's Subject field. The traffic must
-                    match both ports and to.
+                    by a BaselineAdminNetworkPolicy's Subject field.
                   properties:
                     action:
-                      description: 'Action specifies the affect this rule will have
-                        on matching traffic, currently the following actions are supported:
+                      description: 'Action specifies the effect this rule will have
+                        on matching traffic. Currently the following actions are supported:
                         Allow: allows the selected traffic Deny: denies the selected
-                        traffic This field is mandatory.'
+                        traffic'
                       type: string
                     name:
                       description: Name is an identifier for this rule, that may be
@@ -63,8 +63,8 @@ spec:
                       type: string
                     ports:
                       description: Ports allows for matching traffic based on port
-                        and protocols. If Ports is not set then traffic is not filtered
-                        via port.
+                        and protocols. If Ports is not set then the rule does not
+                        filter traffic via port.
                       items:
                         description: AdminNetworkPolicyPort describes how to select
                           network ports on pod(s). Exactly one field must be set.
@@ -75,11 +75,11 @@ spec:
                             description: NamedPort selects a port on a pod(s) based
                               on name.
                             type: string
-                          port:
+                          portNumber:
                             description: Port selects a port on a pod(s) based on
                               number.
                             properties:
-                              number:
+                              port:
                                 description: Number defines a network port value.
                                 format: int32
                                 maximum: 65535
@@ -89,12 +89,12 @@ spec:
                                 allOf:
                                 - default: TCP
                                 - default: TCP
-                                description: The protocol (TCP, UDP, or SCTP) which
-                                  traffic must match. If not specified, this field
-                                  defaults to TCP.
+                                description: Protocol is the network protocol (TCP,
+                                  UDP, or SCTP) which traffic must match. If not specified,
+                                  this field defaults to TCP.
                                 type: string
                             required:
-                            - number
+                            - port
                             - protocol
                             type: object
                           portRange:
@@ -113,9 +113,9 @@ spec:
                                 allOf:
                                 - default: TCP
                                 - default: TCP
-                                description: The protocol (TCP, UDP, or SCTP) which
-                                  traffic must match. If not specified, this field
-                                  defaults to TCP.
+                                description: Protocol is the network protocol (TCP,
+                                  UDP, or SCTP) which traffic must match. If not specified,
+                                  this field defaults to TCP.
                                 type: string
                               start:
                                 description: Start defines a network port that is
@@ -130,12 +130,14 @@ spec:
                             - start
                             type: object
                         type: object
+                      maxItems: 100
                       type: array
                     to:
-                      description: List of destinations whose traffic this adminNetworkPolicyRule
-                        applies to. If any adminNetworkPolicyPeer matches the destination
-                        of outgoing traffic then the specified action is applied.
-                        This field must be defined and contain at least one item.
+                      description: To is the list of destinations whose traffic this
+                        rule applies to. If any AdminNetworkPolicyPeer matches the
+                        destination of outgoing traffic then the specified action
+                        is applied. This field must be defined and contain at least
+                        one item.
                       items:
                         description: AdminNetworkPolicyPeer defines an in-cluster
                           peer to allow traffic to/from. Exactly one of the selector
@@ -213,9 +215,10 @@ spec:
                                 type: array
                               related:
                                 description: Related provides a mechanism for selecting
-                                  namespaces. It can be set to "Self" to select all
-                                  pods in the subject's namespace, and set to "NotSelf"
-                                  to select all pods not in the subject's namespace.
+                                  namespaces relative to the subject pod. A value
+                                  of "Self" matches the subject pod's namespace, while
+                                  a value of "NotSelf" matches namespaces other than
+                                  the subject pod's namespace.
                                 type: string
                               sameLabels:
                                 description: SameLabels is used to select a set of
@@ -230,8 +233,8 @@ spec:
                                 type: array
                             type: object
                           pods:
-                            description: NamespacedPods defines a way to select a
-                              set of pods in in a set of namespaces.
+                            description: Pods defines a way to select a set of pods
+                              in in a set of namespaces.
                             properties:
                               namespaces:
                                 description: Namespaces is used to select a set of
@@ -304,10 +307,10 @@ spec:
                                     type: array
                                   related:
                                     description: Related provides a mechanism for
-                                      selecting namespaces. It can be set to "Self"
-                                      to select all pods in the subject's namespace,
-                                      and set to "NotSelf" to select all pods not
-                                      in the subject's namespace.
+                                      selecting namespaces relative to the subject
+                                      pod. A value of "Self" matches the subject pod's
+                                      namespace, while a value of "NotSelf" matches
+                                      namespaces other than the subject pod's namespace.
                                     type: string
                                   sameLabels:
                                     description: SameLabels is used to select a set
@@ -386,26 +389,26 @@ spec:
                 maxItems: 100
                 type: array
               ingress:
-                description: List of Ingress rules to be applied to the selected pods
-                  if they are not matched by any AdminNetworkPolicy or NetworkPolicy
-                  rules. A total of 100 Ingress rules will be allowed in each BANP
-                  instance. BANPs with no ingress rules do not affect ingress traffic.
+                description: Ingress is the list of Ingress rules to be applied to
+                  the selected pods if they are not matched by any AdminNetworkPolicy
+                  or NetworkPolicy rules. A total of 100 Ingress rules will be allowed
+                  in each BANP instance. BANPs with no ingress rules do not affect
+                  ingress traffic.
                 items:
                   description: BaselineAdminNetworkPolicyIngressRule describes an
                     action to take on a particular set of traffic destined for pods
-                    selected by a BaselineAdminNetworkPolicy's Subject field. The
-                    traffic must match both ports and from.
+                    selected by a BaselineAdminNetworkPolicy's Subject field.
                   properties:
                     action:
-                      description: 'Action specifies the affect this rule will have
-                        on matching traffic, currently the following actions are supported:
+                      description: 'Action specifies the effect this rule will have
+                        on matching traffic. Currently the following actions are supported:
                         Allow: allows the selected traffic Deny: denies the selected
-                        traffic This field is mandatory.'
+                        traffic'
                       type: string
                     from:
-                      description: List of sources whose traffic this AdminNetworkPolicyRule
-                        applies to. If any adminNetworkPolicyPeer matches the source
-                        of incoming traffic then the specified action is applied.
+                      description: From is the list of sources whose traffic this
+                        rule applies to. If any AdminNetworkPolicyPeer matches the
+                        source of incoming traffic then the specified action is applied.
                         This field must be defined and contain at least one item.
                       items:
                         description: AdminNetworkPolicyPeer defines an in-cluster
@@ -484,9 +487,10 @@ spec:
                                 type: array
                               related:
                                 description: Related provides a mechanism for selecting
-                                  namespaces. It can be set to "Self" to select all
-                                  pods in the subject's namespace, and set to "NotSelf"
-                                  to select all pods not in the subject's namespace.
+                                  namespaces relative to the subject pod. A value
+                                  of "Self" matches the subject pod's namespace, while
+                                  a value of "NotSelf" matches namespaces other than
+                                  the subject pod's namespace.
                                 type: string
                               sameLabels:
                                 description: SameLabels is used to select a set of
@@ -501,8 +505,8 @@ spec:
                                 type: array
                             type: object
                           pods:
-                            description: NamespacedPods defines a way to select a
-                              set of pods in in a set of namespaces.
+                            description: Pods defines a way to select a set of pods
+                              in in a set of namespaces.
                             properties:
                               namespaces:
                                 description: Namespaces is used to select a set of
@@ -575,10 +579,10 @@ spec:
                                     type: array
                                   related:
                                     description: Related provides a mechanism for
-                                      selecting namespaces. It can be set to "Self"
-                                      to select all pods in the subject's namespace,
-                                      and set to "NotSelf" to select all pods not
-                                      in the subject's namespace.
+                                      selecting namespaces relative to the subject
+                                      pod. A value of "Self" matches the subject pod's
+                                      namespace, while a value of "NotSelf" matches
+                                      namespaces other than the subject pod's namespace.
                                     type: string
                                   sameLabels:
                                     description: SameLabels is used to select a set
@@ -659,8 +663,8 @@ spec:
                       type: string
                     ports:
                       description: Ports allows for matching traffic based on port
-                        and protocols. If Ports is not set then traffic is not filtered
-                        via port.
+                        and protocols. If Ports is not set then the rule does not
+                        filter traffic via port.
                       items:
                         description: AdminNetworkPolicyPort describes how to select
                           network ports on pod(s). Exactly one field must be set.
@@ -671,11 +675,11 @@ spec:
                             description: NamedPort selects a port on a pod(s) based
                               on name.
                             type: string
-                          port:
+                          portNumber:
                             description: Port selects a port on a pod(s) based on
                               number.
                             properties:
-                              number:
+                              port:
                                 description: Number defines a network port value.
                                 format: int32
                                 maximum: 65535
@@ -685,12 +689,12 @@ spec:
                                 allOf:
                                 - default: TCP
                                 - default: TCP
-                                description: The protocol (TCP, UDP, or SCTP) which
-                                  traffic must match. If not specified, this field
-                                  defaults to TCP.
+                                description: Protocol is the network protocol (TCP,
+                                  UDP, or SCTP) which traffic must match. If not specified,
+                                  this field defaults to TCP.
                                 type: string
                             required:
-                            - number
+                            - port
                             - protocol
                             type: object
                           portRange:
@@ -709,9 +713,9 @@ spec:
                                 allOf:
                                 - default: TCP
                                 - default: TCP
-                                description: The protocol (TCP, UDP, or SCTP) which
-                                  traffic must match. If not specified, this field
-                                  defaults to TCP.
+                                description: Protocol is the network protocol (TCP,
+                                  UDP, or SCTP) which traffic must match. If not specified,
+                                  this field defaults to TCP.
                                 type: string
                               start:
                                 description: Start defines a network port that is
@@ -726,6 +730,7 @@ spec:
                             - start
                             type: object
                         type: object
+                      maxItems: 100
                       type: array
                   required:
                   - action

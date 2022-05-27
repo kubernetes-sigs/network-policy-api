@@ -23,7 +23,7 @@ import (
 //+kubebuilder:subresource:status
 
 // BaselineAdminNetworkPolicy is a cluster level resource that is part of the
-// adminNetworkPolicy API.
+// AdminNetworkPolicy API.
 type BaselineAdminNetworkPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
@@ -48,16 +48,16 @@ type BaselineAdminNetworkPolicySpec struct {
 	// Subject defines the pods to which this BaselineAdminNetworkPolicy applies.
 	Subject AdminNetworkPolicySubject `json:"subject"`
 
-	// List of Ingress rules to be applied to the selected pods if they are not
-	// matched by any AdminNetworkPolicy or NetworkPolicy rules.
+	// Ingress is the list of Ingress rules to be applied to the selected pods
+	// if they are not matched by any AdminNetworkPolicy or NetworkPolicy rules.
 	// A total of 100 Ingress rules will be allowed in each BANP instance.
 	// BANPs with no ingress rules do not affect ingress traffic.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	Ingress []BaselineAdminNetworkPolicyIngressRule `json:"ingress,omitempty"`
 
-	// List of Egress rules to be applied to the selected pods if they are not
-	// matched by any AdminNetworkPolicy or NetworkPolicy rules.
+	// Egress is the list of Egress rules to be applied to the selected pods if
+	// they are not matched by any AdminNetworkPolicy or NetworkPolicy rules.
 	// A total of 100 Egress rules will be allowed in each BANP instance. BANPs
 	// with no egress rules do not affect egress traffic.
 	// +optional
@@ -67,7 +67,7 @@ type BaselineAdminNetworkPolicySpec struct {
 
 // BaselineAdminNetworkPolicyIngressRule describes an action to take on a particular
 // set of traffic destined for pods selected by a BaselineAdminNetworkPolicy's
-// Subject field. The traffic must match both ports and from.
+// Subject field.
 type BaselineAdminNetworkPolicyIngressRule struct {
 	// Name is an identifier for this rule, that may be no more than 100 characters
 	// in length. This field should be used by the implementation to help
@@ -77,29 +77,29 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 	// +kubebuilder:validation:MaxLength=100
 	Name string `json:"name,omitempty"`
 
-	// Action specifies the affect this rule will have on matching traffic,
-	// currently the following actions are supported:
+	// Action specifies the effect this rule will have on matching traffic.
+	// Currently the following actions are supported:
 	// Allow: allows the selected traffic
 	// Deny: denies the selected traffic
-	// This field is mandatory.
 	Action BaselineAdminNetworkPolicyRuleAction `json:"action"`
 
-	// Ports allows for matching traffic based on port and protocols.
-	// If Ports is not set then traffic is not filtered via port.
-	// +optional
-	Ports []AdminNetworkPolicyPort `json:"ports,omitempty"`
-
-	// List of sources whose traffic this AdminNetworkPolicyRule applies to.
-	// If any adminNetworkPolicyPeer matches the source of incoming
+	// From is the list of sources whose traffic this rule applies to.
+	// If any AdminNetworkPolicyPeer matches the source of incoming
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
 	// +kubebuilder:validation:MinItems=1
 	From []AdminNetworkPolicyPeer `json:"from"`
+
+	// Ports allows for matching traffic based on port and protocols.
+	// If Ports is not set then the rule does not filter traffic via port.
+	// +optional
+	// +kubebuilder:validation:MaxItems=100
+	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
 }
 
 // AdminNetworkPolicyEgressRule describes an action to take on a particular
 // set of traffic originating from pods selected by a BaselineAdminNetworkPolicy's
-// Subject field. The traffic must match both ports and to.
+// Subject field.
 type BaselineAdminNetworkPolicyEgressRule struct {
 	// Name is an identifier for this rule, that may be no more than 100 characters
 	// in length. This field should be used by the implementation to help
@@ -109,24 +109,24 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 	// +kubebuilder:validation:MaxLength=100
 	Name string `json:"name,omitempty"`
 
-	// Action specifies the affect this rule will have on matching traffic,
-	// currently the following actions are supported:
+	// Action specifies the effect this rule will have on matching traffic.
+	// Currently the following actions are supported:
 	// Allow: allows the selected traffic
 	// Deny: denies the selected traffic
-	// This field is mandatory.
 	Action BaselineAdminNetworkPolicyRuleAction `json:"action"`
 
-	// Ports allows for matching traffic based on port and protocols.
-	// If Ports is not set then traffic is not filtered via port.
-	// +optional
-	Ports []AdminNetworkPolicyPort `json:"ports,omitempty"`
-
-	// List of destinations whose traffic this adminNetworkPolicyRule applies to.
-	// If any adminNetworkPolicyPeer matches the destination of outgoing
+	// To is the list of destinations whose traffic this rule applies to.
+	// If any AdminNetworkPolicyPeer matches the destination of outgoing
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
 	// +kubebuilder:validation:MinItems=1
 	To []AdminNetworkPolicyPeer `json:"to"`
+
+	// Ports allows for matching traffic based on port and protocols.
+	// If Ports is not set then the rule does not filter traffic via port.
+	// +optional
+	// +kubebuilder:validation:MaxItems=100
+	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
 }
 
 // BaselineAdminNetworkPolicyRuleAction string describes the BaselineAdminNetworkPolicy
@@ -135,10 +135,9 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 type BaselineAdminNetworkPolicyRuleAction string
 
 const (
-
-	// BaselineAdminNetworkPolicyRuleActionDeny enables admins to deny specific traffic.
+	// BaselineAdminNetworkPolicyRuleActionDeny enables admins to deny traffic.
 	BaselineAdminNetworkPolicyRuleActionDeny BaselineAdminNetworkPolicyRuleAction = "Deny"
-	// BaselineAdminNetworkPolicyRuleActionAllow enables admins to specifically allow certain traffic.
+	// BaselineAdminNetworkPolicyRuleActionAllow enables admins to allow certain traffic.
 	BaselineAdminNetworkPolicyRuleActionAllow BaselineAdminNetworkPolicyRuleAction = "Allow"
 )
 
