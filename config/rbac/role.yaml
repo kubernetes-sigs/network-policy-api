@@ -1,0 +1,34 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - policy.networking.k8s.io.policy.networking.k8s.io
+  resources:
+  - adminnetworkpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - policy.networking.k8s.io.policy.networking.k8s.io
+  resources:
+  - adminnetworkpolicies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - policy.networking.k8s.io.policy.networking.k8s.io
+  resources:
+  - adminnetworkpolicies/status
+  verbs:
+  - get
+  - patch
+  - update

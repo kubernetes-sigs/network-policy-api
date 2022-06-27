@@ -1,0 +1,24 @@
+domain: policy.networking.k8s.io
+layout: go.kubebuilder.io/v3
+projectName: network-policy-api
+repo: github.com/kubernetes-sigs/network-policy-api
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: false
+  domain: policy.networking.k8s.io
+  group: policy.networking.k8s.io
+  kind: AdminNetworkPolicy
+  path: github.com/kubernetes-sigs/network-policy-api/apis/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: false
+  domain: policy.networking.k8s.io
+  group: policy.networking.k8s.io
+  kind: BaselineAdminNetworkPolicy
+  path: github.com/kubernetes-sigs/network-policy-api/apis/v1alpha1
+  version: v1alpha1
+version: "3"

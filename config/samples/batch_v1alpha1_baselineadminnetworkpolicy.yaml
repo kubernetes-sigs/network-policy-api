@@ -1,0 +1,7 @@
+apiVersion: batch.policy.networking.k8s.io/v1alpha1
+kind: BaselineAdminNetworkPolicy
+metadata:
+  name: baselineadminnetworkpolicy-sample
+spec:
+  # Add fields here
+  foo: bar

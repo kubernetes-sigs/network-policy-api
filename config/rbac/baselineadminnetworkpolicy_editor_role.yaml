@@ -1,0 +1,24 @@
+# permissions for end users to edit baselineadminnetworkpolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: baselineadminnetworkpolicy-editor-role
+rules:
+- apiGroups:
+  - batch.policy.networking.k8s.io
+  resources:
+  - baselineadminnetworkpolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - batch.policy.networking.k8s.io
+  resources:
+  - baselineadminnetworkpolicies/status
+  verbs:
+  - get
