@@ -4,105 +4,98 @@ The AdminNetworkPolicy API is an open source project managed by the [SIG-NETWORK
 community. It is a collection of resources, which aim to make securing Kubernetes 
 clusters easier for Administrators.  
 
-![Gateway API Model](./images/api-model.png)
+![Gateway API Model](./images/ANP-api-model.png)
 
 ## Getting started
 
-Whether you are a user interested in using the Gateway API or an implementer 
+Whether you are a user interested in using the AdminNetworkPolicy API or an implementer 
 interested in conforming to the API, the following resources will help give 
 you the necessary background:
 
-- [API overview](/concepts/api-overview)
-- [User guides](/guides/getting-started)
-- [Gateway controller implementations](/implementations)
-- [API reference spec](/references/spec)
-- [Community links](/contributing/community) and [developer guide](/contributing/devguide)
+- [API overview](/guides/api-overview)
+- [Examples](/guides/examples)
+- [API Source](https://github.com/kubernetes-sigs/network-policy-api/tree/master/apis/v1alpha1)
 
 
-## Gateway API concepts
-The following design goals drive the concepts of the Gateway API. These 
-demonstrate how Gateway aims to improve upon current standards like Ingress.
+## AdminNetworkPolicy API User Stories
 
+The following user stories drive the concepts of the AdminNetworkPolicy API for the 
+`v1alpha1` version of the api. More information on how the community ended up here 
+can be found in the [API KEP](https://github.com/kubernetes/enhancements/tree/master/keps/sig-network/2091-admin-network-policy)
+and in the accompanying [KEP PR](https://github.com/kubernetes/enhancements/pull/2522)
 
-- **Role-oriented** - Gateway is composed of API resources which model 
-organizational roles that use and configure Kubernetes service networking. 
-- **Portable** - This isn't an improvement but rather something
-that should stay the same. Just as Ingress is a universal specification with
-[numerous implementations](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/),
-Gateway API is designed to be a portable specification supported by many
-implementations.
-- **Expressive** - Gateway API resources support core functionality for things 
-like header-based matching, traffic weighting, and other capabilities that 
-were only possible in Ingress through custom annotations.
-- **Extensible** - Gateway API allows for custom resources to be linked at 
-various layers of the API. This makes granular customization possible at the
-appropriate places within the API structure.
+Future API developments should all start with a **well-defined** and **intentional** 
+user story.
 
-Some other notable capabilities include:
+### Story 1: Deny traffic at a cluster level
 
-- **GatewayClasses** - GatewayClasses formalize types of load balancing 
-implementations. These classes make it easy and explicit for users to 
-understand what kind of capabilities are available via the Kubernetes resource 
-model.
-- **Shared Gateways and cross-Namespace support** - They allow the sharing of
-load balancers and VIPs by permitting independent Route resources to attach to
-the same Gateway. This allows teams (even across Namespaces) to share
-infrastructure safely without direct coordination.
-- **Typed Routes and typed backends** - The Gateway API supports typed Route 
-resources and also different types of backends. This allows the API to be 
-flexible in supporting various protocols (like HTTP and gRPC) and
-various backend targets (like Kubernetes Services, storage buckets, or
-functions). 
+As a cluster admin, I want to apply non-overridable deny rules
+to certain pod(s) and(or) Namespace(s) that isolate the selected
+resources from all other cluster internal traffic.
 
+For Example: In this diagram there is a AdminNetworkPolicy applied to the
+`sensitive-ns` denying ingress from all other in-cluster resources for all
+ports and protocols.
 
-## Why does a role-oriented API matter?
+![Alt text](./images/explicit_deny.png?raw=true "Explicit Deny")
 
-Whether it’s roads, power, data centers, or Kubernetes clusters,
-infrastructure is built to be shared. However, shared infrastructure raises a
-common challenge - how to provide flexibility to users of the infrastructure
-while maintaining control by owners of the infrastructure? 
+### Story 2: Allow traffic at a cluster level
 
-The Gateway API accomplishes this through a role-oriented design for
-Kubernetes service networking that strikes a balance between distributed
-flexibility and centralized control. It allows shared network infrastructure
-(hardware load balancers, cloud networking, cluster-hosted proxies etc) to be
-used by many different and non-coordinating teams, all bound by the policies
-and constraints set by cluster operators. The following example shows how this
-works in practice.
+As a cluster admin, I want to apply non-overridable allow rules to  
+certain pods(s) and(or) Namespace(s) that enable the selected resources
+to communicate with all other cluster internal entities.  
 
-A cluster operator creates a [Gateway](/api-types/gateway) resource derived from a
-[GatewayClass](/api-types/gatewayclass). This Gateway deploys or configures the
-underlying network resources that it represents. Through the
-[Route Attachment Process](/concepts/api-overview#attaching-routes-to-gateways)
-between the Gateway and Routes, the cluster operator and specific teams must
-agree on what can attach to this Gateway and expose their applications through
-it. Centralized policies [such as TLS](/guides/tls#downstream-tls) can
-be enforced on the Gateway by the cluster operator. Meanwhile, the store and site
-teams run [in their own Namespaces](/guides/multiple-ns), but attach their
-Routes to the same shared Gateway, allowing them to independently control
-their [routing logic](/guides/http-routing). This separation of concerns
-allows the store team to manage their own
-[traffic splitting rollout](/guides/traffic-splitting) while
-leaving centralized policies and control to the cluster operators.
+For Example: In this diagram there is a AdminNetworkPolicy applied to every
+namespace in the cluster allowing egress traffic to `kube-dns` pods, and ingress
+traffic from pods in `monitoring-ns` for all ports and protocols.
 
-![Gateway API Roles](./images/gateway-roles.png)
+![Alt text](./images/explicit_allow.png?raw=true "Explicit Allow")
 
-This flexibility allows the API to adapt to vastly different
-organizational models and implementations while remaining a portable and
-standard API.
+### Story 3: Explicitly Delegate traffic to existing K8s Network Policy
 
+As a cluster admin, I want to explicitly delegate traffic so that it
+skips any remaining cluster network policies and is handled by standard
+namespace scoped network policies.
 
-## Who is working on Gateway?
+For Example: In the diagram below egress traffic destined for the service svc-pub
+in namespace bar-ns-1 on TCP port 8080 is delegated to the k8s network policies
+implemented in foo-ns-1 and foo-ns-2. If no k8s network policies touch the
+delegated traffic the traffic will be allowed.
 
-The Gateway API is a
+![Alt text](./images/delegation.png?raw=true "Delegate")
+
+### Story 4: Create and Isolate multiple tenants in a cluster
+
+As a cluster admin, I want to build tenants in my cluster that are isolated from
+each other by default. Tenancy may be modeled as 1:1, where 1 tenant is mapped
+to a single Namespace, or 1:n, where a single tenant may own more than 1 Namespace.
+
+For Example: In the diagram below two tenants (Foo and Bar) are defined such that
+all ingress traffic is denied to either tenant.  
+
+![Alt text](./images/tenants.png?raw=true "Tenants")
+
+### Story 5: Cluster Wide Default Guardrails
+
+As a cluster admin I want to change the default security model for my cluster,
+so that all intra-cluster traffic (except for certain essential traffic) is
+blocked by default. Namespace owners will need to use NetworkPolicies to
+explicitly allow known traffic. This follows a whitelist model which is
+familiar to many security administrators, and similar
+to how [kubernetes suggests network policy be used](https://kubernetes.io/docs/concepts/services-networking/network-policies/#default-policies).
+
+For Example: In the following diagram all Ingress traffic to every cluster
+resource is denied by a baseline deny rule.
+
+![Alt text](./images/baseline.png?raw=true "Default Rules")
+
+## Who is working on AdminNetworkPolicy?
+
+The AdminNetworkPolicy API is a
 [SIG-Network](https://github.com/kubernetes/community/tree/master/sig-network)
-project being built to improve and standardize service networking in
-Kubernetes. Current and in-progress implementations include Contour,
-Emissary-Ingress (Ambassador API Gateway), Google Kubernetes Engine (GKE), Istio,
-Kong, and Traefik. Check out the [implementations
-reference](implementations.md) to see the latest projects &
-products that support Gateway. If you are interested in contributing to or
-building an implementation using the Gateway API then don’t hesitate to [get
+project being built to improve and standardize cluster-wide security policy in k8s. In-progress implementations include Antrea (VMware) and Openshift (RedHat),
+If you are interested in contributing to or
+building an implementation using the AdminNetworkPolicy API then don’t hesitate to [get
 involved!](/contributing/community)
 
 [sig-network]: https://github.com/kubernetes/community/tree/master/sig-network
