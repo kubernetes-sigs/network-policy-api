@@ -88,8 +88,8 @@ any defined NetworkPolicy or BaselineAdminNetworkPolicy objects.
 
 ### AdminNetworkPolicy Rules 
 
-Each ANP should define at least one `Ingress` or `Egress` relevant in-cluster traffic flows. 
-and the Actions that should take place for those flows. In each `gress` rule the user 
+Each ANP should define at least one `Ingress` or `Egress` relevant in-cluster traffic flow 
+along with the associated Action that should occur. In each `gress` rule the user 
 should AT THE MINIMUM define an `Action`, and at least one `AdminNetworkPolicyPeer`.
 Optionally the user may also define select `Ports` to filter traffic on and also 
 a name for each rule to make management/ reporting easier for Admins.

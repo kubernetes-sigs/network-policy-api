@@ -36,6 +36,8 @@ nav:
   - Introduction: index.md
   - API overview: guides/api-overview.md
   - Examples: guides/examples.md
+  - Reference:
+    - API specification: references/spec.md
 # (TODO)
 #  - Implementation Guidelines: concepts/guidelines.md
 #  - Versioning: concepts/versioning.md

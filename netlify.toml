@@ -1,0 +1,26 @@
+# Netlify build instructions
+[build]
+    command = "make docs"
+    publish = "site"
+    environment = { PYTHON_VERSION = "3.7" }
+
+# Standard Netlify redirects
+[[redirects]]
+    from = "https://master--kubernetes-sigs-adminnetworkpolicy-api.netlify.com/*"
+    to = "https://master.adminnetworkpolicy-api.sigs.k8s.io/:splat"
+    status = 301
+    force = true
+
+# HTTP-to-HTTPS rules
+[[redirects]]
+    from = "http://master.adminnetworkpolicy-api.sigs.k8s.io/*"
+    to = "https://master.adminnetworkpolicy-api.sigs.k8s.io/:splat"
+    status = 301
+    force = true
+
+[[redirects]]
+    from = "http://master--kubernetes-sigs-adminnetworkpolicy-api.netlify.com/*"
+    to = "http://master.adminnetworkpolicy-api.sigs.k8s.io/:splat"
+    status = 301
+    force = true
+    
