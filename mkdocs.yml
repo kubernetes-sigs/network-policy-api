@@ -1,0 +1,53 @@
+site_name: Kubernetes AdminNetworkPolicy API
+repo_url: https://github.com/kubernetes-sigs/network-policy-api
+repo_name: kubernetes-sigs/network-policy-api
+site_dir: site
+docs_dir: site-src
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/git-alt
+  logo: images/k8s-favicon.png
+  favicon: images/k8s-favicon.png
+  features:
+    - search.highlight
+    - navigation.tabs
+    - navigation.top
+edit_uri: edit/main/site-src/
+plugins:
+  - search
+  - awesome-pages
+  - macros:
+      #include_dir: examples
+      j2_line_comment_prefix: "#$"
+markdown_extensions:
+  - admonition
+  - meta
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.snippets
+  - toc:
+      permalink: true
+nav:
+  - Introduction: index.md
+  - API overview: guides/api-overview.md
+  - Examples: guides/examples.md
+  - Reference:
+    - API specification: references/spec.md
+# (TODO)
+#  - Implementation Guidelines: concepts/guidelines.md
+#  - Versioning: concepts/versioning.md
+#    - Implementations: implementations.md
+#    - FAQ: faq.md
+  # - Guides:
+  #   - Getting started: guides/getting-started.md
+  # - Contributing:
+  #   - Developer guide: contributing/devguide.md
+  #   - Enhancement Tracking and Backlog: contributing/enhancement-requests.md
+  #   - Community: contributing/community.md
+  # - Blog: 
+  #   - Index: blog/index.md
