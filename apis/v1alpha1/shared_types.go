@@ -67,7 +67,6 @@ type AdminNetworkPolicyPort struct {
 type Port struct {
 	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
 	// match. If not specified, this field defaults to TCP.
-	// +kubebuilder:default=TCP
 	Protocol v1.Protocol `json:"protocol"`
 
 	// Number defines a network port value.
@@ -81,7 +80,6 @@ type Port struct {
 type PortRange struct {
 	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
 	// match. If not specified, this field defaults to TCP.
-	// +kubebuilder:default=TCP
 	Protocol v1.Protocol `json:"protocol,omitempty"`
 
 	// Start defines a network port that is the start of a port range, the Start
