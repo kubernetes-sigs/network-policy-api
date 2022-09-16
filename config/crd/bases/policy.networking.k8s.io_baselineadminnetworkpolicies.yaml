@@ -85,9 +85,7 @@ spec:
                                 minimum: 1
                                 type: integer
                               protocol:
-                                allOf:
-                                - default: TCP
-                                - default: TCP
+                                default: TCP
                                 description: Protocol is the network protocol (TCP,
                                   UDP, or SCTP) which traffic must match. If not specified,
                                   this field defaults to TCP.
@@ -109,9 +107,7 @@ spec:
                                 minimum: 1
                                 type: integer
                               protocol:
-                                allOf:
-                                - default: TCP
-                                - default: TCP
+                                default: TCP
                                 description: Protocol is the network protocol (TCP,
                                   UDP, or SCTP) which traffic must match. If not specified,
                                   this field defaults to TCP.
@@ -691,9 +687,7 @@ spec:
                                 minimum: 1
                                 type: integer
                               protocol:
-                                allOf:
-                                - default: TCP
-                                - default: TCP
+                                default: TCP
                                 description: Protocol is the network protocol (TCP,
                                   UDP, or SCTP) which traffic must match. If not specified,
                                   this field defaults to TCP.
@@ -715,9 +709,7 @@ spec:
                                 minimum: 1
                                 type: integer
                               protocol:
-                                allOf:
-                                - default: TCP
-                                - default: TCP
+                                default: TCP
                                 description: Protocol is the network protocol (TCP,
                                   UDP, or SCTP) which traffic must match. If not specified,
                                   this field defaults to TCP.
