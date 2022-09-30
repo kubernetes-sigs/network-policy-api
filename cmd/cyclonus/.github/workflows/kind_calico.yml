@@ -1,0 +1,25 @@
+name: Kind Calico Cyclonus
+on:
+  workflow_dispatch:
+    inputs:
+      cyclonus_args:
+        description: "args to pass on to Cyclonus"
+        required: false
+        default: "generate --include conflict --job-timeout-seconds 2"
+#  schedule:
+    # At 01:00 on Sunday.
+#    - cron: '0 1 * * 0'
+
+jobs:
+  test-kind-calico:
+    name: Run Cyclonus on KinD/Calico
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+      - name: Run Cyclonus
+        working-directory: hack/kind
+        run: CNI=calico RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.cyclonus_args }}" ./run-cyclonus.sh
