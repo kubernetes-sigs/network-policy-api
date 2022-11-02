@@ -37,6 +37,12 @@ vet: ## Run go vet against code.
 
 all: generate manifests fmt vet ## Runs all the development targets
 
+verify:
+	hack/verify-all.sh -v
+
+crd-e2e:
+	hack/crd-e2e.sh -v
+
 ##@ Deployment
 install: manifests ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	kubectl kustomize config/crd | kubectl apply -f -
@@ -50,5 +56,4 @@ docs:
  
 .PHONY: local-docs ## Deploy the docs locally 
 local-docs:
-	mkdocs serve
-	
+	mkdocs serve	
