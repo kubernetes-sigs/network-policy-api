@@ -12,6 +12,7 @@ You can reach the maintainers of this project at:
 - [Slack](https://kubernetes.slack.com/messages/sig-network-policy-api)
 - [Mailing List](https://groups.google.com/forum/#!forum/kubernetes-sig-network)
 
+To get started contributing please take time to read over the [contributing guidelines](https://github.com/kubernetes-sigs/network-policy-api/blob/master/CONTRIBUTING.md) as well as the [developer guide](https://github.com/kubernetes/community/blob/master/contributors/devel/README.md).
 ### Code of conduct
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
