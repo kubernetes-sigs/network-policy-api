@@ -15,8 +15,14 @@ linters:
   - govet
   - misspell
   - exportloopref
+  - unused
   disable:
   - scopelint
+  - deadcode
+  - structcheck
+  - varcheck
+  - rowserrcheck
+  - sqlclosecheck
   disable-all: false
   presets:
   - bugs

@@ -246,14 +246,17 @@ func AllowAllTo_Version2(namespace string, targetLabels map[string]string) *netw
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  Namespace: secondary
-  name: web-allow-all-namespaces
+
+	Namespace: secondary
+	name: web-allow-all-namespaces
+
 spec:
-  podSelector:
-    matchLabels:
-      app: web
-  ingress:
-  - from:
+
+	podSelector:
+	  matchLabels:
+	    app: web
+	ingress:
+	- from:
 */
 func AllowAllTo_Version3(namespace string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
@@ -543,20 +546,23 @@ func AllowNoEgressFromLabels(namespace string, targetLabels map[string]string) *
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: foo-deny-egress
+
+	name: foo-deny-egress
+
 spec:
-  podSelector:
-    matchLabels:
-      app: foo
-  policyTypes:
-  - Egress
-  egress:
-  # allow DNS resolution
-  - ports:
-    - port: 53
-      protocol: UDP
-    - port: 53
-      protocol: TCP
+
+	podSelector:
+	  matchLabels:
+	    app: foo
+	policyTypes:
+	- Egress
+	egress:
+	# allow DNS resolution
+	- ports:
+	  - port: 53
+	    protocol: UDP
+	  - port: 53
+	    protocol: TCP
 */
 func AllowEgressOnPort(namespace string, targetLabels map[string]string, port int) *networkingv1.NetworkPolicy {
 	tcp := v1.ProtocolTCP
@@ -667,14 +673,17 @@ func AllowEgressToAllNamespacesOnPort(namespace string, targetLabels map[string]
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-nothing
+
+	name: allow-nothing
+
 spec:
-  podSelector:
-    matchLabels:
-      app: foo
-  policyTypes:
-  - Egress
-  - Ingress
+
+	podSelector:
+	  matchLabels:
+	    app: foo
+	policyTypes:
+	- Egress
+	- Ingress
 */
 func AllowNoIngressNorEgress(namespace string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
