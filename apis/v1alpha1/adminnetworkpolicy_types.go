@@ -51,6 +51,12 @@ type AdminNetworkPolicySpec struct {
 	// higher precedence, and are checked before rules with higher priority values.
 	// All AdminNetworkPolicy rules have higher precedence than NetworkPolicy or
 	// BaselineAdminNetworkPolicy rules
+	// The relative precedence of the rules within a single ANP object (all of
+	// which share the priority) will be determined by the order in which the rule
+	// is written. Thus, a rule that appears at the top of the ingress/egress rules
+	// would take the highest precedence. If ingress rules are defined before egress
+	// rules in the same ANP object then ingress would take precedence and vice versa.
+	// The behavior is undefined if two ANP objects have same priority.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1000
 	Priority int32 `json:"priority"`
