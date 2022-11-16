@@ -4,8 +4,9 @@
  👋 Welcome to the Network Policy API Project - we are happy to have you here! Before you get started here are some useful links:
 - [Our Website](https://network-policy-api.sigs.k8s.io/)
 - [Agenda](https://docs.google.com/document/d/1AtWQy2fNa4qXRag9cCp5_HsefD7bxKe3ea2RPn8jnSs/edit#heading=h.ajvcztp6cza)
+- [NetworkPolicy v1 Docs](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
 
-## What is the NetworkPolciy API
+## What is the Network Policy API Project
 The network policy API is a part of [SIG Network](https://github.com/kubernetes/community/tree/master/sig-network),
 and this repository addresses further work involving Kubernetes network security beyond the NetworkPolicy v1 resource.
 
