@@ -53,7 +53,7 @@ selected by the AdminNetworkPolicy, as opposed to implicit deny NetworkPolicy ru
 - **Pass**: Traffic that matches a `Pass` rule will skip all further rules from all
   numbered ANPs and instead be enforced by the K8s NetworkPolicies.
   If there is no K8s NetworkPolicy of BaselineAdminNetworkPolicy rule match
-  match, traffic will be governed by the implementation. For most implementations, 
+  traffic will be governed by the implementation. For most implementations,
   this means "allow", but there may be implementations which have their own policies 
   outside of the standard Kubernetes APIs.
 - **Deny**: Traffic that matches a `Deny` rule will be dropped.
@@ -66,10 +66,10 @@ modified by the admin, or overridden by a higher priority rule.
 
 On the other hand, the `Allow` rules can be used to call out traffic in the cluster
 that needs to be allowed for certain components to work as expected (egress to
-CoreDNS for example). Those traffic should not be blocked when developers apply
+CoreDNS for example). This traffic should not be blocked when developers apply
 NetworkPolicy to their Namespaces which isolates the workloads.
 
-AdminNetworkPolicy `Pass` rules allows an admin to delegate security posture for
+AdminNetworkPolicy `Pass` rules allow an admin to delegate security posture for
 certain traffic to the Namespace owners by overriding any lower precedence Allow
 or Deny rules. For example, intra-tenant traffic management can be delegated to tenant
 admins explicitly with the use of `Pass` rules. More specifically traffic selected 
@@ -92,15 +92,15 @@ Each ANP should define at least one `Ingress` or `Egress` relevant in-cluster tr
 along with the associated Action that should occur. In each `gress` rule the user 
 should AT THE MINIMUM define an `Action`, and at least one `AdminNetworkPolicyPeer`.
 Optionally the user may also define select `Ports` to filter traffic on and also 
-a name for each rule to make management/ reporting easier for Admins.
+a name for each rule to make management and reporting easier for Admins.
 
 ### AdminNetworkPolicy Status 
 
 For `v1alpha1` of this API the ANP status field is simply defined as a list of 
-[`metav1.condition`](https://github.com/kubernetes/apimachinery/blob/v0.25.0/pkg/apis/meta/v1/types.go#L1464)s. Currently there are no rule as to what these conditions should display, 
+[`metav1.condition`](https://github.com/kubernetes/apimachinery/blob/v0.25.0/pkg/apis/meta/v1/types.go#L1464)s. Currently there are no rules as to what these conditions should display,
 and it is up to each implementation to report what they see fit. For further 
 API iterations the community may consider standardizing these conditions based on 
-the usefulness they provide for various implementors. 
+the usefulness they provide for various implementors.
 
 ## The BaselineAdminNetworkPolicy Resource 
 
