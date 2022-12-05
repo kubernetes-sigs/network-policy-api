@@ -13,7 +13,7 @@ spec:
     listKind: BaselineAdminNetworkPolicyList
     plural: baselineadminnetworkpolicies
     singular: baselineadminnetworkpolicy
-  scope: Namespaced
+  scope: Cluster
   versions:
   - name: v1alpha1
     schema:

@@ -21,6 +21,7 @@ import (
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
 
 // BaselineAdminNetworkPolicy is a cluster level resource that is part of the
 // AdminNetworkPolicy API.
