@@ -23,9 +23,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:resource:scope=Cluster
+// +genclient
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AdminNetworkPolicy is  a cluster level resource that is part of the
 // AdminNetworkPolicy API.
@@ -176,15 +178,12 @@ const (
 	AdminNetworkPolicyRuleActionPass AdminNetworkPolicyRuleAction = "Pass"
 )
 
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AdminNetworkPolicyList contains a list of AdminNetworkPolicy
 type AdminNetworkPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AdminNetworkPolicy `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&AdminNetworkPolicy{}, &AdminNetworkPolicyList{})
 }
