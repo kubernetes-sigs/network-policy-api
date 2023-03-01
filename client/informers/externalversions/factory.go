@@ -28,8 +28,8 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	versioned "sigs.k8s.io/network-policy-api/client/clientset/versioned"
+	apis "sigs.k8s.io/network-policy-api/client/informers/externalversions/apis"
 	internalinterfaces "sigs.k8s.io/network-policy-api/client/informers/externalversions/internalinterfaces"
-	policynetworkingk8sio "sigs.k8s.io/network-policy-api/client/informers/externalversions/policy.networking.k8s.io"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.
@@ -243,9 +243,9 @@ type SharedInformerFactory interface {
 	// client.
 	InformerFor(obj runtime.Object, newFunc internalinterfaces.NewInformerFunc) cache.SharedIndexInformer
 
-	Policy() policynetworkingk8sio.Interface
+	Policy() apis.Interface
 }
 
-func (f *sharedInformerFactory) Policy() policynetworkingk8sio.Interface {
-	return policynetworkingk8sio.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Policy() apis.Interface {
+	return apis.New(f, f.namespace, f.tweakListOptions)
 }
