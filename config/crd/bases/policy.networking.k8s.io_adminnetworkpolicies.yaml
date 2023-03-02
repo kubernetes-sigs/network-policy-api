@@ -214,26 +214,21 @@ spec:
                                 x-kubernetes-map-type: atomic
                               notSameLabels:
                                 description: NotSameLabels is used to select a set
-                                  of Namespaces that do not have a set of label(s).
-                                  To be selected a Namespace must have none of the
-                                  labels defined in NotSameLabels. If NotSameLabels
+                                  of Namespaces that do not have certain values for
+                                  a set of label(s). To be selected a Namespace must
+                                  have all of the labels defined in NotSameLabels,
+                                  AND at least one of them must have different values
+                                  than the subject of this policy. If NotSameLabels
                                   is empty then nothing is selected.
                                 items:
                                   type: string
                                 maxItems: 100
                                 type: array
-                              related:
-                                description: Related provides a mechanism for selecting
-                                  namespaces relative to the subject pod. A value
-                                  of "Self" matches the subject pod's namespace, while
-                                  a value of "NotSelf" matches namespaces other than
-                                  the subject pod's namespace.
-                                type: string
                               sameLabels:
                                 description: SameLabels is used to select a set of
                                   Namespaces that share the same values for a set
                                   of labels. To be selected a Namespace must have
-                                  all of the labels defined in SameLabels, and they
+                                  all of the labels defined in SameLabels, AND they
                                   must all have the same value as the subject of this
                                   policy. If Samelabels is Empty then nothing is selected.
                                 items:
@@ -307,27 +302,22 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   notSameLabels:
                                     description: NotSameLabels is used to select a
-                                      set of Namespaces that do not have a set of
-                                      label(s). To be selected a Namespace must have
-                                      none of the labels defined in NotSameLabels.
-                                      If NotSameLabels is empty then nothing is selected.
+                                      set of Namespaces that do not have certain values
+                                      for a set of label(s). To be selected a Namespace
+                                      must have all of the labels defined in NotSameLabels,
+                                      AND at least one of them must have different
+                                      values than the subject of this policy. If NotSameLabels
+                                      is empty then nothing is selected.
                                     items:
                                       type: string
                                     maxItems: 100
                                     type: array
-                                  related:
-                                    description: Related provides a mechanism for
-                                      selecting namespaces relative to the subject
-                                      pod. A value of "Self" matches the subject pod's
-                                      namespace, while a value of "NotSelf" matches
-                                      namespaces other than the subject pod's namespace.
-                                    type: string
                                   sameLabels:
                                     description: SameLabels is used to select a set
                                       of Namespaces that share the same values for
                                       a set of labels. To be selected a Namespace
                                       must have all of the labels defined in SameLabels,
-                                      and they must all have the same value as the
+                                      AND they must all have the same value as the
                                       subject of this policy. If Samelabels is Empty
                                       then nothing is selected.
                                     items:
@@ -493,26 +483,21 @@ spec:
                                 x-kubernetes-map-type: atomic
                               notSameLabels:
                                 description: NotSameLabels is used to select a set
-                                  of Namespaces that do not have a set of label(s).
-                                  To be selected a Namespace must have none of the
-                                  labels defined in NotSameLabels. If NotSameLabels
+                                  of Namespaces that do not have certain values for
+                                  a set of label(s). To be selected a Namespace must
+                                  have all of the labels defined in NotSameLabels,
+                                  AND at least one of them must have different values
+                                  than the subject of this policy. If NotSameLabels
                                   is empty then nothing is selected.
                                 items:
                                   type: string
                                 maxItems: 100
                                 type: array
-                              related:
-                                description: Related provides a mechanism for selecting
-                                  namespaces relative to the subject pod. A value
-                                  of "Self" matches the subject pod's namespace, while
-                                  a value of "NotSelf" matches namespaces other than
-                                  the subject pod's namespace.
-                                type: string
                               sameLabels:
                                 description: SameLabels is used to select a set of
                                   Namespaces that share the same values for a set
                                   of labels. To be selected a Namespace must have
-                                  all of the labels defined in SameLabels, and they
+                                  all of the labels defined in SameLabels, AND they
                                   must all have the same value as the subject of this
                                   policy. If Samelabels is Empty then nothing is selected.
                                 items:
@@ -586,27 +571,22 @@ spec:
                                     x-kubernetes-map-type: atomic
                                   notSameLabels:
                                     description: NotSameLabels is used to select a
-                                      set of Namespaces that do not have a set of
-                                      label(s). To be selected a Namespace must have
-                                      none of the labels defined in NotSameLabels.
-                                      If NotSameLabels is empty then nothing is selected.
+                                      set of Namespaces that do not have certain values
+                                      for a set of label(s). To be selected a Namespace
+                                      must have all of the labels defined in NotSameLabels,
+                                      AND at least one of them must have different
+                                      values than the subject of this policy. If NotSameLabels
+                                      is empty then nothing is selected.
                                     items:
                                       type: string
                                     maxItems: 100
                                     type: array
-                                  related:
-                                    description: Related provides a mechanism for
-                                      selecting namespaces relative to the subject
-                                      pod. A value of "Self" matches the subject pod's
-                                      namespace, while a value of "NotSelf" matches
-                                      namespaces other than the subject pod's namespace.
-                                    type: string
                                   sameLabels:
                                     description: SameLabels is used to select a set
                                       of Namespaces that share the same values for
                                       a set of labels. To be selected a Namespace
                                       must have all of the labels defined in SameLabels,
-                                      and they must all have the same value as the
+                                      AND they must all have the same value as the
                                       subject of this policy. If Samelabels is Empty
                                       then nothing is selected.
                                     items:
