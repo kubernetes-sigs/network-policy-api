@@ -26,9 +26,10 @@ import (
 // +genclient
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:shortName=anp,scope=Cluster
+// +kubebuilder:printcolumn:name="Priority",type=string,JSONPath=".spec.priority"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // AdminNetworkPolicy is  a cluster level resource that is part of the
 // AdminNetworkPolicy API.
 type AdminNetworkPolicy struct {
