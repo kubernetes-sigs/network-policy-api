@@ -19,9 +19,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:resource:scope=Cluster
+// +genclient
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BaselineAdminNetworkPolicy is a cluster level resource that is part of the
 // AdminNetworkPolicy API.
@@ -98,7 +100,7 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
 }
 
-// AdminNetworkPolicyEgressRule describes an action to take on a particular
+// BaselineAdminNetworkPolicyEgressRule describes an action to take on a particular
 // set of traffic originating from pods selected by a BaselineAdminNetworkPolicy's
 // Subject field.
 type BaselineAdminNetworkPolicyEgressRule struct {
@@ -142,15 +144,12 @@ const (
 	BaselineAdminNetworkPolicyRuleActionAllow BaselineAdminNetworkPolicyRuleAction = "Allow"
 )
 
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // BaselineAdminNetworkPolicyList contains a list of BaselineAdminNetworkPolicy
 type BaselineAdminNetworkPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []BaselineAdminNetworkPolicy `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&BaselineAdminNetworkPolicy{}, &BaselineAdminNetworkPolicyList{})
 }
