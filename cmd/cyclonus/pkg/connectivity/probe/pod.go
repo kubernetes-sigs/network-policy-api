@@ -2,17 +2,18 @@ package probe
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/mattfenwick/collections/pkg/slice"
 	"github.com/mattfenwick/cyclonus/pkg/generator"
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 const (
-	agnhostImage        = "k8s.gcr.io/e2e-test-images/agnhost:2.36"
+	agnhostImage        = "registry.k8s.io/e2e-test-images/agnhost:2.36"
 	cyclonusWorkerImage = "mfenwick100/cyclonus-worker:latest"
 )
 
