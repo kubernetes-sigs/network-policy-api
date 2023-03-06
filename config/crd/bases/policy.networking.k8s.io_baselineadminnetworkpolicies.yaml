@@ -12,10 +12,16 @@ spec:
     kind: BaselineAdminNetworkPolicy
     listKind: BaselineAdminNetworkPolicyList
     plural: baselineadminnetworkpolicies
+    shortNames:
+    - banp
     singular: baselineadminnetworkpolicy
   scope: Cluster
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: BaselineAdminNetworkPolicy is a cluster level resource that is
@@ -43,8 +49,8 @@ spec:
                   in each BANP instance. BANPs with no egress rules do not affect
                   egress traffic.
                 items:
-                  description: AdminNetworkPolicyEgressRule describes an action to
-                    take on a particular set of traffic originating from pods selected
+                  description: BaselineAdminNetworkPolicyEgressRule describes an action
+                    to take on a particular set of traffic originating from pods selected
                     by a BaselineAdminNetworkPolicy's Subject field.
                   properties:
                     action:
