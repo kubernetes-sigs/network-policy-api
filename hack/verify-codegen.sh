@@ -20,7 +20,7 @@ set -o pipefail
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE}")/..
 
-make -C "$SCRIPT_ROOT" generate
+make -C "$SCRIPT_ROOT" generate-deepcopy generate-typed-clients generate-typed-listers generate-typed-informers
 
 if git status -s 2>&1 | grep -E -q '^\s+[MADRCU]'
 then

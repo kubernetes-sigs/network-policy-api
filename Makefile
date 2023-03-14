@@ -1,3 +1,6 @@
+# Get the current working directory for this code
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -28,7 +31,7 @@ CLIENTSET_PKG_NAME ?= clientset
 API_PKG ?= sigs.k8s.io/network-policy-api
 API_GROUP_NAME ?= policy.networking.k8s.io
 API_DIR ?= ${API_PKG}/apis/v1alpha1
-OUTPUT_PKG ?= sigs.k8s.io/network-policy-api/client
+OUTPUT_PKG ?= sigs.k8s.io/network-policy-api/pkg/client
 COMMON_FLAGS ?= --go-header-file $(shell pwd)/hack/boilerplate.go.txt
 
 .PHONY: manifests
@@ -44,7 +47,19 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: generate
-generate: generate-deepcopy generate-typed-clients generate-typed-listers generate-typed-informers
+generate: generate-setup generate-deepcopy generate-typed-clients generate-typed-listers generate-typed-informers generate-cleanup
+
+.PHONY: generate-setup
+generate-setup:
+	# Even when modules are enabled, the code-generator tools always write to
+	# a traditional GOPATH directory, so fake on up to point to the current
+	# workspace.
+	mkdir -p "${GOPATH}/src/sigs.k8s.io"
+	ln -sf "${ROOT_DIR}" "${GOPATH}/src/sigs.k8s.io/network-policy-api"
+
+.PHONY: generate-cleanup
+generate-cleanup:
+	rm -rf "${GOPATH}/src/sigs.k8s.io"
 
 .PHONY: generate-deepcopy
 generate-deepcopy: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
