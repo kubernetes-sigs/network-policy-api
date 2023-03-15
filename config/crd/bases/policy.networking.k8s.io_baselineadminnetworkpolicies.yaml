@@ -977,6 +977,10 @@ spec:
         - metadata
         - spec
         type: object
+        x-kubernetes-validations:
+        - message: Only one baseline admin network policy with metadata.name="default"
+            can be created in the cluster
+          rule: self.metadata.name == 'default'
     served: true
     storage: true
     subresources:
