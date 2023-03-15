@@ -47,7 +47,7 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: generate
-generate: generate-setup generate-deepcopy generate-typed-clients generate-typed-listers generate-typed-informers generate-cleanup
+generate: generate-deepcopy generate-typed-clients generate-typed-listers generate-typed-informers
 
 .PHONY: generate-setup
 generate-setup:
