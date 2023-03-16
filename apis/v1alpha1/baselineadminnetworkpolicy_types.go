@@ -27,6 +27,7 @@ import (
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:metadata:annotations="api-approved.kubernetes.io=https://github.com/kubernetes/enhancements/pull/2522"
+// +kubebuilder:validation:XValidation:rule="self.metadata.name == 'default'",message="Only one baseline admin network policy with metadata.name=\"default\" can be created in the cluster"
 // BaselineAdminNetworkPolicy is a cluster level resource that is part of the
 // AdminNetworkPolicy API.
 type BaselineAdminNetworkPolicy struct {
