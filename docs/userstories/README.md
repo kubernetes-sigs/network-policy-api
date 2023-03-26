@@ -13,14 +13,9 @@ agreed upon by the Kubernetes community
 
 ## Directory Structure 
 
-Each new Object should have it's own directory, following directory naming 
+Each new Story should have it's own directory, following directory naming 
 conventions seen in [`kubernetes/kubernetes`.](https://github.com/kubernetes/kubernetes) Specifically the directory name 
-should be **lowercase** and **descriptive**. The directory structure should 
-roughly represent whether or not the new object will augment the existing [network policy API](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#networkpolicy-v1-networking-k8s-io) (`network-policy-api/docs/userstories/v1/<newobject>/`) or create a 
-new set of APIs (`network-policy-api/docs/userstories/v2/<newobject>/`). 
-If there is some doubt as to which bucket the new object will fall into, the new 
-directory should be made outside of either subdirectory (`network-policy-api/docs/userstories/<newobject>/`) and a final 
-determination can be made at a later date.
+should be **lowercase** and **descriptive**. Include a `README.md` file that outlines what the user story is trying to address.
 
 ## User Story Structure
 
