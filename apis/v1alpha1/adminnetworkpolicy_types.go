@@ -57,11 +57,6 @@ type AdminNetworkPolicySpec struct {
 	// higher precedence, and are checked before rules with higher priority values.
 	// All AdminNetworkPolicy rules have higher precedence than NetworkPolicy or
 	// BaselineAdminNetworkPolicy rules
-	// The relative precedence of the rules within a single ANP object (all of
-	// which share the priority) will be determined by the order in which the rule
-	// is written. Thus, a rule that appears at the top of the ingress/egress rules
-	// would take the highest precedence. If ingress rules are defined before egress
-	// rules in the same ANP object then ingress would take precedence and vice versa.
 	// The behavior is undefined if two ANP objects have same priority.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1000
@@ -71,15 +66,23 @@ type AdminNetworkPolicySpec struct {
 	Subject AdminNetworkPolicySubject `json:"subject"`
 
 	// Ingress is the list of Ingress rules to be applied to the selected pods.
-	// A total of 100 rules will be allowed in each ANP instance. ANPs with no
-	// ingress rules do not affect ingress traffic.
+	// A total of 100 rules will be allowed in each ANP instance.
+	// The relative precedence of ingress rules within a single ANP object (all of
+	// which share the priority) will be determined by the order in which the rule
+	// is written. Thus, a rule that appears at the top of the ingress rules
+	// would take the highest precedence.
+	// ANPs with no ingress rules do not affect ingress traffic.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	Ingress []AdminNetworkPolicyIngressRule `json:"ingress,omitempty"`
 
 	// Egress is the list of Egress rules to be applied to the selected pods.
-	// A total of 100 rules will be allowed in each ANP instance. ANPs with no
-	// egress rules do not affect egress traffic.
+	// A total of 100 rules will be allowed in each ANP instance.
+	// The relative precedence of egress rules within a single ANP object (all of
+	// which share the priority) will be determined by the order in which the rule
+	// is written. Thus, a rule that appears at the top of the egress rules
+	// would take the highest precedence.
+	// ANPs with no egress rules do not affect egress traffic.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	Egress []AdminNetworkPolicyEgressRule `json:"egress,omitempty"`
