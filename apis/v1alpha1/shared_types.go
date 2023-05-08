@@ -111,13 +111,6 @@ type AdminNetworkPolicyPeer struct {
 	Pods *NamespacedPodPeer `json:"pods,omitempty"`
 }
 
-type NamespaceRelation string
-
-const (
-	NamespaceSelf    NamespaceRelation = "Self"
-	NamespaceNotSelf NamespaceRelation = "NotSelf"
-)
-
 // NamespacedPeer defines a flexible way to select Namespaces in a cluster.
 // Exactly one of the selectors must be set.  If a consumer observes none of
 // its fields are set, they must assume an unknown option has been specified
@@ -125,13 +118,6 @@ const (
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
 type NamespacedPeer struct {
-	// Related provides a mechanism for selecting namespaces relative to the
-	// subject pod. A value of "Self" matches the subject pod's namespace,
-	// while a value of "NotSelf" matches namespaces other than the subject
-	// pod's namespace.
-	// +optional
-	Related *NamespaceRelation `json:"related,omitempty"`
-
 	// NamespaceSelector is a labelSelector used to select Namespaces, This field
 	// follows standard label selector semantics; if present but empty, it selects
 	// all Namespaces.
@@ -141,15 +127,17 @@ type NamespacedPeer struct {
 	// SameLabels is used to select a set of Namespaces that share the same values
 	// for a set of labels.
 	// To be selected a Namespace must have all of the labels defined in SameLabels,
-	// and they must all have the same value as the subject of this policy.
+	// AND they must all have the same value as the subject of this policy.
 	// If Samelabels is Empty then nothing is selected.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	SameLabels []string `json:"sameLabels,omitempty"`
 
-	// NotSameLabels is used to select a set of Namespaces that do not have a set
-	// of label(s). To be selected a Namespace must have none of the labels defined
-	// in NotSameLabels. If NotSameLabels is empty then nothing is selected.
+	// NotSameLabels is used to select a set of Namespaces that do not have certain
+	// values for a set of label(s).
+	// To be selected a Namespace must have all of the labels defined in NotSameLabels,
+	// AND at least one of them must have different values than the subject of this policy.
+	// If NotSameLabels is empty then nothing is selected.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	NotSameLabels []string `json:"notSameLabels,omitempty"`
