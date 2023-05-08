@@ -30,7 +30,7 @@ const (
 
 	// These values must be updated during the release process
 	bundleVersion = ""
-	approvalLink  = ""
+	approvalLink  = "https://github.com/kubernetes-sigs/network-policy-api/issues/90"
 )
 
 // This generation code is largely copied from
