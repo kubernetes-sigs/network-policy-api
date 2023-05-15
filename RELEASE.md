@@ -4,7 +4,7 @@
 
 The Network Policy API project is has the following two main release components:
 - Kubernetes Custom Resource Definitions (CRDs)
-- Corresponding Go API in the form of `sigs.k8s.io/network-policy-api` Go package
+- Corresponding Go bindings for the API (`sigs.k8s.io/network-policy-api` Go package)
 
 This repository is the home for both of the above components.
 
@@ -13,6 +13,8 @@ The versioning strategy for this project is covered in detail in [the release
 documentation].
 
 [the release documentation]: site-src/versioning.md
+
+Adapted with :blue_heart: from the [gateway api project release documentation](https://gateway-api.sigs.k8s.io/)
 
 ## Releasing a new version
 

@@ -1,6 +1,6 @@
 # Api Object Overview
 
-Prior to the Network Policy API the original NetworkPolicy Resource was the only
+Prior to the Network Policy API the original NetworkPolicy V1 Resource was the only
 way for k8s users to apply security rules to their kubernetes workloads. One of the
 main drawbacks to this API was that it was designed exclusively for use by the
 Application Developer, although in reality it is used by many different cluster
@@ -9,8 +9,8 @@ Contrast, each resource in the Network Policy API is designed to be used by a
 specific persona.
 
 With the advent of the AdminNetworkPolicy and BaselineAdminNetworkPolicy
-resources Cluster Admins will now have the ability to apply policy on in-cluster
-workloads with only a few simple policy objects that can be applied globally.
+resources Cluster Admins will now have the ability to apply policy globally with
+only a few simple policy objects.
 
 ## Roles and personas
 

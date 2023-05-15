@@ -10,7 +10,7 @@ implementations, the versions they cover, and documentation to help users get st
 
 Updated: 05-08-2023
 
-- [Ovn-Kubernetes CNI](https://github.com/ovn-org/ovn-kubernetes/pull/3489) (work in progress)
+- [OVN-Kubernetes CNI](https://github.com/ovn-org/ovn-kubernetes/pull/3489) (work in progress)
 - [Antrea CNI](https://github.com/antrea-io/antrea/pull/4537) (work in progress)
 - [Cilium CNI](https://github.com/cilium/cilium/issues/23380) (tracking issue)
 - [Calico CNI](https://github.com/projectcalico/calico/issues/7578) (tracking issue)
