@@ -26,6 +26,10 @@ help: ## Display this help.
 
 ##@ Development
 
+# Command-line flags passed to "go test" for the conformance
+# test. These are passed after the "-args" flag.
+CONFORMANCE_FLAGS ?=
+
 .PHONY: fmt
 fmt: ## Run go fmt against code.
 	go fmt ./...
@@ -46,6 +50,10 @@ verify:
 
 crd-e2e:
 	hack/crd-e2e.sh -v
+
+.PHONY: conformance
+conformance:
+	go test -v ./conformance/... -args ${CONFORMANCE_FLAGS}
 
 ##@ Deployment
 install: generate ## Install CRDs into the K8s cluster specified in ~/.kube/config.

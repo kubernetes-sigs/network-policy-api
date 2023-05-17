@@ -1,0 +1,177 @@
+/*
+Copyright 2022 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package suite
+
+import (
+	"embed"
+	"testing"
+
+	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"sigs.k8s.io/network-policy-api/conformance"
+	"sigs.k8s.io/network-policy-api/conformance/utils/config"
+	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
+)
+
+// ConformanceTestSuite defines the test suite used to run network-policy API
+// conformance tests.
+type ConformanceTestSuite struct {
+	Client            client.Client
+	Debug             bool
+	Cleanup           bool
+	BaseManifests     string
+	Applier           kubernetes.Applier
+	SupportedFeatures sets.Set[SupportedFeature]
+	TimeoutConfig     config.TimeoutConfig
+	SkipTests         sets.Set[string]
+	FS                embed.FS
+}
+
+// Options can be used to initialize a ConformanceTestSuite.
+type Options struct {
+	Client          client.Client
+	Debug           bool
+	BaseManifests   string
+	NamespaceLabels map[string]string
+
+	// CleanupBaseResources indicates whether or not the base test
+	// resources such as Namespaces should be cleaned up after the run.
+	CleanupBaseResources       bool
+	SupportedFeatures          sets.Set[SupportedFeature]
+	ExemptFeatures             sets.Set[SupportedFeature]
+	EnableAllSupportedFeatures bool
+	TimeoutConfig              config.TimeoutConfig
+	// SkipTests contains all the tests not to be run and can be used to opt out
+	// of specific tests
+	SkipTests []string
+
+	FS *embed.FS
+}
+
+// New returns a new ConformanceTestSuite.
+func New(s Options) *ConformanceTestSuite {
+	config.SetupTimeoutConfig(&s.TimeoutConfig)
+
+	if s.EnableAllSupportedFeatures {
+		s.SupportedFeatures = AllFeatures
+	} else if s.SupportedFeatures == nil {
+		s.SupportedFeatures = StandardCoreFeatures
+	} else {
+		for feature := range StandardCoreFeatures {
+			s.SupportedFeatures.Insert(feature)
+		}
+	}
+
+	for feature := range s.ExemptFeatures {
+		s.SupportedFeatures.Delete(feature)
+	}
+
+	if s.FS == nil {
+		s.FS = &conformance.Manifests
+	}
+
+	suite := &ConformanceTestSuite{
+		Client:        s.Client,
+		Debug:         s.Debug,
+		Cleanup:       s.CleanupBaseResources,
+		BaseManifests: s.BaseManifests,
+		Applier: kubernetes.Applier{
+			NamespaceLabels: s.NamespaceLabels,
+		},
+		SupportedFeatures: s.SupportedFeatures,
+		TimeoutConfig:     s.TimeoutConfig,
+		SkipTests:         sets.New(s.SkipTests...),
+		FS:                *s.FS,
+	}
+
+	// apply defaults
+	if suite.BaseManifests == "" {
+		suite.BaseManifests = "base/manifests.yaml"
+	}
+
+	return suite
+}
+
+// Setup ensures the base resources required for conformance tests are installed
+// in the cluster. It also ensures that all relevant resources are ready.
+func (suite *ConformanceTestSuite) Setup(t *testing.T) {
+	suite.Applier.FS = suite.FS
+
+	if suite.SupportedFeatures.Has(SupportAdminNetworkPolicy) {
+		t.Logf("Test Setup: Applying base manifests")
+		suite.Applier.MustApplyWithCleanup(t, suite.Client, suite.TimeoutConfig, suite.BaseManifests, suite.Cleanup)
+
+		t.Logf("Test Setup: Ensuring Namespaces and Pods from base manifests are ready")
+		namespaces := []string{
+			"network-policy-conformance-gryffindor",
+			"network-policy-conformance-slytherin",
+			"network-policy-conformance-hufflepuff",
+			"network-policy-conformance-ravenclaw",
+		}
+		kubernetes.NamespacesMustBeReady(t, suite.Client, suite.TimeoutConfig, namespaces)
+	}
+}
+
+// Run runs the provided set of conformance tests.
+func (suite *ConformanceTestSuite) Run(t *testing.T, tests []ConformanceTest) {
+	for _, test := range tests {
+		t.Run(test.ShortName, func(t *testing.T) {
+			test.Run(t, suite)
+		})
+	}
+}
+
+// ConformanceTest is used to define each individual conformance test.
+type ConformanceTest struct {
+	ShortName   string
+	Description string
+	Features    []SupportedFeature
+	Manifests   []string
+	Slow        bool
+	Parallel    bool
+	Test        func(*testing.T, *ConformanceTestSuite)
+}
+
+// Run runs an individual tests, applying and cleaning up the required manifests
+// before calling the Test function.
+func (test *ConformanceTest) Run(t *testing.T, suite *ConformanceTestSuite) {
+	if test.Parallel {
+		t.Parallel()
+	}
+
+	// Check that all features exercised by the test have been opted into by
+	// the suite.
+	for _, feature := range test.Features {
+		if !suite.SupportedFeatures.Has(feature) {
+			t.Skipf("Skipping %s: suite does not support %s", test.ShortName, feature)
+		}
+	}
+
+	// check that the test should not be skipped
+	if suite.SkipTests.Has(test.ShortName) {
+		t.Logf("Skipping %s", test.ShortName)
+		return
+	}
+
+	for _, manifestLocation := range test.Manifests {
+		t.Logf("Applying %s", manifestLocation)
+		suite.Applier.MustApplyWithCleanup(t, suite.Client, suite.TimeoutConfig, manifestLocation, true)
+	}
+
+	test.Test(t, suite)
+}
