@@ -1,7 +1,7 @@
 <img src="https://github.com/kubernetes/kubernetes/raw/master/logo/logo.png" width="100">
 
 # Network Policy API
- 👋 Welcome to the Network Policy API Project - we are happy to have you here! Before you get started here are some useful links:
+  Welcome to the Network Policy API Project - we are happy to have you here! Before you get started here are some useful links:
 - [Our Website](https://network-policy-api.sigs.k8s.io/)
 - [Agenda](https://docs.google.com/document/d/1AtWQy2fNa4qXRag9cCp5_HsefD7bxKe3ea2RPn8jnSs/edit#heading=h.ajvcztp6cza)
 - [NetworkPolicy v1 Docs](https://kubernetes.io/docs/concepts/services-networking/network-policies/)

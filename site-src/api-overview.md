@@ -1,13 +1,16 @@
-## API overview
+# Api Object Overview
 
-Prior to the AdminNetworkPolicy API there was no native tooling for Cluster Admins
-to apply security rules in a cluster-wide manner, and in some cases Network Policies
-were being incorrectly used to do so, creating a complex web of objects to be
-maintained.
+Prior to the Network Policy API the original NetworkPolicy V1 Resource was the only
+way for k8s users to apply security rules to their kubernetes workloads. One of the
+main drawbacks to this API was that it was designed exclusively for use by the
+Application Developer, although in reality it is used by many different cluster
+personas, sometimes creating a complex web of objects to be maintained. In
+Contrast, each resource in the Network Policy API is designed to be used by a
+specific persona.
 
-With the advent of the AdminNetworkPolicy API Cluster Admins will now have the 
-ability to apply policy on in-cluster workloads with only a few simple policy 
-objects that can be applied globally.
+With the advent of the AdminNetworkPolicy and BaselineAdminNetworkPolicy
+resources Cluster Admins will now have the ability to apply policy globally with
+only a few simple policy objects.
 
 ## Roles and personas
 
@@ -17,9 +20,14 @@ In this documentation we refer to three primary personas:
 - Namespace Administrator
 - Cluster Administrator
 
-## Resource Model 
+## Resource Model
 
-There are two main objects in the AdminNetworkPolicy API resource model
+!!! note
+    Network Policy API resources are in the `policy.networking.k8s.io` API group as
+    Custom Resource Definitions (CRDs). Unqualified resource names below will
+    implicitly be in this API group.
+
+Currently, there are two main objects in the Network Policy API resource model:
 
 - **AdminNetworkPolicy (ANP)**
 
@@ -31,18 +39,18 @@ There are two main objects in the AdminNetworkPolicy API resource model
 be read as-is, i.e. there will not be any implicit isolation effects for the Pods
 selected by the AdminNetworkPolicy, as opposed to what NetworkPolicy rules imply.
 
-- As of `v1alpha1` of this API we focus primarily on E/W cluster traffic and 
-do not address N/S (Ingress/Egress) use cases. However this is an issue the community 
-would like to keep thinking about during further iterations, and a tracking issue 
+- As of `v1alpha1` of this API we focus primarily on E/W cluster traffic and
+do not address N/S (Ingress/Egress) use cases. However this is an issue the community
+would like to keep thinking about during further iterations, and a tracking issue
 can be found/ commented on here ---> [issue #28](https://github.com/kubernetes-sigs/network-policy-api/issues/28)
 
-## The AdminNetworkPolicy Resource 
+## The AdminNetworkPolicy Resource
 
-The AdminNetworkPolicy (ANP) resource will help administrators set strict security 
-rules for the cluster, i.e. a developer CANNOT override these rules by creating 
+The AdminNetworkPolicy (ANP) resource will help administrators set strict security
+rules for the cluster, i.e. a developer CANNOT override these rules by creating
 NetworkPolicies that apply to the same workloads as the AdminNetworkPolicy.
 
-### AdminNetworkPolicy Actions 
+### AdminNetworkPolicy Actions
 
 Unlike the NetworkPolicy resource in which each rule represents an allowed
 traffic, AdminNetworkPolicies will enable administrators to set `Pass`,
