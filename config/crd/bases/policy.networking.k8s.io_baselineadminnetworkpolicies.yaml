@@ -72,8 +72,9 @@ spec:
                       type: string
                     ports:
                       description: Ports allows for matching traffic based on port
-                        and protocols. If Ports is not set then the rule does not
-                        filter traffic via port.
+                        and protocols. This field is a list of destination ports for
+                        the outging egress traffic. If Ports is not set then the rule
+                        does not filter traffic via port.
                       items:
                         description: AdminNetworkPolicyPort describes how to select
                           network ports on pod(s). Exactly one field must be set.
@@ -657,7 +658,10 @@ spec:
                       type: string
                     ports:
                       description: Ports allows for matching traffic based on port
-                        and protocols. If Ports is not set then the rule does not
+                        and protocols. This field is a list of ports which should
+                        be matched on the pods selected for this policy i.e the subject
+                        of the policy. So it matches on the destination port for the
+                        ingress traffic. If Ports is not set then the rule does not
                         filter traffic via port.
                       items:
                         description: AdminNetworkPolicyPort describes how to select

@@ -119,6 +119,9 @@ type AdminNetworkPolicyIngressRule struct {
 	From []AdminNetworkPolicyPeer `json:"from"`
 
 	// Ports allows for matching traffic based on port and protocols.
+	// This field is a list of ports which should be matched on
+	// the pods selected for this policy i.e the subject of the policy.
+	// So it matches on the destination port for the ingress traffic.
 	// If Ports is not set then the rule does not filter traffic via port.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
@@ -156,6 +159,7 @@ type AdminNetworkPolicyEgressRule struct {
 	To []AdminNetworkPolicyPeer `json:"to"`
 
 	// Ports allows for matching traffic based on port and protocols.
+	// This field is a list of destination ports for the outging egress traffic.
 	// If Ports is not set then the rule does not filter traffic via port.
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
