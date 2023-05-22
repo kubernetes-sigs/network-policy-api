@@ -1,0 +1,204 @@
+# This file contains the base resources that most conformance tests will rely
+# on. This includes 4 namespaces along with Server and Client Deployments in
+# each of them that can be used as backends and probes for testing traffic.
+# Create 4 namespaces
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: network-policy-conformance-gryffindor
+  labels:
+    conformance-house: gryffindor
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: network-policy-conformance-slytherin
+  labels:
+    conformance-house: slytherin
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: network-policy-conformance-hufflepuff
+  labels:
+    conformance-house: hufflepuff
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: network-policy-conformance-ravenclaw
+  labels:
+    conformance-house: ravenclaw
+# Create 4 deployments; 2 pods each under these namespaces
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: harry-potter
+  namespace: network-policy-conformance-gryffindor
+spec:
+  selector:
+    matchLabels:
+      conformance-house: gryffindor
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        conformance-house: gryffindor
+    spec:
+      containers:
+        - name: harry-potter-client
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+        - name: harry-potter-80
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+        - name: harry-potter-8080
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
+        - name: harry-potter-5353
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 5353"]
+        - name: harry-potter-53
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+        - name: harry-potter-9003
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9003
+            value: "foo"
+        - name: harry-potter-9005
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9005
+            value: "foo"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: draco-malfoy
+  namespace: network-policy-conformance-slytherin
+spec:
+  selector:
+    matchLabels:
+      conformance-house: slytherin
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        conformance-house: slytherin
+    spec:
+      containers:
+        - name: draco-malfoy-client
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+        - name: draco-malfoy-80
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+        - name: draco-malfoy-8080
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
+        - name: draco-malfoy-5353
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 5353"]
+        - name: draco-malfoy-53
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+        - name: draco-malfoy-9003
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9003
+            value: "foo"
+        - name: draco-malfoy-9005
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9005
+            value: "foo"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cedric-diggory
+  namespace: network-policy-conformance-hufflepuff
+spec:
+  selector:
+    matchLabels:
+      conformance-house: hufflepuff
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        conformance-house: hufflepuff
+    spec:
+      containers:
+        - name: cedric-diggory-client
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+        - name: cedric-diggory-80
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+        - name: cedric-diggory-8080
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
+        - name: cedric-diggory-5353
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 5353"]
+        - name: cedric-diggory-53
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+        - name: cedric-diggory-9003
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9003
+            value: "foo"
+        - name: cedric-diggory-9005
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9005
+            value: "foo"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: luna-lovegood
+  namespace: network-policy-conformance-ravenclaw
+spec:
+  selector:
+    matchLabels:
+      conformance-house: ravenclaw
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        conformance-house: ravenclaw
+    spec:
+      containers:
+        - name: luna-lovegood-client
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+        - name: luna-lovegood-80
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+        - name: luna-lovegood-8080
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
+        - name: luna-lovegood-5353
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 5353"]
+        - name: luna-lovegood-53
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+        - name: luna-lovegood-9003
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9003
+            value: "foo"
+        - name: luna-lovegood-9005
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9005
+            value: "foo"
