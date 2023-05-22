@@ -44,11 +44,6 @@ For a **PATCH** release:
   in the upcoming steps.
 - Use `git` to cherry-pick all relevant PRs into your branch.
 - Update `pkg/generator/main.go` with the new semver tag and any updates to the API review URL.
-- Run the following command `BASE_REF=vmajor.minor.patch make generate` which
-  will update generated docs and webhook with the correct version info. (Note
-  that you can't test with these YAMLs yet as they contain references to
-  elements which wont exist until the tag is cut and image is promoted to
-  production registry.)
 - Create a pull request of the `<githubuser>/release-x.x.x` branch into the `release-x.x` branch upstream
   (which should already exist since this is a patch release). Add a hold on this PR waiting for at least
   one maintainer/codeowner to provide a `lgtm`.
@@ -64,11 +59,6 @@ For a **MAJOR** or **MINOR** release:
 - Cut a `release-major.minor` branch that we can tag things in as needed.
 - Check out the `release-major.minor` release branch locally.
 - Update `pkg/generator/main.go` with the new semver tag and any updates to the API review URL.
-- Run the following command `BASE_REF=vmajor.minor.patch make generate` which
-  will update generated docs and webhook with the correct version info. (Note
-  that you can't test with these YAMLs yet as they contain references to
-  elements which wont exist until the tag is cut and image is promoted to
-  production registry.)
 - Verify the CI tests pass before continuing.
 - Create a tag using the `HEAD` of the `release-x.x` branch. This can be done using the `git` CLI or
   Github's [release][release] page.
@@ -79,11 +69,6 @@ For a **MAJOR** or **MINOR** release:
 For an **RC** release:
 
 - Update `pkg/generator/main.go` with the new semver tag and any updates to the API review URL.
-- Run the following command `BASE_REF=vmajor.minor.patch make generate` which
-  will update generated docs and webhook with the correct version info. (Note
-  that you can't test with these YAMLs yet as they contain references to
-  elements which wont exist until the tag is cut and image is promoted to
-  production registry.)
 - Include the changelog update in this PR.
 - Merge the update PR.
 - Tag the release using the commit on `main` where the changelog update merged.
