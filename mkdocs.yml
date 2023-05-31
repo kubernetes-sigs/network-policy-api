@@ -39,6 +39,8 @@ nav:
     - Resources: api-overview.md
     - Versioning: versioning.md
     - Implementations: implementations.md
+  - Guides:
+    - Getting started: getting-started.md
   - Reference:
     - Examples: reference/examples.md
     - API Reference: reference/spec.md

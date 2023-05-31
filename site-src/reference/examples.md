@@ -65,7 +65,7 @@ spec:
               app: kube-dns
 ```
 
-### Story 3: Explicitly Delegate traffic to existing K8s Network Policy
+### Sample Spec for Story 3: Explicitly Delegate traffic to existing K8s Network Policy
 
 ![Alt text](../../images/delegation.png?raw=true "Delegate")
 
@@ -81,21 +81,20 @@ spec:
   egress:
   - action: Pass
     to:
-    - namespaces:
+    - pods:
         namespaceSelector:
           matchLabels:
             kubernetes.io/metadata.name: bar-ns-1
-      pods:
         podSelector:
           matchLabels:
             app: svc-pub
     ports:
-      - portNumber: 
-          protocol: TCP
-          port: 8080
+    - portNumber:
+        protocol: TCP
+        port: 8080
 ```
 
-### Story 4: Create and Isolate multiple tenants in a cluster  
+### Sample Spec for Story 4: Create and Isolate multiple tenants in a cluster  
 
 ![Alt text](../../images/tenants.png?raw=true "Tenants")
 
@@ -117,7 +116,7 @@ spec:
           - tenant
 ```
 
-This can also be expressed in the following way: 
+This can also be expressed in the following way:
 
 ```yaml
 apiVersion: policy.networking.k8s.io/v1alpha1
@@ -141,7 +140,7 @@ spec:
           namespaceSelector: {}
 ```
 
-### Story 5: Cluster Wide Default Guardrails
+### Sample Spec for Story 5: Cluster Wide Default Guardrails
 
 ![Alt text](../../images/baseline.png?raw=true "Default Rules")
 
