@@ -30,6 +30,10 @@ import (
 // +kubebuilder:resource:shortName=anp,scope=Cluster
 // +kubebuilder:printcolumn:name="Priority",type=string,JSONPath=".spec.priority"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Condition",type=string,JSONPath=".status.conditions[*].type"
+// +kubebuilder:printcolumn:name="Status",type=string,JSONPath=".status.conditions[*].status"
+// +kubebuilder:printcolumn:name="Reason",type=string,JSONPath=".status.conditions[*].reason"
+// +kubebuilder:printcolumn:name="Message",type=string,JSONPath=".status.conditions[*].message"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // AdminNetworkPolicy is  a cluster level resource that is part of the
 // AdminNetworkPolicy API.
