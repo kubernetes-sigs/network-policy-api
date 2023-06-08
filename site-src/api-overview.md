@@ -33,6 +33,11 @@ Currently, there are two main objects in the Network Policy API resource model:
 
 - **BaselineAdminNetworkPolicy (BANP)**
 
+The diagram below demonstrates how these new API objects interact with
+each-other and existing NetworkPolicy Objects:
+
+![Alt text](./images/ANP-api-model.png?raw=true "Admin Network Policy API Model")
+
 ## General Notes
 
 - Any well defined AdminNetworkPolicy rules should
@@ -116,7 +121,7 @@ The BaselineAdminNetworkPolicy (BANP) resource will allow administrators to
 set baseline security rules that describes default connectivity for cluster workloads, 
 which CAN be overridden by developer NetworkPolicies if needed. The major use case 
 BANPs solve is the ability to flip the [default security stance of the 
-cluster](../index.md#story-5-cluster-wide-default-guardrails).
+cluster](user-stories.md#story-5-cluster-wide-default-guardrails).
 
 ### BaselineAdminNetworkPolicy Rule Actions 
 

@@ -1,0 +1,16 @@
+
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: AdminNetworkPolicy
+metadata:
+  name: tenant-creation-example
+spec:
+  priority: 50
+  subject:
+    namespaces:
+      matchExpressions: {key: "tenant"; operator: Exists}
+  ingress:
+    - action: Deny
+      from:
+      - namespaces:
+          notSameLabels:
+          - tenant

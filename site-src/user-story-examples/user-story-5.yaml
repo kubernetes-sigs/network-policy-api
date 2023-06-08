@@ -1,0 +1,12 @@
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: BaselineAdminNetworkPolicy
+metadata:
+  name: baseline-rule-example
+spec:
+  subject:
+    namespaces: {}
+  ingress:
+    - action: Deny   # zero-trust cluster default security posture
+      from:
+      - namespaces:
+          namespaceSelector: {}

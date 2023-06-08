@@ -24,6 +24,11 @@ ports and protocols.
 
 ![Alt text](./images/explicit_deny.png?raw=true "Explicit Deny")
 
+??? success "Equivalent API Object"
+    ```yaml
+    --8<-- "user-story-examples/user-story-1.yaml"
+    ```
+
 #### Story 2: Allow traffic at a cluster level
 
 As a cluster admin, I want to apply non-overridable allow rules to  
@@ -35,6 +40,11 @@ namespace in the cluster allowing egress traffic to `kube-dns` pods, and ingress
 traffic from pods in `monitoring-ns` for all ports and protocols.
 
 ![Alt text](./images/explicit_allow.png?raw=true "Explicit Allow")
+
+??? success "Equivalent API Object"
+    ```yaml
+    --8<-- "user-story-examples/user-story-2.yaml"
+    ```
 
 #### Story 3: Explicitly Delegate traffic to existing K8s Network Policy
 
@@ -49,6 +59,11 @@ delegated traffic the traffic will be allowed.
 
 ![Alt text](./images/delegation.png?raw=true "Delegate")
 
+??? success "Equivalent API Object"
+    ```yaml
+    --8<-- "user-story-examples/user-story-3.yaml"
+    ```
+
 #### Story 4: Create and Isolate multiple tenants in a cluster
 
 As a cluster admin, I want to build tenants in my cluster that are isolated from
@@ -59,6 +74,17 @@ For Example: In the diagram below two tenants (Foo and Bar) are defined such tha
 all ingress traffic is denied to either tenant.  
 
 ![Alt text](./images/tenants.png?raw=true "Tenants")
+
+??? success "Equivalent API Object"
+    ```yaml
+    --8<-- "user-story-examples/user-story-4-v1.yaml"
+    ```
+
+    This can also be expressed in the following way:
+
+    ```yaml
+    --8<-- "user-story-examples/user-story-4-v2.yaml"
+    ```
 
 #### Story 5: Cluster Wide Default Guardrails
 
@@ -73,3 +99,8 @@ For Example: In the following diagram all Ingress traffic to every cluster
 resource is denied by a baseline deny rule.
 
 ![Alt text](./images/baseline.png?raw=true "Default Rules")
+
+??? success "Equivalent API Object"
+    ```yaml
+    --8<-- "user-story-examples/user-story-5.yaml"
+    ```

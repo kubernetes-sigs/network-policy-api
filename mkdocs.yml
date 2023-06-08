@@ -13,7 +13,7 @@ theme:
     - search.highlight
     - navigation.tabs
     - navigation.top
-edit_uri: edit/main/site-src/
+edit_uri: edit/master/site-src/
 plugins:
   - search
   - awesome-pages
@@ -26,10 +26,13 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.details
   - pymdownx.highlight
   - pymdownx.inlinehilite
   - pymdownx.superfences
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      base_path: site-src
+      check_paths: true
   - toc:
       permalink: true
 nav:
