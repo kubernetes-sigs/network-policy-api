@@ -42,7 +42,7 @@ var BaselineAdminNetworkPolicyEgressSCTP = suite.ConformanceTest{
 	Features: []suite.SupportedFeature{
 		suite.SupportBaselineAdminNetworkPolicy,
 	},
-	Manifests: []string{"tests/baseline-admin-network-policy-core-egress-sctp-rules_base.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/core-egress-sctp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {

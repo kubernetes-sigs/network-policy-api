@@ -42,7 +42,7 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 	Features: []suite.SupportedFeature{
 		suite.SupportAdminNetworkPolicy,
 	},
-	Manifests: []string{"tests/admin-network-policy-core-ingress-udp-rules_base.yaml"},
+	Manifests: []string{"base/admin_network_policy/core-ingress-udp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
