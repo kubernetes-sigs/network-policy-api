@@ -32,23 +32,23 @@ import (
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyIngressSCTP,
+		BaselineAdminNetworkPolicyIngressSCTP,
 	)
 }
 
-var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyIngressSCTP",
-	Description: "Tests support for ingress traffic (SCTP protocol) using admin network policy API based on a server and client model",
+var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
+	ShortName:   "BaselineAdminNetworkPolicyIngressSCTP",
+	Description: "Tests support for ingress traffic (SCTP protocol) using baseline admin network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
+		suite.SupportBaselineAdminNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_network_policy/core-ingress-sctp-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/core-ingress-sctp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-sctp` ANP
+			// This test uses `default` BANP
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
 			clientPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -70,7 +70,7 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 		t.Run("Should support an 'allow-ingress' policy for SCTP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-sctp` ANP
+			// This test uses `default` BANP
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
 			clientPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -93,7 +93,7 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 		t.Run("Should support an 'deny-ingress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-sctp` ANP
+			// This test uses `default` BANP
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
 			clientPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -101,17 +101,17 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 				Name:      "luna-lovegood-1",
 			}, clientPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "ingress-sctp",
-			}, anp)
-			framework.ExpectNoError(err, "unable to fetch the admin network policy")
+				Name: "default",
+			}, banp)
+			framework.ExpectNoError(err, "unable to fetch the baseline admin network policy")
 			// swap rules at index0 and index1
-			allowRule := anp.DeepCopy().Spec.Ingress[0]
-			anp.Spec.Ingress[0] = anp.DeepCopy().Spec.Ingress[1]
-			anp.Spec.Ingress[1] = allowRule
-			err = s.Client.Update(ctx, anp)
-			framework.ExpectNoError(err, "unable to update the admin network policy")
+			allowRule := banp.DeepCopy().Spec.Ingress[0]
+			banp.Spec.Ingress[0] = banp.DeepCopy().Spec.Ingress[1]
+			banp.Spec.Ingress[1] = allowRule
+			err = s.Client.Update(ctx, banp)
+			framework.ExpectNoError(err, "unable to update the baseline admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is DENIED from gryffindor to ravenclaw
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -127,7 +127,7 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 		t.Run("Should support a 'deny-ingress' policy for SCTP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-sctp` ANP
+			// This test uses `default` BANP
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
 			clientPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -139,74 +139,6 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 			// ensure ingress from slytherin is DENIED to ravenclaw at port 9003; ingressRule at index3
 			success := kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-0", "sctp",
 				clientPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
-			// draco-malfoy-1 is our client pod in slytherin namespace
-			// ensure ingress from slytherin is ALLOWED to ravenclaw for rest of the traffic; matches no rules hence allowed
-			success = kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-1", "sctp",
-				clientPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
-		})
-
-		t.Run("Should support an 'pass-ingress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
-			defer cancel()
-			// This test uses `ingress-sctp` ANP
-			// luna-lovegood-1 is our server pod in ravenclaw namespace
-			clientPod := &v1.Pod{}
-			err := s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-ravenclaw",
-				Name:      "luna-lovegood-1",
-			}, clientPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "ingress-sctp",
-			}, anp)
-			framework.ExpectNoError(err, "unable to fetch the admin network policy")
-			// swap rules at index0 and index2
-			denyRule := anp.DeepCopy().Spec.Ingress[0]
-			anp.Spec.Ingress[0] = anp.DeepCopy().Spec.Ingress[2]
-			anp.Spec.Ingress[2] = denyRule
-			err = s.Client.Update(ctx, anp)
-			framework.ExpectNoError(err, "unable to update the admin network policy")
-			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure ingress is PASSED from gryffindor to ravenclaw
-			// ingressRule at index0 will take precedence over ingressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
-			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
-				clientPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
-			// harry-potter-1 is our client pod in gryffindor namespace
-			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
-				clientPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
-		})
-
-		t.Run("Should support a 'pass-ingress' policy for SCTP protocol at the specified port", func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
-			defer cancel()
-			// This test uses `ingress-sctp` ANP
-			// luna-lovegood-0 is our server pod in ravenclaw namespace
-			clientPod := &v1.Pod{}
-			err := s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-ravenclaw",
-				Name:      "luna-lovegood-0",
-			}, clientPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "ingress-sctp",
-			}, anp)
-			framework.ExpectNoError(err, "unable to fetch the admin network policy")
-			// swap rules at index3 and index4
-			denyRule := anp.DeepCopy().Spec.Ingress[3]
-			anp.Spec.Ingress[3] = anp.DeepCopy().Spec.Ingress[4]
-			anp.Spec.Ingress[4] = denyRule
-			err = s.Client.Update(ctx, anp)
-			framework.ExpectNoError(err, "unable to update the admin network policy")
-			// draco-malfoy-0 is our client pod in slytherin namespace
-			// ensure ingress from slytherin is PASSED to ravenclaw at port 9003; ingressRule at index3
-			success := kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-0", "sctp",
-				clientPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			// ensure ingress from slytherin is ALLOWED to ravenclaw for rest of the traffic; matches no rules hence allowed
