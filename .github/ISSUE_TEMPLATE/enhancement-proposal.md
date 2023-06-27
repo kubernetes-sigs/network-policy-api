@@ -2,7 +2,7 @@
 name: Enhancement Proposal
 about: Use this template for submitting enhancement requests
 title: "[ENHANCEMENT]"
-labels: ''
+labels: 'kind/enhancement'
 assignees: ''
 
 ---
