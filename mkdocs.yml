@@ -42,6 +42,7 @@ nav:
   - Reference:
     - Examples: reference/examples.md
     - API Reference: reference/spec.md
+    - Enhancement Proposals: enhancements.md
 
 
 # (TODO)
