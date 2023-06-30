@@ -17,7 +17,7 @@ spec:
           matchLabels:
             conformance-house: slytherin
   egress:
-  - name: "deny-all-egress-from-slytherin" # test will update to pass
+  - name: "deny-all-egress-to-slytherin" # test will update to pass
     action: "Deny" # test will update to pass
     to:
     - namespaces:
@@ -64,7 +64,7 @@ spec:
           matchLabels:
             conformance-house: slytherin
   egress:
-  - name: "deny-all-egress-from-slytherin"
+  - name: "deny-all-egress-to-slytherin"
     action: "Deny"
     to:
     - namespaces:
