@@ -1,0 +1,19 @@
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: AdminNetworkPolicy
+metadata:
+  name: tenant-creation-example
+spec:
+  priority: 50
+  subject:
+    namespaces:
+      matchExpressions: {key: "tenant"; operator: Exists}
+  ingress:
+    - action: Pass # Pass inter-tenant traffic to any defined NetworkPolicies
+      from:
+      - namespaces:
+          sameLabels:
+          - tenant
+    - action: Deny   # Deny everything else other than same tenant traffic
+      from:
+      - namespaces:
+          namespaceSelector: {}

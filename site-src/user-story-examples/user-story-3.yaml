@@ -1,0 +1,22 @@
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: AdminNetworkPolicy
+metadata:
+  name: pub-svc-delegate-example
+spec:
+  priority: 20
+  subject:
+    namespaces: {}
+  egress:
+  - action: Pass
+    to:
+    - pods:
+        namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: bar-ns-1
+        podSelector:
+          matchLabels:
+            app: svc-pub
+    ports:
+    - portNumber:
+        protocol: TCP
+        port: 8080

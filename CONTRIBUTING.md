@@ -21,6 +21,22 @@ If your repo has certain guidelines for contribution, put them here ahead of the
 1) Clone the repo: `git clone https://github.com/kubernetes-sigs/network-policy-api.git`
 2) Run `cd network-policy-api` && `make install`
 
+## Developing the Website
+
+The site documentation is written in Markdown and compiled with
+[mkdocs](https://www.mkdocs.org/).
+
+### Setting up local development
+
+1.  Install mkdocs and required plugins:
+
+    ```
+    pip install mkdocs mkdocs-material mkdocs-awesome-pages-plugin mkdocs-macros-plugin
+    ```
+
+2.  To build the docs, run `make docs`.
+3.  To deploy the docs locally, run `make local-docs`
+
 ## Mentorship
 
 - [Mentoring Initiatives](https://git.k8s.io/community/mentoring) - We have a diverse set of mentorship programs available that are always looking for volunteers!
