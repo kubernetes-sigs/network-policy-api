@@ -50,21 +50,21 @@ var BaselineAdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is ALLOWED to ravenclaw from hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
 			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
-				clientPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
-				clientPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 
@@ -73,21 +73,21 @@ var BaselineAdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// harry-potter-1 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-1",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
-			// ensure egress is ALLOWED to gryffindor from hufflepuff at port 53; egressRule at index5
+			// ensure egress is ALLOWED to gryffindor from hufflepuff at port 53; egressRule at index5 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
-				clientPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
-			// ensure egress is DENIED to gryffindor from hufflepuff for rest of the traffic; egressRule at index6
+			// ensure egress is DENIED to gryffindor from hufflepuff for rest of the traffic; egressRule at index6 should take effect
 			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
-				clientPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
@@ -96,11 +96,11 @@ var BaselineAdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-1",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
@@ -117,11 +117,11 @@ var BaselineAdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			// ensure egress is DENIED to ravenclaw to hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
 			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
-				clientPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
-				clientPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
@@ -130,21 +130,21 @@ var BaselineAdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// draco-malfoy-0 is our server pod in slytherin namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-slytherin",
 				Name:      "draco-malfoy-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
-			// ensure egress to slytherin is DENIED from hufflepuff at port 80; egressRule at index3
+			// ensure egress to slytherin is DENIED from hufflepuff at port 80; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
-				clientPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is ALLOWED from hufflepuff for rest of the traffic; matches no rules hence allowed
 			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
-				clientPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 	},
