@@ -51,21 +51,21 @@ var AdminNetworkPolicyPriorityField = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `priority-50-example` ANP; takes precedence over old-priority-60-new-priority-40-example ANP
 			// harry-potter-0 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// draco-malfoy-0 is our client pod in slytherin namespace
 			// ensure ingress is DENIED to gryffindor from slytherin
-			// inressRule at index0 will take effect
+			// inressRule at index0 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
@@ -74,21 +74,21 @@ var AdminNetworkPolicyPriorityField = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `priority-50-example` ANP; takes precedence over old-priority-60-new-priority-40-example ANP
 			// draco-malfoy-0 is our server pod in slytherin namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-slytherin",
 				Name:      "draco-malfoy-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is DENIED to gryffindor from slytherin
-			// egressRule at index0 will take effect
+			// egressRule at index0 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
@@ -106,38 +106,38 @@ var AdminNetworkPolicyPriorityField = suite.ConformanceTest{
 			err = s.Client.Update(ctx, anp)
 			framework.ExpectNoError(err, "unable to update the admin network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// draco-malfoy-0 is our client pod in slytherin namespace
 			// ensure ingress is PASSED to gryffindor from slytherin - the baseline admin network policy ALLOW should take effect
-			// inressRule at index0 will take effect
+			// inressRule at index0 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-slytherin",
 				Name:      "draco-malfoy-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is PASSED to gryffindor from slytherin - the baseline admin network policy ALLOW should take effect
-			// egressRule at index0 will take effect
+			// egressRule at index0 should take effect
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 	},

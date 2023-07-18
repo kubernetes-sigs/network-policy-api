@@ -50,20 +50,20 @@ var BaselineAdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to ravenclaw from gryffindor
 			// egressRule at index0 will take precedence over egressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
 			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 
@@ -72,21 +72,21 @@ var BaselineAdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// cedric-diggory-1 is our server pod in hufflepuff namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-hufflepuff",
 				Name:      "cedric-diggory-1",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure egress is ALLOWED to hufflepuff from gryffindor at port 80; egressRule at index5
+			// ensure egress is ALLOWED to hufflepuff from gryffindor at port 80; egressRule at index5 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
-			// ensure egress is DENIED to hufflepuff from gryffindor for rest of the traffic; egressRule at index6
+			// ensure egress is DENIED to hufflepuff from gryffindor for rest of the traffic; egressRule at index6 should take effect
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
@@ -95,11 +95,11 @@ var BaselineAdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-1",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
@@ -116,11 +116,11 @@ var BaselineAdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 			// ensure egress is DENIED to ravenclaw from gryffindor
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
 			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
@@ -129,21 +129,21 @@ var BaselineAdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// draco-malfoy-0 is our server pod in slytherin namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-slytherin",
 				Name:      "draco-malfoy-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure egress to slytherin is DENIED from gryffindor at port 80; egressRule at index3
+			// ensure egress to slytherin is DENIED from gryffindor at port 80; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
 			// ensure egress to slytherin is ALLOWED from gryffindor for rest of the traffic; matches no rules hence allowed
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 	},

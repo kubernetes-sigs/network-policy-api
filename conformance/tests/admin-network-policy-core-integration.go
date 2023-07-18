@@ -50,53 +50,54 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 		t.Run("Should Deny traffic from slytherin to gryffindor respecting ANP", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass-example` ANP
+			// This test uses `pass-example` ANP from api_integration/core-anp-np-banp.yaml
 			// harry-potter-0 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// draco-malfoy-0 is our client pod in slytherin namespace
 			// ensure ingress is DENIED to gryffindor from slytherin
 			// inressRule at index0 will take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
 		t.Run("Should Deny traffic to slytherin from gryffindor respecting ANP", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass-example` ANP
+			// This test uses `pass-example` ANP from api_integration/core-anp-np-banp.yaml
 			// draco-malfoy-0 is our server pod in slytherin namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-slytherin",
 				Name:      "draco-malfoy-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure ingress is DENIED to gryffindor from slytherin
+			// ensure egress is DENIED to slytherin from gryffindor
 			// egressRule at index0 will take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
 		t.Run("Should support a 'pass-ingress' policy for ANP and respect the match for network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass example` ANP
+			// This test uses `pass example` ANP from api_integration/core-anp-np-banp.yaml
+			// and alters the ingress rule action to "pass"
 			anp := &v1alpha1.AdminNetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Name: "pass-example",
@@ -107,28 +108,29 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			err = s.Client.Update(ctx, anp)
 			framework.ExpectNoError(err, "unable to update the admin network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// draco-malfoy-0 is our client pod in slytherin namespace
-			// ensure ingress is PASSED to gryffindor from slytherin - the network policy ALLOW should take effect
+			// ensure ingress is PASSED to gryffindor from slytherin - the underlying network policy ALLOW should take effect
 			// inressRule at index0 will take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 
 		t.Run("Should support a 'pass-egress' policy for ANP and respect the match for network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass example` ANP
+			// This test uses `pass example` ANP from api_integration/core-anp-np-banp.yaml
+			// and alters the egress rule action to "pass"
 			anp := &v1alpha1.AdminNetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Name: "pass-example",
@@ -139,28 +141,28 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			err = s.Client.Update(ctx, anp)
 			framework.ExpectNoError(err, "unable to update the admin network policy")
 			// draco-malfoy-0 is our server pod in slytherin namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-slytherin",
 				Name:      "draco-malfoy-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure ingress is PASSED to gryffindor from slytherin - the underlying network policy ALLOW should take effect
+			// ensure egress is PASSED from gryffindor to slytherin - the underlying network policy ALLOW should take effect
 			// egressRule at index0 will take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 
 		t.Run("Should support a 'pass-ingress' policy for ANP and respect the match for baseline admin network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` BANP from api_integration/core-anp-np-banp.yaml
 			np := &networkingv1.NetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
@@ -192,7 +194,7 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 		t.Run("Should support a 'pass-egress' policy for ANP and respect the match for baseline admin network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` BANP from api_integration/core-anp-np-banp.yaml
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			clientPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{

@@ -50,20 +50,20 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// harry-potter-0 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// luna-lovegood-0 is our client pod in ravenclaw namespace
 			// ensure ingress is ALLOWED from ravenclaw to gryffindor
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
 			success := kubernetes.PokeServer(t, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			success = kubernetes.PokeServer(t, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 
@@ -72,21 +72,21 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// harry-potter-1 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-1",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
-			// ensure ingress is ALLOWED from hufflepuff to gryffindor at port 80; ingressRule at index5
+			// ensure ingress is ALLOWED from hufflepuff to gryffindor at port 80; ingressRule at index5 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
-			// ensure ingress is DENIED from hufflepuff to gryffindor for rest of the traffic; ingressRule at index6
+			// ensure ingress is DENIED from hufflepuff to gryffindor for rest of the traffic; ingressRule at index6 should take effect
 			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
@@ -95,11 +95,11 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// harry-potter-1 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-1",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
@@ -116,11 +116,11 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 			// ensure ingress is DENIED from ravenclaw to gryffindor
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
 			success := kubernetes.PokeServer(t, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// luna-lovegood-1 is our client pod in ravenclaw namespace
 			success = kubernetes.PokeServer(t, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
 
@@ -129,21 +129,21 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 			defer cancel()
 			// This test uses `default` BANP
 			// harry-potter-0 is our server pod in gryffindor namespace
-			clientPod := &v1.Pod{}
+			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-0",
-			}, clientPod)
+			}, serverPod)
 			framework.ExpectNoError(err, "unable to fetch the server pod")
 			// draco-malfoy-0 is our client pod in slytherin namespace
-			// ensure ingress from slytherin is DENIED to gryffindor at port 80; ingressRule at index3
+			// ensure ingress from slytherin is DENIED to gryffindor at port 80; ingressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-0", "tcp",
-				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			// ensure ingress from slytherin is ALLOWED to gryffindor for rest of the traffic; matches no rules hence allowed
 			success = kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-1", "tcp",
-				clientPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
 	},
