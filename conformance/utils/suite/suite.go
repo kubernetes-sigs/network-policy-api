@@ -123,7 +123,13 @@ func (suite *ConformanceTestSuite) Setup(t *testing.T) {
 			"network-policy-conformance-hufflepuff",
 			"network-policy-conformance-ravenclaw",
 		}
-		kubernetes.NamespacesMustBeReady(t, suite.Client, suite.TimeoutConfig, namespaces)
+		statefulSets := []string{
+			"harry-potter",
+			"draco-malfoy",
+			"cedric-diggory",
+			"luna-lovegood",
+		}
+		kubernetes.NamespacesMustBeReady(t, suite.Client, suite.TimeoutConfig, namespaces, statefulSets)
 	}
 }
 
