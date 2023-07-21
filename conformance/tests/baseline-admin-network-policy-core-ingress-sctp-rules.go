@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/kubernetes/test/e2e/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
@@ -55,14 +55,14 @@ var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-0",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is ALLOWED from gryffindor to ravenclaw
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
-			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
-			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
@@ -77,15 +77,15 @@ var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-1",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure ingress is ALLOWED from hufflepuff to ravenclaw at port 9003; ingressRule at index5 should take effect
-			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "sctp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			// ensure ingress is DENIED from hufflepuff to ravenclaw for rest of the traffic; ingressRule at index6 should take effect
-			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "sctp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
@@ -100,26 +100,26 @@ var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-1",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "default",
 			}, banp)
-			framework.ExpectNoError(err, "unable to fetch the baseline admin network policy")
+			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
 			// swap rules at index0 and index1
 			allowRule := banp.DeepCopy().Spec.Ingress[0]
 			banp.Spec.Ingress[0] = banp.DeepCopy().Spec.Ingress[1]
 			banp.Spec.Ingress[1] = allowRule
 			err = s.Client.Update(ctx, banp)
-			framework.ExpectNoError(err, "unable to update the baseline admin network policy")
+			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is DENIED from gryffindor to ravenclaw
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
-			success := kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
-			success = kubernetes.PokeServer(t, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
@@ -134,15 +134,15 @@ var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-0",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// draco-malfoy-0 is our client pod in slytherin namespace
 			// ensure ingress from slytherin is DENIED to ravenclaw at port 9003; ingressRule at index3 should take effect
-			success := kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-0", "sctp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			// ensure ingress from slytherin is ALLOWED to ravenclaw for rest of the traffic; matches no rules hence allowed
-			success = kubernetes.PokeServer(t, "network-policy-conformance-slytherin", "draco-malfoy-1", "sctp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})

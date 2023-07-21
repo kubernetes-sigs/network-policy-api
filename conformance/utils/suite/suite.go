@@ -21,6 +21,8 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/util/sets"
+	k8sclient "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"sigs.k8s.io/network-policy-api/conformance"
@@ -32,6 +34,8 @@ import (
 // conformance tests.
 type ConformanceTestSuite struct {
 	Client            client.Client
+	ClientSet         k8sclient.Interface
+	KubeConfig        rest.Config
 	Debug             bool
 	Cleanup           bool
 	BaseManifests     string
@@ -45,6 +49,8 @@ type ConformanceTestSuite struct {
 // Options can be used to initialize a ConformanceTestSuite.
 type Options struct {
 	Client          client.Client
+	ClientSet       k8sclient.Interface
+	KubeConfig      rest.Config
 	Debug           bool
 	BaseManifests   string
 	NamespaceLabels map[string]string
@@ -87,6 +93,8 @@ func New(s Options) *ConformanceTestSuite {
 
 	suite := &ConformanceTestSuite{
 		Client:        s.Client,
+		ClientSet:     s.ClientSet,
+		KubeConfig:    s.KubeConfig,
 		Debug:         s.Debug,
 		Cleanup:       s.CleanupBaseResources,
 		BaseManifests: s.BaseManifests,

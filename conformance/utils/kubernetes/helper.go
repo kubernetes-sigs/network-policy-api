@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -10,10 +11,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/kubernetes/test/e2e/framework"
-	e2ekubectl "k8s.io/kubernetes/test/e2e/framework/kubectl"
+	k8sclient "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"sigs.k8s.io/network-policy-api/conformance/utils/config"
@@ -23,11 +27,43 @@ var (
 	numStatufulSetReplicas int32 = 2
 )
 
+// RunCommandFromPod is a utility function that runs kubectl exec command on the Pod specified and returns the result.
+func RunCommandFromPod(client k8sclient.Interface, kubeConfig *rest.Config, podNamespace, podName string, cmd []string) (stdout string, stderr string, err error) {
+	// TODO(dyanngg): find a better way to derive container name
+	containerName := podName[:len(podName)-1] + "client"
+	request := client.CoreV1().RESTClient().Post().
+		Namespace(podNamespace).
+		Resource("pods").
+		Name(podName).
+		SubResource("exec").
+		Param("container", containerName).
+		VersionedParams(&corev1.PodExecOptions{
+			Command: cmd,
+			Stdin:   false,
+			Stdout:  true,
+			Stderr:  true,
+			TTY:     false,
+		}, scheme.ParameterCodec)
+	exec, err := remotecommand.NewSPDYExecutor(kubeConfig, "POST", request.URL())
+	if err != nil {
+		return "", "", err
+	}
+	ctx, cancelFn := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancelFn()
+	var stdoutB, stderrB bytes.Buffer
+	if err := exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+		Stdout: &stdoutB,
+		Stderr: &stderrB,
+	}); err != nil {
+		return stdoutB.String(), stderrB.String(), err
+	}
+	return stdoutB.String(), stderrB.String(), nil
+}
+
 // PokeServer is a utility function that checks if the connection from the provided clientPod in clientNamespace towards the targetHost:targetPort
 // using the provided protocol can be established or not and returns the result based on if the expectation is shouldConnect or !shouldConnect
-func PokeServer(t *testing.T, clientNamespace, clientPod, protocol, targetHost string, targetPort int32, timeout time.Duration, shouldConnect bool) bool {
+func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Config, clientNamespace, clientPod, protocol, targetHost string, targetPort int32, timeout time.Duration, shouldConnect bool) bool {
 	t.Helper()
-	cmd := []string{"exec", clientPod, "--"} // command is to be run inside a pod
 	timeoutArg := fmt.Sprintf("--timeout=%v", timeout)
 	protocolArg := fmt.Sprintf("--protocol=%s", protocol)
 	ipPortArg := net.JoinHostPort(targetHost, fmt.Sprintf("%d", targetPort))
@@ -38,36 +74,30 @@ func PokeServer(t *testing.T, clientNamespace, clientPod, protocol, targetHost s
 		protocolArg,
 		ipPortArg), " ")
 
-	cmd = append(cmd, connectCommand...)
-	var res string
-	var err error
-	res, err = e2ekubectl.RunKubectl(clientNamespace, cmd...)
-	// TODO(tssurya): Improve the error matching to be more specific (https://pkg.go.dev/k8s.io/kubernetes/test/images/agnhost#readme-connect)
-	// A connection error looks like this and we need to improve the parsing to be more accurate:
-	// Command stdout:
-	// stderr:
-	// TIMEOUT
-	// command terminated with exit code 1
-	// error:
-	// exit status 1
+	stdout, stderr, err := RunCommandFromPod(client, kubeConfig, clientNamespace, clientPod, connectCommand)
 	// TODO(tssurya): See if we need to add a wait&retry mechanism to test connectivity
 	// See https://github.com/kubernetes-sigs/network-policy-api/issues/108 for details.
-	if shouldConnect && (err != nil || len(res) > 0) {
-		framework.Logf("FAILED Command was %s", connectCommand)
-		framework.Logf("FAILED Response was %v, expected connection to succeed from %s to %s, "+
-			"but instead it miserably failed: %v", res, clientPod, targetHost, err.Error())
+	if err != nil && stderr == "" {
+		// If err != nil and stderr == "", then it means this probe failed because of the command instead of connectivity.
+		t.Logf("FAILED to execute command %s on pod %s/%s: %v", connectCommand, clientNamespace, clientPod, err.Error())
+		return false
+	}
+	if shouldConnect && len(stderr) > 0 {
+		t.Logf("FAILED Command was %s", connectCommand)
+		t.Logf("Expected connection to succeed from %s/%s to %s, but instead it miserably failed. stderr: %v",
+			clientNamespace, clientPod, targetHost, stderr)
 		return false
 	} else if !shouldConnect {
-		if err == nil && len(res) == 0 {
-			framework.Logf("FAILED Command was %s", connectCommand)
-			framework.Logf("FAILED Response was %v, expected connection to fail from %s to %s, "+
-				"but instead it successfully connected", res, clientPod, targetHost)
+		if stdout == "" && stderr == "" {
+			t.Logf("FAILED Command was %s", connectCommand)
+			t.Logf("Expected connection to fail from %s/%s to %s, but instead it successfully connected.",
+				clientNamespace, clientPod, targetHost)
 			return false
-		} else if strings.Contains(err.Error(), "TIMEOUT") {
-			framework.Logf("error contained 'TIMEOUT', as expected: %s", err.Error())
-			return true
-		} else {
-			framework.Logf("error didn't contain 'TIMEOUT', as expected: %s", err.Error())
+		} else if !strings.Contains(stderr, "TIMEOUT") {
+			t.Logf("FAILED Command was %s", connectCommand)
+			// Other possible results include "REFUSED" for example, signaling the connection is rejected.
+			t.Logf("Expected connection to be dropped from %s/%s to %s, but instead it returned a different status: %s",
+				clientNamespace, clientPod, targetHost, stderr)
 			return false
 		}
 	}
