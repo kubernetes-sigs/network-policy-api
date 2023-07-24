@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/kubernetes/test/e2e/framework"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
@@ -55,15 +55,15 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-0",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is ALLOWED to ravenclaw from hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
-			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
-			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
@@ -78,15 +78,15 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "harry-potter-1",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is ALLOWED to gryffindor from hufflepuff at port 53; egressRule at index5
-			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			// ensure egress is DENIED to gryffindor from hufflepuff for rest of the traffic; egressRule at index6
-			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
@@ -101,26 +101,26 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-1",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			anp := &v1alpha1.AdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-udp",
 			}, anp)
-			framework.ExpectNoError(err, "unable to fetch the admin network policy")
+			require.NoErrorf(t, err, "unable to fetch the admin network policy")
 			// swap rules at index0 and index1
 			allowRule := anp.DeepCopy().Spec.Egress[0]
 			anp.Spec.Egress[0] = anp.DeepCopy().Spec.Egress[1]
 			anp.Spec.Egress[1] = allowRule
 			err = s.Client.Update(ctx, anp)
-			framework.ExpectNoError(err, "unable to update the admin network policy")
+			require.NoErrorf(t, err, "unable to update the admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is DENIED to ravenclaw to hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
-			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
-			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 		})
@@ -135,15 +135,15 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-slytherin",
 				Name:      "draco-malfoy-0",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is DENIED from hufflepuff at port 80; egressRule at index3 should take effect
-			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
 			assert.Equal(t, true, success)
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is ALLOWED from hufflepuff for rest of the traffic; matches no rules hence allowed
-			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
@@ -158,26 +158,26 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-ravenclaw",
 				Name:      "luna-lovegood-1",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			anp := &v1alpha1.AdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-udp",
 			}, anp)
-			framework.ExpectNoError(err, "unable to fetch the admin network policy")
+			require.NoErrorf(t, err, "unable to fetch the admin network policy")
 			// swap rules at index0 and index2
 			denyRule := anp.DeepCopy().Spec.Egress[0]
 			anp.Spec.Egress[0] = anp.DeepCopy().Spec.Egress[2]
 			anp.Spec.Egress[2] = denyRule
 			err = s.Client.Update(ctx, anp)
-			framework.ExpectNoError(err, "unable to update the admin network policy")
+			require.NoErrorf(t, err, "unable to update the admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is PASSED to ravenclaw from hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
-			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
-			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})
@@ -192,26 +192,26 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Namespace: "network-policy-conformance-slytherin",
 				Name:      "draco-malfoy-0",
 			}, serverPod)
-			framework.ExpectNoError(err, "unable to fetch the server pod")
+			require.NoErrorf(t, err, "unable to fetch the server pod")
 			anp := &v1alpha1.AdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-udp",
 			}, anp)
-			framework.ExpectNoError(err, "unable to fetch the admin network policy")
+			require.NoErrorf(t, err, "unable to fetch the admin network policy")
 			// swap rules at index3 and index4
 			denyRule := anp.DeepCopy().Spec.Egress[3]
 			anp.Spec.Egress[3] = anp.DeepCopy().Spec.Egress[4]
 			anp.Spec.Egress[4] = denyRule
 			err = s.Client.Update(ctx, anp)
-			framework.ExpectNoError(err, "unable to update the admin network policy")
+			require.NoErrorf(t, err, "unable to update the admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is PASSED from hufflepuff at port 5353; egressRule at index3 should take effect
-			success := kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is ALLOWED from hufflepuff for rest of the traffic; matches no rules hence allowed
-			success = kubernetes.PokeServer(t, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
 		})

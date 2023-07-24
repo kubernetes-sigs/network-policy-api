@@ -50,8 +50,8 @@ type TimeoutConfig struct {
 func DefaultTimeoutConfig() TimeoutConfig {
 	return TimeoutConfig{
 		CreateTimeout:         60 * time.Second,
-		DeleteTimeout:         10 * time.Second,
-		GetTimeout:            10 * time.Second,
+		DeleteTimeout:         20 * time.Second,
+		GetTimeout:            20 * time.Second,
 		ManifestFetchTimeout:  10 * time.Second,
 		NamespacesMustBeReady: 300 * time.Second,
 		RequestTimeout:        3 * time.Second,
