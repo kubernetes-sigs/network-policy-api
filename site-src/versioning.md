@@ -1,6 +1,7 @@
 Adapted with :blue_heart: from the [gateway api project release documentation](https://gateway-api.sigs.k8s.io/)
 
 ## Overview
+
 Each new release of NetworkPolicy APIs is defined with a "bundle version" that
 represents the Git tag of a release, such as v0.4.0. This contains the
 following:
@@ -9,24 +10,46 @@ following:
 * CRDs (Kubernetes definitions of the resources)
 
 ### API Versions (e.g. v1alpha2, v1beta1)
+
 Within Network Policy API, API versions are primarily used to indicate the stability of a resource. For example, if a resource has not yet graduated to beta, it is still possible that it could either be removed from the API or changed in
 backwards incompatible ways. For more information on API versions, refer to the
 [full Kubernetes API versioning
 documentation](https://kubernetes.io/docs/reference/using-api/#api-versioning).
 
+### Release Channels (e.g. Experimental, Standard)
+
+Network Policy API provides 2 release channels: an Experimental one and a Standard one.
+
+The Standard release channel includes:
+
+* Resources that have graduated to beta
+* All fields that have graduated to standard and are no longer considered
+  experimental
+
+The Experimental release channel includes everything in the Standard release
+channel, plus:
+
+* Alpha API resources
+* New fields that are considered experimental and have not yet graduated to the
+  standard channel
+
 ## Version Indicators
+
 Each CRD will be published with annotations that indicate their bundle version
 and channel:
 
-```
+```yaml
 policy.networking.k8s.io/bundle-version: v0.4.0
+policy.networking.k8s.io/channel: standard|experimental
 ```
 
 ## What can Change
+
 When using or implementing this API, it is important to understand what can
 change across API versions.
 
 ### Patch version (e.g. v0.4.0 -> v0.4.1)
+
 * Clarifications to godocs
 * Updates to CRDs and/or code to fix a bug
 * Conformance test fixes
@@ -34,6 +57,7 @@ change across API versions.
 * Fixes to typos
 
 ### Minor version (e.g. v0.4.0 -> v0.5.0)
+
 * Everything that is valid in a patch release
 * New API fields or resources
 * Changes to recommended conditions or reasons in status
@@ -50,6 +74,7 @@ change across API versions.
   policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/)
 
 ### Major version (e.g. v0.x to v1.0)
+
 * There are no API compatibility guarantees when the major version changes.
 
 ## Graduation Criteria
@@ -76,8 +101,27 @@ A resource to graduate from beta to GA must meet the following criteria:
 * At least 6 months of soak time as a beta API.
 * Approval from subproject owners + KEP reviewers.
 
+### Fields
+
+#### Experimental -> Standard
+
+As described above, field level stability is layered on top of beta and GA
+resources (no fields in alpha resources can be considered standard). The
+requirements for a field to graduate from experimental to standard depend on the
+API version of the resource it is a part of. For a field to be considered
+standard, it needs to meet the same criteria of the resource it is contained in.
+
+If a resource has graduated to beta, an experimental field must meet all of the
+beta graduation criteria before graduating to standard. Similarly, if a resource
+has graduated to GA, a field must meet all of the beta and GA graduation
+criteria. There is one slight variation here, instead of 6 months of soak time
+as a beta API, a field graduating to standard requires 6 months of soak time as an
+experimental field.
+
 ## Out of Scope
+
 ### Unreleased APIs
+
 This project will have frequent updates to the main branch. There are no
 compatibility guarantees associated with code in any branch, including main,
 until it has been released. For example, changes may be reverted before a
@@ -85,6 +129,7 @@ release is published. For the best results, use the latest published release of
 this project.
 
 ### Source Code
+
 We do not provide stability guarantees for source code imports. The Interfaces
 and behavior may change in an unexpected and backwards-incompatible way in any
 future release.

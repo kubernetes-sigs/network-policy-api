@@ -23,21 +23,41 @@ thisyear=`date +"%Y"`
 mkdir -p release/
 
 # Make clean files with boilerplate
-cat hack/boilerplate.sh.txt > release/install.yaml
-sed -i "s/YEAR/$thisyear/g" release/install.yaml
-cat << EOF >> release/install.yaml
+cat hack/boilerplate.sh.txt > release/experimental-install.yaml
+sed -i "s/YEAR/$thisyear/g" release/experimental-install.yaml
+cat << EOF >> release/experimental-install.yaml
 #
-# NetworkPolicy API install
+# NetworkPolicy API Experimental channel install
 #
 EOF
 
-for file in `ls config/crd/policy*.yaml`
+# TODO(astoycos): Add standard install once we have a beta release.
+# cat hack/boilerplate.sh.txt > release/standard-install.yaml
+# sed -i "s/YEAR/$thisyear/g" release/standard-install.yaml
+# cat << EOF >> release/standard-install.yaml
+# #
+# # NetworkPolicy API Standard channel install
+# #
+# EOF
+
+for file in `ls config/crd/experimental/policy*.yaml`
 do
-    echo "---" >> release/install.yaml
-    echo "#" >> release/install.yaml
-    echo "# $file" >> release/install.yaml
-    echo "#" >> release/install.yaml
-    cat $file >> release/install.yaml
+    echo "---" >> release/experimental-install.yaml
+    echo "#" >> release/experimental-install.yaml
+    echo "# $file" >> release/experimental-install.yaml
+    echo "#" >> release/experimental-install.yaml
+    cat $file >> release/experimental-install.yaml
 done
+
+# TODO(astoycos): Add standard install once we have a beta release.
+# for file in `ls config/crd/standard/policy*.yaml`
+# do
+#     echo "---" >> release/standard-install.yaml
+#     echo "#" >> release/standard-install.yaml
+#     echo "# $file" >> release/standard-install.yaml
+#     echo "#" >> release/standard-install.yaml
+#     cat $file >> release/standard-install.yaml
+# done
+
 
 echo "Generated:" release/install.yaml

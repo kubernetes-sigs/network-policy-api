@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"strings"
 
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"sigs.k8s.io/controller-tools/pkg/crd"
@@ -27,11 +29,14 @@ import (
 
 const (
 	bundleVersionAnnotation = "policy.networking.k8s.io/bundle-version"
+	channelAnnotation       = "policy.networking.k8s.io/channel"
 
 	// These values must be updated during the release process
 	bundleVersion = "v0.1.1"
 	approvalLink  = "https://github.com/kubernetes-sigs/network-policy-api/pull/135"
 )
+
+var standardKinds = map[string]bool{}
 
 // This generation code is largely copied from
 // github.com/kubernetes-sigs/controller-tools/blob/ab52f76cc7d167925b2d5942f24bf22e30f49a02/pkg/crd/gen.go
@@ -73,36 +78,82 @@ func main() {
 		log.Fatalf("no objects in the roots")
 	}
 
-	for _, groupKind := range kubeKinds {
-		log.Printf("generating CRD for %v\n", groupKind)
+	channels := []string{"standard", "experimental"}
+	for _, channel := range channels {
+		for _, groupKind := range kubeKinds {
+			if channel == "standard" && !standardKinds[groupKind.Kind] {
+				continue
+			}
 
-		parser.NeedCRDFor(groupKind, nil)
-		crdRaw := parser.CustomResourceDefinitions[groupKind]
+			log.Printf("generating CRD for %v\n", groupKind)
 
-		// Inline version of "addAttribution(&crdRaw)" ...
-		if crdRaw.ObjectMeta.Annotations == nil {
-			crdRaw.ObjectMeta.Annotations = map[string]string{}
-		}
-		crdRaw.ObjectMeta.Annotations[bundleVersionAnnotation] = bundleVersion
-		crdRaw.ObjectMeta.Annotations[apiext.KubeAPIApprovedAnnotation] = approvalLink
+			parser.NeedCRDFor(groupKind, nil)
+			crdRaw := parser.CustomResourceDefinitions[groupKind]
 
-		// Prevent the top level metadata for the CRD to be generated regardless of the intention in the arguments
-		crd.FixTopLevelMetadata(crdRaw)
+			// Inline version of "addAttribution(&crdRaw)" ...
+			if crdRaw.ObjectMeta.Annotations == nil {
+				crdRaw.ObjectMeta.Annotations = map[string]string{}
+			}
+			crdRaw.ObjectMeta.Annotations[bundleVersionAnnotation] = bundleVersion
+			crdRaw.ObjectMeta.Annotations[channelAnnotation] = channel
+			crdRaw.ObjectMeta.Annotations[apiext.KubeAPIApprovedAnnotation] = approvalLink
 
-		conv, err := crd.AsVersion(crdRaw, apiext.SchemeGroupVersion)
-		if err != nil {
-			log.Fatalf("failed to convert CRD: %s", err)
-		}
+			// Prevent the top level metadata for the CRD to be generated regardless of the intention in the arguments
+			crd.FixTopLevelMetadata(crdRaw)
 
-		out, err := yaml.Marshal(conv)
-		if err != nil {
-			log.Fatalf("failed to marshal CRD: %s", err)
-		}
+			channelCrd := crdRaw.DeepCopy()
+			for _, version := range channelCrd.Spec.Versions {
+				version.Schema.OpenAPIV3Schema.Properties = channelTweaks(channel, version.Schema.OpenAPIV3Schema.Properties)
+			}
 
-		fileName := fmt.Sprintf("config/crd/%s_%s.yaml", crdRaw.Spec.Group, crdRaw.Spec.Names.Plural)
-		err = os.WriteFile(fileName, out, 0o600)
-		if err != nil {
-			log.Fatalf("failed to write CRD: %s", err)
+			conv, err := crd.AsVersion(crdRaw, apiext.SchemeGroupVersion)
+			if err != nil {
+				log.Fatalf("failed to convert CRD: %s", err)
+			}
+
+			out, err := yaml.Marshal(conv)
+			if err != nil {
+				log.Fatalf("failed to marshal CRD: %s", err)
+			}
+
+			fileName := fmt.Sprintf("config/crd/%s/%s_%s.yaml", channel, crdRaw.Spec.Group, crdRaw.Spec.Names.Plural)
+			err = os.WriteFile(fileName, out, 0o600)
+			if err != nil {
+				log.Fatalf("failed to write CRD: %s", err)
+			}
 		}
 	}
+}
+
+func channelTweaks(channel string, props map[string]apiext.JSONSchemaProps) map[string]apiext.JSONSchemaProps {
+	for name := range props {
+		jsonProps := props[name]
+		if channel == "standard" && strings.Contains(jsonProps.Description, "<network-policy-api:experimental>") {
+			delete(props, name)
+			continue
+		}
+
+		if channel == "experimental" && strings.Contains(jsonProps.Description, "<network-policy-api:experimental:validation:") {
+			validationRe := regexp.MustCompile(`<network-policy-api:experimental:validation:Enum=([A-Za-z;]*)>`)
+			match := validationRe.FindStringSubmatch(jsonProps.Description)
+			if len(match) != 2 {
+				log.Fatalf("Invalid network-policy-api:experimental:validation tag for %s", name)
+			}
+			jsonProps.Enum = []apiext.JSON{}
+			for _, val := range strings.Split(match[1], ";") {
+				jsonProps.Enum = append(jsonProps.Enum, apiext.JSON{Raw: []byte("\"" + val + "\"")})
+			}
+		}
+
+		experimentalRe := regexp.MustCompile(`<network-policy-api:experimental:.*>`)
+		jsonProps.Description = experimentalRe.ReplaceAllLiteralString(jsonProps.Description, "")
+
+		if len(jsonProps.Properties) > 0 {
+			jsonProps.Properties = channelTweaks(channel, jsonProps.Properties)
+		} else if jsonProps.Items != nil && jsonProps.Items.Schema != nil {
+			jsonProps.Items.Schema.Properties = channelTweaks(channel, jsonProps.Items.Schema.Properties)
+		}
+		props[name] = jsonProps
+	}
+	return props
 }

@@ -29,7 +29,7 @@ multiple K8s CRD resources geared towards different users and use cases.
 
 - [Kubecon NA 2022 Contributors Summit](https://youtu.be/00nVssi2oPA)
 - [Kubecon NA 2022 SIG Network Deep Dive](https://www.youtube.com/watch?v=qn9bM5Cwvg0&t=752s)
-- [Kubecon NA 2023 SIG Network Deep Dive](https://www.youtube.com/watch?v=0uPEFcWn-_o)
+- [Kubecon EU 2023 SIG Network Deep Dive](https://www.youtube.com/watch?v=0uPEFcWn-_o)
 
 ## Community, discussion, contribution, and support
 Learn how to engage with the Kubernetes community on the [community page](http://kubernetes.io/community/).
