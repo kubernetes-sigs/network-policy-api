@@ -61,11 +61,11 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			// egressRule at index0 will take precedence over egressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support an 'allow-egress' policy for UDP protocol at the specified port", func(t *testing.T) {
@@ -83,12 +83,12 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			// ensure egress is ALLOWED to gryffindor from hufflepuff at port 53; egressRule at index5
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			// ensure egress is DENIED to gryffindor from hufflepuff for rest of the traffic; egressRule at index6
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support an 'deny-egress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
@@ -118,11 +118,11 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support a 'deny-egress' policy for UDP protocol at the specified port", func(t *testing.T) {
@@ -140,12 +140,12 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			// ensure egress to slytherin is DENIED from hufflepuff at port 80; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is ALLOWED from hufflepuff for rest of the traffic; matches no rules hence allowed
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support an 'pass-egress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
@@ -175,11 +175,11 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			// egressRule at index0 will take precedence over egressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support a 'pass-egress' policy for UDP protocol at the specified port", func(t *testing.T) {
@@ -208,12 +208,12 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 			// ensure egress to slytherin is PASSED from hufflepuff at port 5353; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is ALLOWED from hufflepuff for rest of the traffic; matches no rules hence allowed
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 	},
 }
