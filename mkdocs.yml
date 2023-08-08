@@ -65,6 +65,7 @@ nav:
       - Provisional: 
         - npeps/npep-126-egress-traffic-control.md
         - npeps/npep-122.md
+        - npeps/npep-133.md
       - Implementable:
         - npeps/npep-137-conformance-profiles.md
         # - Experimental:
