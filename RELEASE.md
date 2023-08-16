@@ -52,7 +52,9 @@ For a **PATCH** release:
   Github's [release][release] page.
 - Run the `make build-install-yaml` command which will generate install files in the `release/` directory.
   Attach these files to the Github release.
-- Update the `README.md` and `site-src/guides/index.md` files to point links and examples to the new release.
+- Update the website files to point links and examples to the new release (simply `grep` for previous version).
+- Write a changelog for the new release in the [changelog readme](./CHANGELOG.md).
+- Make the new-release from the [releases page](https://github.com/kubernetes-sigs/network-policy-api/releases) with the new changelog and attach the `install.yaml`.
 
 For a **MAJOR** or **MINOR** release:
 
@@ -64,7 +66,9 @@ For a **MAJOR** or **MINOR** release:
   Github's [release][release] page.
 - Run the `make build-install-yaml` command which will generate install files in the `release/` directory.
   Attach these files to the Github release.
-- Update the `README.md` and `site-src/guides/index.md` files to point links and examples to the new release.
+- Update the website files to point links and examples to the new release (simply `grep` for previous version).
+- Write a changelog for the new release in the [changelog readme](./CHANGELOG.md).
+- Make the new-release from the [releases page](https://github.com/kubernetes-sigs/network-policy-api/releases) with the new changelog and attach the `install.yaml`.
 
 For an **RC** release:
 
