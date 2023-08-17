@@ -29,8 +29,8 @@ const (
 	bundleVersionAnnotation = "policy.networking.k8s.io/bundle-version"
 
 	// These values must be updated during the release process
-	bundleVersion = "v0.1.0"
-	approvalLink  = "https://github.com/kubernetes-sigs/network-policy-api/pull/106"
+	bundleVersion = "v0.1.1"
+	approvalLink  = "https://github.com/kubernetes-sigs/network-policy-api/pull/135"
 )
 
 // This generation code is largely copied from
