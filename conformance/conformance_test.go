@@ -18,10 +18,8 @@ limitations under the License.
 package conformance_test
 
 import (
-	"strings"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
@@ -55,8 +53,8 @@ func TestConformance(t *testing.T) {
 
 	v1alpha1.AddToScheme(c.Scheme())
 
-	supportedFeatures := parseSupportedFeatures(*flags.SupportedFeatures)
-	exemptFeatures := parseSupportedFeatures(*flags.ExemptFeatures)
+	supportedFeatures := suite.ParseSupportedFeatures(*flags.SupportedFeatures)
+	exemptFeatures := suite.ParseSupportedFeatures(*flags.ExemptFeatures)
 
 	t.Logf("Running conformance tests with cleanup: %t\n debug: %t\n enable all features: %t \n supported features: [%v]\n exempt features: [%v]",
 		*flags.CleanupBaseResources, *flags.ShowDebug, *flags.EnableAllSupportedFeatures, *flags.SupportedFeatures, *flags.ExemptFeatures)
@@ -74,17 +72,4 @@ func TestConformance(t *testing.T) {
 	cSuite.Setup(t)
 
 	cSuite.Run(t, tests.ConformanceTests)
-}
-
-// parseSupportedFeatures parses flag arguments and converts the string to
-// sets.Set[suite.SupportedFeature]
-func parseSupportedFeatures(f string) sets.Set[suite.SupportedFeature] {
-	if f == "" {
-		return nil
-	}
-	res := sets.Set[suite.SupportedFeature]{}
-	for _, value := range strings.Split(f, ",") {
-		res.Insert(suite.SupportedFeature(value))
-	}
-	return res
 }

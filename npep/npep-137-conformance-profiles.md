@@ -106,7 +106,7 @@ using two methods:
 * The `go test` CLI commands specifying the required information need to generate
 a conformance test report. Sample:
 ```
-go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy --organization=ovn-org -project=ovn-kubernetes -url=<project-url> -version=0.1.1 -contact=<> -additionalinfo=<link-to-implementation>
+go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy --organization=ovn-org -project=ovn-kubernetes -url=<project-url> -version=0.1.1 -contact=<> -additional-info=<link-to-implementation>
 ```
 * Using the conformance profile test suite `TestConformanceProfiles` by directly customizing it by providing
 the correct arguments. Sample:
