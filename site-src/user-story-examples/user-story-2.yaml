@@ -16,11 +16,11 @@ spec:
   egress:
     - action: Allow
       to:
-      - namespaces:
-          namespaceSelector:
-            matchlabels:
-              kubernetes.io/metadata.name: kube-system
-        pods:
+      - pods:
+          namespaces:
+            namespaceSelector:
+              matchlabels:
+                kubernetes.io/metadata.name: kube-system
           podSelector:
             matchlabels:
               app: kube-dns
