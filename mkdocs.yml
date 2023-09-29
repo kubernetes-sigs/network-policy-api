@@ -41,6 +41,7 @@ nav:
     - User Stories: user-stories.md
     - Resources: api-overview.md
     - Versioning: versioning.md
+    - Conformance: conformance.md
     - Implementations: implementations.md
   - Guides:
     - Getting started: getting-started.md
