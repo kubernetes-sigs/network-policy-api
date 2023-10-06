@@ -119,6 +119,7 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 	// Support: Core
 	//
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=100
 	From []AdminNetworkPolicyPeer `json:"from"`
 
 	// Ports allows for matching traffic based on port and protocols.
@@ -163,6 +164,7 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=100
 	//
 	// Support: Core
 	//
