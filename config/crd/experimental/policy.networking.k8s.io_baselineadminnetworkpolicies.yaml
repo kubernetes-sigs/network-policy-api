@@ -387,6 +387,7 @@ spec:
                             - podSelector
                             type: object
                         type: object
+                      maxItems: 100
                       minItems: 1
                       type: array
                   required:
@@ -661,6 +662,7 @@ spec:
                             - podSelector
                             type: object
                         type: object
+                      maxItems: 100
                       minItems: 1
                       type: array
                     name:
