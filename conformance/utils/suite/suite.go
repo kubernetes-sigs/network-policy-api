@@ -76,9 +76,9 @@ func New(s Options) *ConformanceTestSuite {
 	if s.EnableAllSupportedFeatures {
 		s.SupportedFeatures = AllFeatures
 	} else if s.SupportedFeatures == nil {
-		s.SupportedFeatures = StandardCoreFeatures
+		s.SupportedFeatures = CoreFeatures
 	} else {
-		for feature := range StandardCoreFeatures {
+		for feature := range CoreFeatures {
 			s.SupportedFeatures.Insert(feature)
 		}
 	}

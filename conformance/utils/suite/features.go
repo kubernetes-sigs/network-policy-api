@@ -27,7 +27,7 @@ import "k8s.io/apimachinery/pkg/util/sets"
 type SupportedFeature string
 
 // -----------------------------------------------------------------------------
-// Features - Standard (Core)
+// Features - Core
 // -----------------------------------------------------------------------------
 
 const (
@@ -37,15 +37,15 @@ const (
 	SupportBaselineAdminNetworkPolicy SupportedFeature = "BaselineAdminNetworkPolicy"
 )
 
-// StandardCoreFeatures are the features that are required to be conformant with
+// CoreFeatures are the features that are required to be conformant with
 // the Core API features (e.g. all fields in the API except for NamedPorts, SameLabels, NotSameLabels).
-var StandardCoreFeatures = sets.New(
+var CoreFeatures = sets.New(
 	SupportAdminNetworkPolicy,
 	SupportBaselineAdminNetworkPolicy,
 )
 
 // -----------------------------------------------------------------------------
-// Features - Standard (Extended)
+// Features - Extended
 // -----------------------------------------------------------------------------
 
 const (
@@ -59,16 +59,16 @@ const (
 	SupportBaselineAdminNetworkPolicyNotSameLabels SupportedFeature = "BaselineAdminNetworkPolicyNotSameLabels"
 )
 
-// StandardExtendedFeatures are extra generic features that implementations may
+// ExtendedFeatures are extra generic features that implementations may
 // choose to support as an opt-in.
-var StandardExtendedFeatures = sets.New(
+var ExtendedFeatures = sets.New(
 	SupportAdminNetworkPolicyNamedPorts,
 	SupportAdminNetworkPolicySameLabels,
 	SupportAdminNetworkPolicyNotSameLabels,
 	SupportBaselineAdminNetworkPolicyNamedPorts,
 	SupportBaselineAdminNetworkPolicySameLabels,
 	SupportBaselineAdminNetworkPolicyNotSameLabels,
-).Insert(StandardCoreFeatures.UnsortedList()...)
+).Insert(CoreFeatures.UnsortedList()...)
 
 // -----------------------------------------------------------------------------
 // Features - Compilations
@@ -79,4 +79,4 @@ var StandardExtendedFeatures = sets.New(
 //
 // NOTE: as new feature sets are added they should be inserted into this set.
 var AllFeatures = sets.New[SupportedFeature]().
-	Insert(StandardExtendedFeatures.UnsortedList()...)
+	Insert(ExtendedFeatures.UnsortedList()...)
