@@ -127,14 +127,16 @@ type PortRange struct {
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
 type AdminNetworkPolicyPeer struct {
-	// Namespaces defines a way to select a set of Namespaces.
+	// Namespaces defines a way to select all pods within a set of Namespaces.
+	// Note that host-networked pods are not included in this type of peer.
 	//
 	// Support: Core
 	//
 	// +optional
 	Namespaces *NamespacedPeer `json:"namespaces,omitempty"`
 	// Pods defines a way to select a set of pods in
-	// in a set of namespaces.
+	// in a set of namespaces. Note that host-networked pods
+	// are not included in this type of peer.
 	//
 	// Support: Core
 	//

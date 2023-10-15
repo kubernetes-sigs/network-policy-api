@@ -153,8 +153,10 @@ spec:
                         minProperties: 1
                         properties:
                           namespaces:
-                            description: "Namespaces defines a way to select a set
-                              of Namespaces. \n Support: Core"
+                            description: "Namespaces defines a way to select all pods
+                              within a set of Namespaces. Note that host-networked
+                              pods are not included in this type of peer. \n Support:
+                              Core"
                             maxProperties: 1
                             minProperties: 1
                             properties:
@@ -212,7 +214,9 @@ spec:
                             type: object
                           pods:
                             description: "Pods defines a way to select a set of pods
-                              in in a set of namespaces. \n Support: Core"
+                              in in a set of namespaces. Note that host-networked
+                              pods are not included in this type of peer. \n Support:
+                              Core"
                             properties:
                               namespaces:
                                 description: "Namespaces is used to select a set of
@@ -377,8 +381,10 @@ spec:
                         minProperties: 1
                         properties:
                           namespaces:
-                            description: "Namespaces defines a way to select a set
-                              of Namespaces. \n Support: Core"
+                            description: "Namespaces defines a way to select all pods
+                              within a set of Namespaces. Note that host-networked
+                              pods are not included in this type of peer. \n Support:
+                              Core"
                             maxProperties: 1
                             minProperties: 1
                             properties:
@@ -436,7 +442,9 @@ spec:
                             type: object
                           pods:
                             description: "Pods defines a way to select a set of pods
-                              in in a set of namespaces. \n Support: Core"
+                              in in a set of namespaces. Note that host-networked
+                              pods are not included in this type of peer. \n Support:
+                              Core"
                             properties:
                               namespaces:
                                 description: "Namespaces is used to select a set of
