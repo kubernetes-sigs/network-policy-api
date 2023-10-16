@@ -82,8 +82,8 @@ spec:
                     ports:
                       description: "Ports allows for matching traffic based on port
                         and protocols. This field is a list of destination ports for
-                        the outging egress traffic. If Ports is not set then the rule
-                        does not filter traffic via port. \n Support: Core"
+                        the outgoing egress traffic. If Ports is not set then the
+                        rule does not filter traffic via port. \n Support: Core"
                       items:
                         description: AdminNetworkPolicyPort describes how to select
                           network ports on pod(s). Exactly one field must be set.
@@ -147,16 +147,16 @@ spec:
                       type: array
                     to:
                       description: "To is the List of destinations whose traffic this
-                        rule applies to. If any AdminNetworkPolicyPeer matches the
-                        destination of outgoing traffic then the specified action
+                        rule applies to. If any AdminNetworkPolicyEgressPeer matches
+                        the destination of outgoing traffic then the specified action
                         is applied. This field must be defined and contain at least
                         one item. \n Support: Core"
                       items:
-                        description: AdminNetworkPolicyPeer defines an in-cluster
-                          peer to allow traffic to/from. Exactly one of the selector
-                          pointers must be set for a given peer. If a consumer observes
-                          none of its fields are set, they must assume an unknown
-                          option has been specified and fail closed.
+                        description: AdminNetworkPolicyEgressPeer defines an in-cluster
+                          peer to allow traffic to. Exactly one of the selector pointers
+                          must be set for a given peer. If a consumer observes none
+                          of its fields are set, they must assume an unknown option
+                          has been specified and fail closed.
                         maxProperties: 1
                         minProperties: 1
                         properties:
@@ -376,13 +376,13 @@ spec:
                       type: string
                     from:
                       description: "From is the list of sources whose traffic this
-                        rule applies to. If any AdminNetworkPolicyPeer matches the
-                        source of incoming traffic then the specified action is applied.
-                        This field must be defined and contain at least one item.
-                        \n Support: Core"
+                        rule applies to. If any AdminNetworkPolicyIngressPeer matches
+                        the source of incoming traffic then the specified action is
+                        applied. This field must be defined and contain at least one
+                        item. \n Support: Core"
                       items:
-                        description: AdminNetworkPolicyPeer defines an in-cluster
-                          peer to allow traffic to/from. Exactly one of the selector
+                        description: AdminNetworkPolicyIngressPeer defines an in-cluster
+                          peer to allow traffic from. Exactly one of the selector
                           pointers must be set for a given peer. If a consumer observes
                           none of its fields are set, they must assume an unknown
                           option has been specified and fail closed.
