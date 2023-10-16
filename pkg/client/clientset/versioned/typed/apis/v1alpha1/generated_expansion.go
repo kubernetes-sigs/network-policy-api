@@ -21,3 +21,5 @@ package v1alpha1
 type AdminNetworkPolicyExpansion interface{}
 
 type BaselineAdminNetworkPolicyExpansion interface{}
+
+type ExternalNetworkSetExpansion interface{}

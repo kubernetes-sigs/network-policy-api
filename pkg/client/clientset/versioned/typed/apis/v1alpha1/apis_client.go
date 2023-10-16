@@ -30,6 +30,7 @@ type PolicyV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AdminNetworkPoliciesGetter
 	BaselineAdminNetworkPoliciesGetter
+	ExternalNetworkSetsGetter
 }
 
 // PolicyV1alpha1Client is used to interact with features provided by the policy.networking.k8s.io group.
@@ -43,6 +44,10 @@ func (c *PolicyV1alpha1Client) AdminNetworkPolicies() AdminNetworkPolicyInterfac
 
 func (c *PolicyV1alpha1Client) BaselineAdminNetworkPolicies() BaselineAdminNetworkPolicyInterface {
 	return newBaselineAdminNetworkPolicies(c)
+}
+
+func (c *PolicyV1alpha1Client) ExternalNetworkSets() ExternalNetworkSetInterface {
+	return newExternalNetworkSets(c)
 }
 
 // NewForConfig creates a new PolicyV1alpha1Client for the given config.

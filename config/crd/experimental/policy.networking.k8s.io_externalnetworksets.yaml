@@ -1,0 +1,78 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    api-approved.kubernetes.io: https://github.com/kubernetes-sigs/network-policy-api/pull/135
+    policy.networking.k8s.io/bundle-version: v0.1.1
+    policy.networking.k8s.io/channel: experimental
+  creationTimestamp: null
+  name: externalnetworksets.policy.networking.k8s.io
+spec:
+  group: policy.networking.k8s.io
+  names:
+    kind: ExternalNetworkSet
+    listKind: ExternalNetworkSetList
+    plural: externalnetworksets
+    shortNames:
+    - ens
+    singular: externalnetworkset
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.networks
+      name: Networks
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ExternalNetworkSet is a cluster level resource that is used to
+          define a set of networks outside the cluster which can be referred to from
+          the AdminNetworkPolicy && BaselineAdminNetworkPolicy APIs as an external
+          peer
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Specification of the desired behavior of ExternalNetworkSet.
+            maxProperties: 1
+            minProperties: 1
+            properties:
+              networks:
+                description: "Networks is the list of NetworkCIDR (both v4 & v6) that
+                  can be used to define external destinations. A total of 100 CIDRs
+                  will be allowed in each NetworkSet instance. ANP & BANP APIs may
+                  use the .spec.in(e)gress.from(to).externalNetworks selector to select
+                  a set of external networks \n Support: Core"
+                items:
+                  type: string
+                maxItems: 100
+                minItems: 1
+                type: array
+            type: object
+        required:
+        - metadata
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: null
+  storedVersions: null

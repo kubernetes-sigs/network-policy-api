@@ -25,3 +25,7 @@ type AdminNetworkPolicyListerExpansion interface{}
 // BaselineAdminNetworkPolicyListerExpansion allows custom methods to be added to
 // BaselineAdminNetworkPolicyLister.
 type BaselineAdminNetworkPolicyListerExpansion interface{}
+
+// ExternalNetworkSetListerExpansion allows custom methods to be added to
+// ExternalNetworkSetLister.
+type ExternalNetworkSetListerExpansion interface{}

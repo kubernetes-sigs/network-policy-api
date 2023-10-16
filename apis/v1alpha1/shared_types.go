@@ -170,6 +170,15 @@ type AdminNetworkPolicyEgressPeer struct {
 	//
 	// +optional
 	Nodes *metav1.LabelSelector `json:"nodes,omitempty"`
+	// ExternalNetworks defines a way to select ExternalNetworkSets
+	// that consist of network CIDRs that live outside the cluster as a peer.
+	// This field follows standard label selector semantics; if present
+	// but empty, it selects all ExternalNetworkSets defined in the cluster.
+	//
+	// Support: Core
+	//
+	// +optional
+	ExternalNetworks *metav1.LabelSelector `json:"externalNetworks,omitempty"`
 }
 
 // NamespacedPeer defines a flexible way to select Namespaces in a cluster.

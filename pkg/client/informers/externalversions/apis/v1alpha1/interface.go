@@ -28,6 +28,8 @@ type Interface interface {
 	AdminNetworkPolicies() AdminNetworkPolicyInformer
 	// BaselineAdminNetworkPolicies returns a BaselineAdminNetworkPolicyInformer.
 	BaselineAdminNetworkPolicies() BaselineAdminNetworkPolicyInformer
+	// ExternalNetworkSets returns a ExternalNetworkSetInformer.
+	ExternalNetworkSets() ExternalNetworkSetInformer
 }
 
 type version struct {
@@ -49,4 +51,9 @@ func (v *version) AdminNetworkPolicies() AdminNetworkPolicyInformer {
 // BaselineAdminNetworkPolicies returns a BaselineAdminNetworkPolicyInformer.
 func (v *version) BaselineAdminNetworkPolicies() BaselineAdminNetworkPolicyInformer {
 	return &baselineAdminNetworkPolicyInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
+}
+
+// ExternalNetworkSets returns a ExternalNetworkSetInformer.
+func (v *version) ExternalNetworkSets() ExternalNetworkSetInformer {
+	return &externalNetworkSetInformer{factory: v.factory, tweakListOptions: v.tweakListOptions}
 }

@@ -36,6 +36,10 @@ func (c *FakePolicyV1alpha1) BaselineAdminNetworkPolicies() v1alpha1.BaselineAdm
 	return &FakeBaselineAdminNetworkPolicies{c}
 }
 
+func (c *FakePolicyV1alpha1) ExternalNetworkSets() v1alpha1.ExternalNetworkSetInterface {
+	return &FakeExternalNetworkSets{c}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakePolicyV1alpha1) RESTClient() rest.Interface {
