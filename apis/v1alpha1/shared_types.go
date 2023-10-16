@@ -142,7 +142,7 @@ type AdminNetworkPolicyIngressPeer struct {
 	Pods *NamespacedPodPeer `json:"pods,omitempty"`
 }
 
-// AdminNetworkPolicyEgressPeer defines an in-cluster peer to allow traffic to.
+// AdminNetworkPolicyEgressPeer defines a peer to allow traffic to.
 // Exactly one of the selector pointers must be set for a given peer. If a
 // consumer observes none of its fields are set, they must assume an unknown
 // option has been specified and fail closed.
@@ -162,6 +162,14 @@ type AdminNetworkPolicyEgressPeer struct {
 	//
 	// +optional
 	Pods *NamespacedPodPeer `json:"pods,omitempty"`
+	// Nodes defines a way to select a set of nodes in
+	// in the cluster. This field follows standard label selector
+	// semantics; if present but empty, it selects all Nodes.
+	//
+	// Support: Core
+	//
+	// +optional
+	Nodes *metav1.LabelSelector `json:"nodes,omitempty"`
 }
 
 // NamespacedPeer defines a flexible way to select Namespaces in a cluster.
