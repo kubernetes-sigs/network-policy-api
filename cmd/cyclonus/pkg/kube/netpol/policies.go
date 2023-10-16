@@ -27,19 +27,19 @@ func LabelString(labels map[string]string) string {
 	return strings.Join(chunks, "-")
 }
 
-// https://github.com/ahmetb/kubernetes-network-policy-recipes/blob/master/01-deny-all-traffic-to-an-application.md
-/*
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: web-deny-all
-spec:
-  podSelector:
-    matchLabels:
-      app: web
-  ingress: []
-*/
+// AllowNothingTo is from https://github.com/ahmetb/kubernetes-network-policy-recipes/blob/master/01-deny-all-traffic-to-an-application.md
 func AllowNothingTo(namespace string, toLabels map[string]string) *networkingv1.NetworkPolicy {
+	/*
+		kind: NetworkPolicy
+		apiVersion: networking.k8s.io/v1
+		metadata:
+		  name: web-deny-all
+		spec:
+		  podSelector:
+		    matchLabels:
+		      app: web
+		  ingress: []
+	*/
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("allow-nothing-to-%s", LabelString(toLabels)),
@@ -52,7 +52,7 @@ func AllowNothingTo(namespace string, toLabels map[string]string) *networkingv1.
 	}
 }
 
-// Same as above, but with empty slice instead of nil slice
+// AllowNothingToEmptyIngress is the same as AllowNothingTo, but with empty slice instead of nil slice
 func AllowNothingToEmptyIngress(namespace string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -86,6 +86,7 @@ spec:
           matchLabels:
             app: bookstore
 */
+
 func AllowFromTo(namespace string, fromLabels map[string]string, toLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -122,6 +123,7 @@ spec:
   ingress:
   - {}
 */
+
 func AllowAllTo(namespace string, toLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -151,6 +153,7 @@ spec:
   podSelector: {}
   ingress: []
 */
+
 func AllowNothingToAnything(namespace string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -179,6 +182,7 @@ spec:
   - from:
     - podSelector: {}
 */
+
 func AllowAllWithinNamespace(namespace string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -218,6 +222,7 @@ spec:
   - from:
     - namespaceSelector: {}
 */
+
 func AllowAllTo_Version2(namespace string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -246,18 +251,16 @@ func AllowAllTo_Version2(namespace string, targetLabels map[string]string) *netw
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-
-	Namespace: secondary
-	name: web-allow-all-namespaces
-
+  Namespace: secondary
+  name: web-allow-all-namespaces
 spec:
-
-	podSelector:
-	  matchLabels:
-	    app: web
-	ingress:
-	- from:
+  podSelector:
+    matchLabels:
+      app: web
+  ingress:
+  - from:
 */
+
 func AllowAllTo_Version3(namespace string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -312,6 +315,7 @@ spec:
         matchLabels:
           purpose: production
 */
+
 func AllowFromNamespaceTo(namespace string, namespaceLabels map[string]string, toLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -356,6 +360,7 @@ spec:
           matchLabels:
             type: monitoring
 */
+
 func AllowFromDifferentNamespaceWithLabelsTo(namespace string, fromLabels, namespaceLabels, toLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -394,6 +399,7 @@ spec:
   ingress:
   - from: []
 */
+
 func AllowFromAnywhere(namespace string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -432,6 +438,7 @@ spec:
         matchLabels:
           role: monitoring
 */
+
 func AllowSpecificPortTo(namespace string, fromLabels, targetLabels map[string]string, targetPort int) *networkingv1.NetworkPolicy {
 	portRef := intstr.FromInt(targetPort)
 	return &networkingv1.NetworkPolicy{
@@ -488,6 +495,7 @@ spec:
           app: inventory
           role: web
 */
+
 func AllowFromMultipleTo(namespace string, fromLabels []map[string]string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	var froms []networkingv1.NetworkPolicyPeer
 	for _, labels := range fromLabels {
@@ -526,6 +534,7 @@ spec:
   - Egress
   egress: []
 */
+
 func AllowNoEgressFromLabels(namespace string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -546,24 +555,22 @@ func AllowNoEgressFromLabels(namespace string, targetLabels map[string]string) *
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-
-	name: foo-deny-egress
-
+  name: foo-deny-egress
 spec:
-
-	podSelector:
-	  matchLabels:
-	    app: foo
-	policyTypes:
-	- Egress
-	egress:
-	# allow DNS resolution
-	- ports:
-	  - port: 53
-	    protocol: UDP
-	  - port: 53
-	    protocol: TCP
+  podSelector:
+    matchLabels:
+      app: foo
+  policyTypes:
+  - Egress
+  egress:
+  # allow DNS resolution
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
 */
+
 func AllowEgressOnPort(namespace string, targetLabels map[string]string, port int) *networkingv1.NetworkPolicy {
 	tcp := v1.ProtocolTCP
 	udp := v1.ProtocolUDP
@@ -603,6 +610,7 @@ spec:
   podSelector: {}
   egress: []
 */
+
 func AllowNoEgressFromNamespace(namespace string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -638,6 +646,7 @@ spec:
     to:
     - namespaceSelector: {}
 */
+
 func AllowEgressToAllNamespacesOnPort(namespace string, targetLabels map[string]string, port int) *networkingv1.NetworkPolicy {
 	tcp := v1.ProtocolTCP
 	udp := v1.ProtocolUDP
@@ -673,18 +682,16 @@ func AllowEgressToAllNamespacesOnPort(namespace string, targetLabels map[string]
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-
-	name: allow-nothing
-
+  name: allow-nothing
 spec:
-
-	podSelector:
-	  matchLabels:
-	    app: foo
-	policyTypes:
-	- Egress
-	- Ingress
+  podSelector:
+    matchLabels:
+      app: foo
+  policyTypes:
+  - Egress
+  - Ingress
 */
+
 func AllowNoIngressNorEgress(namespace string, targetLabels map[string]string) *networkingv1.NetworkPolicy {
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{

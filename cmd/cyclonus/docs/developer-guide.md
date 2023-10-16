@@ -2,7 +2,7 @@
 
 ## Setup
 
- - [Get set up with golang 1.18](https://golang.org/dl/)
+ - [Get set up with golang 1.21](https://golang.org/dl/)
  - clone this repo
 
         git clone git@github.com:mattfenwick/cyclonus.git
@@ -52,6 +52,8 @@ TAG=v0.0.1
 git tag $TAG
 git push origin $TAG
 ```
+
+You'll need to be logged in to dockerhub from the command line, in order to push images: `docker login`
 
 Cut a release:
 

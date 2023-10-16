@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mattfenwick/collections/pkg/json"
 	"github.com/mattfenwick/cyclonus/pkg/connectivity"
 	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
 	"github.com/mattfenwick/cyclonus/pkg/generator"
@@ -35,6 +36,7 @@ type GenerateArgs struct {
 	ServerNamespaces          []string
 	ServerPods                []string
 	CleanupNamespaces         bool
+	FailFast                  bool
 	Include                   []string
 	Exclude                   []string
 	DestinationType           string
@@ -42,6 +44,7 @@ type GenerateArgs struct {
 	DryRun                    bool
 	JobTimeoutSeconds         int
 	JunitResultsFile          string
+	ImageRegistry             string
 	//BatchJobs                 bool
 }
 
@@ -72,6 +75,7 @@ func SetupGenerateCommand() *cobra.Command {
 	command.Flags().IntVar(&args.PodCreationTimeoutSeconds, "pod-creation-timeout-seconds", 60, "number of seconds to wait for pods to create, be running and have IP addresses")
 	command.Flags().StringVar(&args.Context, "context", "", "kubernetes context to use; if empty, uses default context")
 	command.Flags().BoolVar(&args.CleanupNamespaces, "cleanup-namespaces", false, "if true, clean up namespaces after completion")
+	command.Flags().BoolVar(&args.FailFast, "fail-fast", false, "if true, stop running tests after the first failure")
 	command.Flags().StringVar(&args.DestinationType, "destination-type", "", "override to set what to direct requests at; if not specified, the tests will be left as-is; one of "+strings.Join(generator.AllProbeModes, ", "))
 	command.Flags().IntVar(&args.JobTimeoutSeconds, "job-timeout-seconds", 10, "number of seconds to pass on to 'agnhost connect --timeout=%ds' flag")
 
@@ -82,12 +86,13 @@ func SetupGenerateCommand() *cobra.Command {
 	command.Flags().BoolVar(&args.DryRun, "dry-run", false, "if true, don't actually do anything: just print out what would be done")
 
 	command.Flags().StringVar(&args.JunitResultsFile, "junit-results-file", "", "output junit results to the specified file")
+	command.Flags().StringVar(&args.ImageRegistry, "image-registry", "registry.k8s.io", "Image registry for agnhost")
 
 	return command
 }
 
 func RunGenerateCommand(args *GenerateArgs) {
-	fmt.Printf("args: \n%s\n", utils.JsonString(args))
+	fmt.Printf("args: \n%s\n", json.MustMarshalToString(args))
 
 	RunVersionCommand()
 
@@ -103,14 +108,14 @@ func RunGenerateCommand(args *GenerateArgs) {
 		utils.DoOrDie(err)
 		info, err := kubeClient.ClientSet.ServerVersion()
 		utils.DoOrDie(err)
-		fmt.Printf("Kubernetes server version: \n%s\n", utils.JsonString(info))
+		fmt.Printf("Kubernetes server version: \n%s\n", json.MustMarshalToString(info))
 		kubernetes = kubeClient
 	}
 
 	serverProtocols := parseProtocols(args.ServerProtocols)
 
 	batchJobs := false // args.BatchJobs
-	resources, err := probe.NewDefaultResources(kubernetes, args.ServerNamespaces, args.ServerPods, args.ServerPorts, serverProtocols, externalIPs, args.PodCreationTimeoutSeconds, batchJobs)
+	resources, err := probe.NewDefaultResources(kubernetes, args.ServerNamespaces, args.ServerPods, args.ServerPorts, serverProtocols, externalIPs, args.PodCreationTimeoutSeconds, batchJobs, args.ImageRegistry)
 	utils.DoOrDie(err)
 
 	interpreterConfig := &connectivity.InterpreterConfig{
@@ -121,6 +126,7 @@ func RunGenerateCommand(args *GenerateArgs) {
 		BatchJobs:                        batchJobs,
 		IgnoreLoopback:                   args.IgnoreLoopback,
 		JobTimeoutSeconds:                args.JobTimeoutSeconds,
+		FailFast:                         args.FailFast,
 	}
 	interpreter := connectivity.NewInterpreter(kubernetes, resources, interpreterConfig)
 	printer := &connectivity.Printer{
@@ -166,6 +172,11 @@ func RunGenerateCommand(args *GenerateArgs) {
 
 		printer.PrintTestCaseResult(result)
 		fmt.Printf("finished policy #%d\n", i+1)
+
+		if args.FailFast && !result.Passed(interpreter.Config.IgnoreLoopback) {
+			logrus.Warn("failing fast due to failure")
+			break
+		}
 	}
 
 	printer.PrintSummary()
