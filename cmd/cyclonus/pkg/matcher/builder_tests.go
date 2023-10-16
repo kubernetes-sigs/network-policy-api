@@ -63,8 +63,8 @@ func RunBuilderTests() {
 					PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress, networkingv1.PolicyTypeEgress},
 				}})
 
-			Expect(ingress.Namespace).To(Equal("default"))
-			Expect(egress.Namespace).To(Equal("default"))
+			Expect(ingress.SubjectMatcher.(*SubjectV1).namespace).To(Equal("default"))
+			Expect(egress.SubjectMatcher.(*SubjectV1).namespace).To(Equal("default"))
 		})
 	})
 
@@ -178,7 +178,7 @@ func RunBuilderTests() {
 					Port: port53UDPMatcher,
 				}}))
 
-			Expect(ip.Allows(&TrafficPeer{IP: "192.168.242.249"}, 80, "", tcp)).To(Equal(true))
+			Expect(ip.Matches(nil, &TrafficPeer{IP: "192.168.242.249"}, 80, "", tcp)).To(Equal(true))
 		})
 	})
 

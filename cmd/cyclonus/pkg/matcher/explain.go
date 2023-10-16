@@ -9,7 +9,6 @@ import (
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
-	networkingv1 "k8s.io/api/networking/v1"
 )
 
 type SliceBuilder struct {
@@ -27,11 +26,13 @@ func (p *Policy) ExplainTable() string {
 	table.SetAutoWrapText(false)
 	table.SetRowLine(true)
 	table.SetAutoMergeCells(true)
-	table.SetHeader([]string{"Type", "Target", "Source rules", "Peer", "Port/Protocol"})
+	// FIXME add action/priority column
+	table.SetHeader([]string{"Type", "Subject", "Source rules", "Peer", "Port/Protocol"})
 
 	builder := &SliceBuilder{}
 	ingresses, egresses := p.SortedTargets()
 	builder.TargetsTableLines(ingresses, true)
+	// FIXME add action/priority column
 	builder.Elements = append(builder.Elements, []string{"", "", "", "", ""})
 	builder.TargetsTableLines(egresses, false)
 
@@ -49,13 +50,13 @@ func (s *SliceBuilder) TargetsTableLines(targets []*Target, isIngress bool) {
 		ruleType = "Egress"
 	}
 	for _, target := range targets {
-		sourceRules := slice.Sort(
-			slice.Map(func(sr *networkingv1.NetworkPolicy) string {
-				return fmt.Sprintf("%s/%s", sr.Namespace, sr.Name)
-			}, target.SourceRules))
-		targetString := fmt.Sprintf("namespace: %s\n%s", target.Namespace, kube.LabelSelectorTableLines(target.PodSelector))
-		rules := strings.Join(sourceRules, "\n")
-		s.Prefix = []string{ruleType, targetString, rules}
+		sourceRules := slice.Sort(target.SourceRules)
+		sourceRulesStrings := make([]string, 0, len(sourceRules))
+		for _, rule := range sourceRules {
+			sourceRulesStrings = append(sourceRulesStrings, string(rule))
+		}
+		rules := strings.Join(sourceRulesStrings, "\n")
+		s.Prefix = []string{ruleType, target.TargetString(), rules}
 
 		if len(target.Peers) == 0 {
 			s.Append("no pods, no ips", "no ports, no protocols")
@@ -86,12 +87,14 @@ func (s *SliceBuilder) IPPeerMatcherTableLines(ip *IPPeerMatcher) {
 }
 
 func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher) {
+	// FIXME add action/priority column
 	var namespaces string
 	switch ns := nsPodMatcher.Namespace.(type) {
 	case *AllNamespaceMatcher:
 		namespaces = "all"
 	case *LabelSelectorNamespaceMatcher:
 		namespaces = kube.LabelSelectorTableLines(ns.Selector)
+	// FIXME handle SameLabels, NotSameLabels
 	case *ExactNamespaceMatcher:
 		namespaces = ns.Namespace
 	default:
@@ -118,8 +121,10 @@ func PortMatcherTableLines(pm PortMatcher) []string {
 		for _, portProtocol := range port.Ports {
 			if portProtocol.Port == nil {
 				lines = append(lines, "all ports on protocol "+string(portProtocol.Protocol))
+			} else if portProtocol.Port.StrVal != "" {
+				lines = append(lines, fmt.Sprintf("namedport '%s'", portProtocol.Port.StrVal))
 			} else {
-				lines = append(lines, "port "+portProtocol.Port.String()+" on protocol "+string(portProtocol.Protocol))
+				lines = append(lines, fmt.Sprintf("port %d on protocol %s", portProtocol.Port.IntVal, portProtocol.Protocol))
 			}
 		}
 		for _, portRange := range port.PortRanges {

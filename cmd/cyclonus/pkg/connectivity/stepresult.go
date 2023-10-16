@@ -3,6 +3,8 @@ package connectivity
 import (
 	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
 	"github.com/mattfenwick/cyclonus/pkg/matcher"
+	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+
 	networkingv1 "k8s.io/api/networking/v1"
 )
 
@@ -11,7 +13,10 @@ type StepResult struct {
 	KubeProbes     []*probe.Table
 	Policy         *matcher.Policy
 	KubePolicies   []*networkingv1.NetworkPolicy
-	comparisons    []*ComparisonTable
+	// FIXME use ANP and BANP here
+	ANPs        []*v1alpha1.AdminNetworkPolicy
+	BANP        *v1alpha1.BaselineAdminNetworkPolicy
+	comparisons []*ComparisonTable
 }
 
 func NewStepResult(simulated *probe.Table, policy *matcher.Policy, kubePolicies []*networkingv1.NetworkPolicy) *StepResult {

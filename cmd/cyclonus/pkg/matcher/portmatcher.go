@@ -11,12 +11,12 @@ import (
 )
 
 type PortMatcher interface {
-	Allows(portInt int, portName string, protocol v1.Protocol) bool
+	Matches(portInt int, portName string, protocol v1.Protocol) bool
 }
 
 type AllPortMatcher struct{}
 
-func (ap *AllPortMatcher) Allows(portInt int, portName string, protocol v1.Protocol) bool {
+func (ap *AllPortMatcher) Matches(portInt int, portName string, protocol v1.Protocol) bool {
 	return true
 }
 
@@ -26,15 +26,23 @@ func (ap *AllPortMatcher) MarshalJSON() (b []byte, e error) {
 	})
 }
 
-// PortProtocolMatcher models a specific combination of port+protocol.  If port is nil,
-// all ports are matched.
+// PortProtocolMatcher models a matcher based on:
+// 1. Protocol
+// 2. Either a) port number or b) port name.
+// This matcher is modeled after the confusing behavior of v1 NetPol's Port field.
+// We map NetworkPolicy v2 to this matcher despite v2's better approach to distinguishing named ports from a port number.
+// This matcher requires that you specify the Protocol for a NamedPort.
+// In NetPol v1, there is the pathological case where the user can define a NetworkPolicy rule allowing a NamedPort on the wrong Protocol.
 type PortProtocolMatcher struct {
-	Port     *intstr.IntOrString
+	// Port is either a port number or a port name.
+	// If nil, all ports are matched.
+	Port *intstr.IntOrString
+	// Protocol must be set, even for a named port
 	Protocol v1.Protocol
 }
 
-// AllowsPortProtocol does not implement the PortMatcher interface, purposely!
-func (p *PortProtocolMatcher) AllowsPortProtocol(portInt int, portName string, protocol v1.Protocol) bool {
+// MatchesPortProtocol does not implement the PortMatcher interface, purposely!
+func (p *PortProtocolMatcher) MatchesPortProtocol(portInt int, portName string, protocol v1.Protocol) bool {
 	if p.Port != nil {
 		return isPortMatch(*p.Port, portInt, portName) && p.Protocol == protocol
 	}
@@ -61,7 +69,7 @@ type PortRangeMatcher struct {
 	Protocol v1.Protocol
 }
 
-func (prm *PortRangeMatcher) AllowsPortProtocol(portInt int, protocol v1.Protocol) bool {
+func (prm *PortRangeMatcher) MatchesPortProtocol(portInt int, protocol v1.Protocol) bool {
 	return prm.From <= portInt && portInt <= prm.To && prm.Protocol == protocol
 }
 
@@ -80,14 +88,14 @@ type SpecificPortMatcher struct {
 	PortRanges []*PortRangeMatcher
 }
 
-func (s *SpecificPortMatcher) Allows(portInt int, portName string, protocol v1.Protocol) bool {
+func (s *SpecificPortMatcher) Matches(portInt int, portName string, protocol v1.Protocol) bool {
 	for _, matcher := range s.Ports {
-		if matcher.AllowsPortProtocol(portInt, portName, protocol) {
+		if matcher.MatchesPortProtocol(portInt, portName, protocol) {
 			return true
 		}
 	}
 	for _, matcher := range s.PortRanges {
-		if matcher.AllowsPortProtocol(portInt, protocol) {
+		if matcher.MatchesPortProtocol(portInt, protocol) {
 			return true
 		}
 	}

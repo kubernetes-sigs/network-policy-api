@@ -2,10 +2,11 @@ package kube
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/olekukonko/tablewriter"
 	. "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 func NetworkPoliciesToTable(policies []*NetworkPolicy) string {
@@ -20,6 +21,9 @@ func NetworkPoliciesToTable(policies []*NetworkPolicy) string {
 		name := fmt.Sprintf("%s/%s", policy.Namespace, policy.Name)
 		//target := SerializeLabelSelector(policy.Spec.PodSelector)
 		target := LabelSelectorTableLines(policy.Spec.PodSelector)
+		if target == "all" {
+			target = "all pods"
+		}
 
 		for _, policyType := range policy.Spec.PolicyTypes {
 			if policyType == PolicyTypeIngress {

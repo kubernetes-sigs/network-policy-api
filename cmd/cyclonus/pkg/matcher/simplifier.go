@@ -9,11 +9,35 @@ import (
 )
 
 func Simplify(matchers []PeerMatcher) []PeerMatcher {
+	if len(matchers) == 0 {
+		return nil
+	}
+
+	result := make([]PeerMatcher, 0)
+	for _, m := range matchers {
+		if matcherV2, ok := m.(*PeerMatcherV2); ok {
+			result = append(result, matcherV2)
+		}
+	}
+
+	result = append(result, SimplifyV1(matchers)...)
+	return result
+}
+
+// SimplifyV1 simplifies all v1 PeerMatchers, potentially resulting in less PeerMatchers.
+func SimplifyV1(matchers []PeerMatcher) []PeerMatcher {
+	v1Matchers := make([]PeerMatcher, 0)
+	for _, m := range matchers {
+		if _, ok := m.(*PeerMatcherV2); !ok {
+			v1Matchers = append(v1Matchers, m)
+		}
+	}
+
 	matchesAll := false
 	var portsForAllPeersMatchers []*PortsForAllPeersMatcher
 	var ips []*IPPeerMatcher
 	var pods []*PodPeerMatcher
-	for _, matcher := range matchers {
+	for _, matcher := range v1Matchers {
 		switch a := matcher.(type) {
 		case *AllPeersMatcher:
 			matchesAll = true

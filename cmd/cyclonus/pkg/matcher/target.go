@@ -2,37 +2,61 @@ package matcher
 
 import (
 	"fmt"
+
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
-// Target represents a NetworkPolicySpec.PodSelector, which is in a namespace
+// string of the form "[policyKind] namespace/name"
+type NetPolID string
+
+func netPolID(p interface{}) NetPolID {
+	switch p := p.(type) {
+	case *networkingv1.NetworkPolicy:
+		ns := p.Namespace
+		if ns == "" {
+			ns = metav1.NamespaceDefault
+		}
+		return NetPolID(fmt.Sprintf("[%s] %s/%s", NetworkPolicyV1, ns, p.Name))
+	case *v1alpha1.AdminNetworkPolicy:
+		ns := p.Namespace
+		if ns == "" {
+			ns = metav1.NamespaceDefault
+		}
+		return NetPolID(fmt.Sprintf("[%s] %s/%s", AdminNetworkPolicy, ns, p.Name))
+	case *v1alpha1.BaselineAdminNetworkPolicy:
+		ns := p.Namespace
+		if ns == "" {
+			ns = metav1.NamespaceDefault
+		}
+		return NetPolID(fmt.Sprintf("[%s] %s/%s", BaselineAdminNetworkPolicy, ns, p.Name))
+	default:
+		panic(fmt.Sprintf("invalid policy type %T", p))
+	}
+}
+
+// Target represents ingress or egress for one or more NetworkPolicies.
+// It can represent either:
+// a) one or more v1 NetPols sharing the same Namespace and Pod Selector
+// b) one or more ANPs/BANPs sharing the same Namespace Selector and Pod Selector.
 type Target struct {
-	Namespace   string
-	PodSelector metav1.LabelSelector
-	Peers       []PeerMatcher
-	SourceRules []*networkingv1.NetworkPolicy
-	primaryKey  string
+	SubjectMatcher
+	SourceRules []NetPolID
+	// Peers contains all matchers for a Target.
+	// Order matters for rules in the same ANP or BANP.
+	// Priority matters for rules in different ANPs.
+	Peers []PeerMatcher
 }
 
 func (t *Target) String() string {
 	return t.GetPrimaryKey()
 }
 
-func (t *Target) IsMatch(namespace string, podLabels map[string]string) bool {
-	return t.Namespace == namespace && kube.IsLabelsMatchLabelSelector(podLabels, t.PodSelector)
-}
-
-func (t *Target) Allows(peer *TrafficPeer, portInt int, portName string, protocol v1.Protocol) bool {
-	for _, peerMatcher := range t.Peers {
-		if peerMatcher.Allows(peer, portInt, portName, protocol) {
-			return true
-		}
-	}
-	return false
+func (t *Target) Simplify() {
+	t.Peers = Simplify(t.Peers)
 }
 
 // Combine creates a new Target combining the egress and ingress rules
@@ -46,32 +70,22 @@ func (t *Target) Combine(other *Target) *Target {
 	}
 
 	return &Target{
-		Namespace:   t.Namespace,
-		PodSelector: t.PodSelector,
-		Peers:       append(t.Peers, other.Peers...),
-		SourceRules: append(t.SourceRules, other.SourceRules...),
+		SubjectMatcher: t.SubjectMatcher,
+		Peers:          append(t.Peers, other.Peers...),
+		SourceRules:    append(t.SourceRules, other.SourceRules...),
 	}
 }
 
-// GetPrimaryKey returns a deterministic combination of PodSelector and namespace
-func (t *Target) GetPrimaryKey() string {
-	if t.primaryKey == "" {
-		t.primaryKey = fmt.Sprintf(`{"Namespace": "%s", "PodSelector": %s}`, t.Namespace, kube.SerializeLabelSelector(t.PodSelector))
-	}
-	return t.primaryKey
-}
-
-// CombineTargetsIgnoringPrimaryKey creates a new target from the given namespace and pod selector,
+// CombineTargetsIgnoringPrimaryKey creates a new v1 target from the given namespace and pod selector,
 // and combines all the edges and source rules from the original targets into the new target.
 func CombineTargetsIgnoringPrimaryKey(namespace string, podSelector metav1.LabelSelector, targets []*Target) *Target {
 	if len(targets) == 0 {
 		return nil
 	}
 	target := &Target{
-		Namespace:   namespace,
-		PodSelector: podSelector,
-		Peers:       targets[0].Peers,
-		SourceRules: targets[0].SourceRules,
+		SubjectMatcher: NewSubjectV1(namespace, podSelector),
+		Peers:          targets[0].Peers,
+		SourceRules:    targets[0].SourceRules,
 	}
 	for _, t := range targets[1:] {
 		target.Peers = append(target.Peers, t.Peers...)
@@ -80,6 +94,87 @@ func CombineTargetsIgnoringPrimaryKey(namespace string, podSelector metav1.Label
 	return target
 }
 
-func (t *Target) Simplify() {
-	t.Peers = Simplify(t.Peers)
+// SubjectMatcher defines which Pods a ANP, BANP, or v1 NetPol applies to
+type SubjectMatcher interface {
+	// Matches returns true if the candidate satisfies the subject selector
+	Matches(candidate *InternalPeer) bool
+	// TargetString is used for printing in tables
+	TargetString() string
+	// GetPrimaryKey serializes the subject selector into a json-like string
+	GetPrimaryKey() string
+}
+
+// SubjectV1 implements SubjectSelector for v1 NetPols
+type SubjectV1 struct {
+	primaryKey  string
+	namespace   string
+	podSelector metav1.LabelSelector
+}
+
+func NewSubjectV1(namespace string, podSelector metav1.LabelSelector) *SubjectV1 {
+	return &SubjectV1{
+		namespace:   namespace,
+		podSelector: podSelector,
+		primaryKey:  fmt.Sprintf(`{"Namespace": "%s", "PodSelector": %s}`, namespace, kube.SerializeLabelSelector(podSelector)),
+	}
+}
+
+func (s *SubjectV1) Matches(candidate *InternalPeer) bool {
+	return s.namespace == candidate.Namespace && kube.IsLabelsMatchLabelSelector(candidate.PodLabels, s.podSelector)
+}
+
+func (s *SubjectV1) TargetString() string {
+	pods := kube.LabelSelectorTableLines(s.podSelector)
+	if pods == "all" {
+		pods = "all pods"
+	}
+	return fmt.Sprintf("namespace: %s\n%s", s.namespace, pods)
+}
+
+func (s *SubjectV1) GetPrimaryKey() string {
+	return s.primaryKey
+}
+
+// SubjectAdmin implements SubjectSelector for ANPs/BANPs
+type SubjectAdmin struct {
+	subject    *v1alpha1.AdminNetworkPolicySubject
+	primaryKey string
+}
+
+func NewSubjectAdmin(subject *v1alpha1.AdminNetworkPolicySubject) *SubjectAdmin {
+	s := &SubjectAdmin{subject: subject}
+
+	if (s.subject.Namespaces == nil && s.subject.Pods == nil) || (s.subject.Namespaces != nil && s.subject.Pods != nil) {
+		// unexpected since there should be exactly one of Namespaces or Pods
+		s.primaryKey = "invalid"
+	} else if s.subject.Namespaces != nil {
+		s.primaryKey = fmt.Sprintf(`{"Namespaces": "%s"}`, kube.SerializeLabelSelector(*s.subject.Namespaces))
+	} else {
+		s.primaryKey = fmt.Sprintf(`{"NamespaceSelector": %s, "PodSelector": %s}`, kube.SerializeLabelSelector(s.subject.Pods.NamespaceSelector), kube.SerializeLabelSelector(s.subject.Pods.PodSelector))
+	}
+
+	return s
+}
+
+func (s *SubjectAdmin) Matches(candidate *InternalPeer) bool {
+	if (s.subject.Namespaces == nil && s.subject.Pods == nil) || (s.subject.Namespaces != nil && s.subject.Pods != nil) {
+		// unexpected since there should be exactly one of Namespaces or Pods
+		return false
+	}
+
+	if s.subject.Namespaces != nil {
+		return kube.IsLabelsMatchLabelSelector(candidate.NamespaceLabels, *s.subject.Namespaces)
+	}
+
+	return kube.IsLabelsMatchLabelSelector(candidate.NamespaceLabels, s.subject.Pods.NamespaceSelector) &&
+		kube.IsLabelsMatchLabelSelector(candidate.PodLabels, s.subject.Pods.PodSelector)
+}
+
+func (s *SubjectAdmin) TargetString() string {
+	// FIXME
+	return "FIXME: implement target string for admin network policies"
+}
+
+func (s *SubjectAdmin) GetPrimaryKey() string {
+	return s.primaryKey
 }

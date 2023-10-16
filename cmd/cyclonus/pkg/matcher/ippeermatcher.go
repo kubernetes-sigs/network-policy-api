@@ -3,15 +3,16 @@ package matcher
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/mattfenwick/collections/pkg/slice"
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	"strings"
 )
 
-// IPPeerMatcher models the case where IPBlock is not nil, and both
-// PodSelector and NamespaceSelector are nil
+// IPPeerMatcher matches traffic to CIDR blocks.
+// It is only relevant to v1 NetPols.
 type IPPeerMatcher struct {
 	IPBlock *networkingv1.IPBlock
 	Port    PortMatcher
@@ -34,11 +35,12 @@ func (i *IPPeerMatcher) MarshalJSON() (b []byte, e error) {
 	})
 }
 
-func (i *IPPeerMatcher) Allows(peer *TrafficPeer, portInt int, portName string, protocol v1.Protocol) bool {
+func (i *IPPeerMatcher) Matches(_, peer *TrafficPeer, portInt int, portName string, protocol v1.Protocol) bool {
 	isIpMatch, err := kube.IsIPAddressMatchForIPBlock(peer.IP, i.IPBlock)
 	// TODO propagate this error instead of panic
 	if err != nil {
 		panic(err)
 	}
-	return isIpMatch && i.Port.Allows(portInt, portName, protocol)
+
+	return isIpMatch && i.Port.Matches(portInt, portName, protocol)
 }
