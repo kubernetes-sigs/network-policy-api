@@ -273,6 +273,7 @@ func NewLabelsDiff(actual map[string]string, expected map[string]string) *Labels
 			ld.Same = append(ld.Same, k)
 		}
 	}
+
 	for k := range expected {
 		if _, ok := actual[k]; !ok {
 			ld.Missing = append(ld.Missing, k)
