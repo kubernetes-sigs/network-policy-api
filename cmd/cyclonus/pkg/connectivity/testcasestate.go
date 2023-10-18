@@ -1,13 +1,14 @@
 package connectivity
 
 import (
+	"time"
+
 	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	"time"
 )
 
 type TestCaseState struct {
@@ -272,7 +273,8 @@ func NewLabelsDiff(actual map[string]string, expected map[string]string) *Labels
 			ld.Same = append(ld.Same, k)
 		}
 	}
-	for k, _ := range expected {
+
+	for k := range expected {
 		if _, ok := actual[k]; !ok {
 			ld.Missing = append(ld.Missing, k)
 		}
