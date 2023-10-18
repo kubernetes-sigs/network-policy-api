@@ -224,8 +224,8 @@ func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 			v := AdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.From, r.Ports)
 			for _, m := range matchers {
-				matcherV2 := NewPeerMatcherANP(m, v, int(anp.Spec.Priority))
-				ingress.Peers = append(ingress.Peers, matcherV2)
+				matcherAdmin := NewPeerMatcherANP(m, v, int(anp.Spec.Priority))
+				ingress.Peers = append(ingress.Peers, matcherAdmin)
 			}
 		}
 	}
@@ -240,8 +240,8 @@ func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 			v := AdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.To, r.Ports)
 			for _, m := range matchers {
-				matcherV2 := NewPeerMatcherANP(m, v, int(anp.Spec.Priority))
-				egress.Peers = append(egress.Peers, matcherV2)
+				matcherAdmin := NewPeerMatcherANP(m, v, int(anp.Spec.Priority))
+				egress.Peers = append(egress.Peers, matcherAdmin)
 			}
 		}
 	}
@@ -267,8 +267,8 @@ func BuildTargetBANP(banp *v1alpha1.BaselineAdminNetworkPolicy) (*Target, *Targe
 			v := BaselineAdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.From, r.Ports)
 			for _, m := range matchers {
-				matcherV2 := NewPeerMatcherBANP(m, v)
-				ingress.Peers = append(ingress.Peers, matcherV2)
+				matcherAdmin := NewPeerMatcherBANP(m, v)
+				ingress.Peers = append(ingress.Peers, matcherAdmin)
 			}
 		}
 	}
@@ -283,8 +283,8 @@ func BuildTargetBANP(banp *v1alpha1.BaselineAdminNetworkPolicy) (*Target, *Targe
 			v := BaselineAdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.To, r.Ports)
 			for _, m := range matchers {
-				matcherV2 := NewPeerMatcherBANP(m, v)
-				egress.Peers = append(egress.Peers, matcherV2)
+				matcherAdmin := NewPeerMatcherBANP(m, v)
+				egress.Peers = append(egress.Peers, matcherAdmin)
 			}
 		}
 	}
@@ -292,7 +292,7 @@ func BuildTargetBANP(banp *v1alpha1.BaselineAdminNetworkPolicy) (*Target, *Targe
 	return ingress, egress
 }
 
-func BuildPeerMatcherAdmin(peers []v1alpha1.AdminNetworkPolicyPeer, ports *[]v1alpha1.AdminNetworkPolicyPort) []PeerMatcher {
+func BuildPeerMatcherAdmin(peers []v1alpha1.AdminNetworkPolicyPeer, ports *[]v1alpha1.AdminNetworkPolicyPort) []*PodPeerMatcher {
 	if len(peers) == 0 {
 		panic(errors.Errorf("invalid admin to/from field: must have at least one peer"))
 	}
@@ -306,7 +306,7 @@ func BuildPeerMatcherAdmin(peers []v1alpha1.AdminNetworkPolicyPeer, ports *[]v1a
 	}
 
 	// 2. build Peers
-	var peerMatchers []PeerMatcher
+	var peerMatchers []*PodPeerMatcher
 	for _, peer := range peers {
 		if (peer.Namespaces == nil && peer.Pods == nil) || (peer.Namespaces != nil && peer.Pods != nil) {
 			panic(errors.Errorf("invalid admin peer: must have exactly one of Namespaces or Pods"))

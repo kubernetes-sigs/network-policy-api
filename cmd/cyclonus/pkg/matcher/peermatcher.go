@@ -19,11 +19,11 @@ These are the original PeerMatcher implementations made for v1 NetPol:
 - IPPeerMatcher
 - PodPeerMatcher
 
-Now we also have PeerMatcherV2, a wrapper for the above to model ANP and BANP,
-as well as NamespaceMatcher objects for SameLabels and NotSameLabels.
-
-All of these (except AllPeersMatcher) use a PortMatcher.
+All PeerMatcher implementations (except AllPeersMatcher) use a PortMatcher.
 If the traffic doesn't match the port matcher, then Matches() will be false.
+
+Now we also have PeerMatcherAdmin, a wrapper for PodPeerMatcher to model ANP and BANP.
+We also made NamespaceMatcher objects for SameLabels and NotSameLabels.
 */
 type PeerMatcher interface {
 	Matches(subject, peer *TrafficPeer, portInt int, portName string, protocol v1.Protocol) bool

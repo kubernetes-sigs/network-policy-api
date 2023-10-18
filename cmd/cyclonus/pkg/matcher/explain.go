@@ -63,15 +63,17 @@ func (s *SliceBuilder) TargetsTableLines(targets []*Target, isIngress bool) {
 		} else {
 			for _, peer := range slice.SortOn(func(p PeerMatcher) string { return json.MustMarshalToString(p) }, target.Peers) {
 				switch a := peer.(type) {
+				case *PeerMatcherAdmin:
+					s.PodPeerMatcherTableLines(a.PodPeerMatcher, a.effectFromMatch)
 				case *AllPeersMatcher:
 					s.Append("all pods, all ips", "all ports, all protocols")
 				case *PortsForAllPeersMatcher:
-					pps := PortMatcherTableLines(a.Port)
+					pps := PortMatcherTableLines(a.Port, NetworkPolicyV1)
 					s.Append("all pods, all ips", strings.Join(pps, "\n"))
 				case *IPPeerMatcher:
 					s.IPPeerMatcherTableLines(a)
 				case *PodPeerMatcher:
-					s.PodPeerMatcherTableLines(a)
+					s.PodPeerMatcherTableLines(a, NewV1Effect(true))
 				default:
 					panic(errors.Errorf("invalid PeerMatcher type %T", a))
 				}
@@ -82,12 +84,12 @@ func (s *SliceBuilder) TargetsTableLines(targets []*Target, isIngress bool) {
 
 func (s *SliceBuilder) IPPeerMatcherTableLines(ip *IPPeerMatcher) {
 	peer := ip.IPBlock.CIDR + "\n" + fmt.Sprintf("except %+v", ip.IPBlock.Except)
-	pps := PortMatcherTableLines(ip.Port)
+	pps := PortMatcherTableLines(ip.Port, NetworkPolicyV1)
 	s.Append(peer, strings.Join(pps, "\n"))
 }
 
-func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher) {
-	// FIXME add action/priority column
+func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher, e Effect) {
+	// FIXME add action/priority column using e
 	var namespaces string
 	switch ns := nsPodMatcher.Namespace.(type) {
 	case *AllNamespaceMatcher:
@@ -109,10 +111,10 @@ func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher) {
 	default:
 		panic(errors.Errorf("invalid PodMatcher type %T", p))
 	}
-	s.Append("namespace: "+namespaces+"\n"+"pods: "+pods, strings.Join(PortMatcherTableLines(nsPodMatcher.Port), "\n"))
+	s.Append("namespace: "+namespaces+"\n"+"pods: "+pods, strings.Join(PortMatcherTableLines(nsPodMatcher.Port, e.PolicyKind), "\n"))
 }
 
-func PortMatcherTableLines(pm PortMatcher) []string {
+func PortMatcherTableLines(pm PortMatcher, kind PolicyKind) []string {
 	switch port := pm.(type) {
 	case *AllPortMatcher:
 		return []string{"all ports, all protocols"}
@@ -122,7 +124,11 @@ func PortMatcherTableLines(pm PortMatcher) []string {
 			if portProtocol.Port == nil {
 				lines = append(lines, "all ports on protocol "+string(portProtocol.Protocol))
 			} else if portProtocol.Port.StrVal != "" {
-				lines = append(lines, fmt.Sprintf("namedport '%s'", portProtocol.Port.StrVal))
+				if kind == NetworkPolicyV1 {
+					lines = append(lines, fmt.Sprintf("namedport '%s' on protocol %s", portProtocol.Port.StrVal, portProtocol.Protocol))
+				} else {
+					lines = append(lines, fmt.Sprintf("namedport '%s'", portProtocol.Port.StrVal))
+				}
 			} else {
 				lines = append(lines, fmt.Sprintf("port %d on protocol %s", portProtocol.Port.IntVal, portProtocol.Protocol))
 			}

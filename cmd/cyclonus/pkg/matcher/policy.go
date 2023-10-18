@@ -301,11 +301,11 @@ func (p *Policy) IsIngressOrEgressAllowed(traffic *Traffic, isIngress bool) Dire
 	effects := make([]Effect, 0)
 	for _, target := range matchingTargets {
 		for _, m := range target.Peers {
-			// check if m is a PeerMatcherV2
+			// check if m is a PeerMatcherAdmin
 			e := NewV1Effect(true)
-			matcherV2, ok := m.(*PeerMatcherV2)
+			matcherAdmin, ok := m.(*PeerMatcherAdmin)
 			if ok {
-				e = matcherV2.effectFromMatch
+				e = matcherAdmin.effectFromMatch
 			}
 
 			if !m.Matches(subject, peer, traffic.ResolvedPort, traffic.ResolvedPortName, traffic.Protocol) {

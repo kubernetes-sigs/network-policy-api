@@ -5,17 +5,18 @@ import (
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
-// PeerMatcherV2 models an ANP or BANP rule, incorporating an ANP/BANP action and an ANP priority.
-// NOTE: best approach right now is to only use PodPeerMatcher as the PeerMatcher.
-type PeerMatcherV2 struct {
-	PeerMatcher
+// PeerMatcherAdmin models an ANP or BANP rule, incorporating an ANP/BANP action and an ANP priority.
+// NOTE: we only use the PodPeerMatcher out of all the PeerMatcher imlementations.
+// This is because ANP and BANP only deal with Pod to Pod traffic, and do not deal with external IPs.
+type PeerMatcherAdmin struct {
+	*PodPeerMatcher
 	effectFromMatch Effect
 }
 
-// NewPeerMatcherANP creates a PeerMatcherV2 for an ANP rule
-func NewPeerMatcherANP(peer PeerMatcher, v Verdict, priority int) *PeerMatcherV2 {
-	return &PeerMatcherV2{
-		PeerMatcher: peer,
+// NewPeerMatcherANP creates a PeerMatcherAdmin for an ANP rule
+func NewPeerMatcherANP(peer *PodPeerMatcher, v Verdict, priority int) *PeerMatcherAdmin {
+	return &PeerMatcherAdmin{
+		PodPeerMatcher: peer,
 		effectFromMatch: Effect{
 			PolicyKind: AdminNetworkPolicy,
 			Priority:   priority,
@@ -24,10 +25,10 @@ func NewPeerMatcherANP(peer PeerMatcher, v Verdict, priority int) *PeerMatcherV2
 	}
 }
 
-// NewPeerMatcherBANP creates a new PeerMatcherV2 for a BANP rule
-func NewPeerMatcherBANP(peer PeerMatcher, v Verdict) *PeerMatcherV2 {
-	return &PeerMatcherV2{
-		PeerMatcher: peer,
+// NewPeerMatcherBANP creates a new PeerMatcherAdmin for a BANP rule
+func NewPeerMatcherBANP(peer *PodPeerMatcher, v Verdict) *PeerMatcherAdmin {
+	return &PeerMatcherAdmin{
+		PodPeerMatcher: peer,
 		effectFromMatch: Effect{
 			PolicyKind: BaselineAdminNetworkPolicy,
 			Verdict:    v,

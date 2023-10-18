@@ -172,7 +172,7 @@ func (s *SubjectAdmin) Matches(candidate *InternalPeer) bool {
 
 func (s *SubjectAdmin) TargetString() string {
 	// FIXME
-	return "FIXME: implement target string for admin network policies"
+	return "FIXME: implement target string like v1's except it supports namespace selector and (not) same labels"
 }
 
 func (s *SubjectAdmin) GetPrimaryKey() string {
