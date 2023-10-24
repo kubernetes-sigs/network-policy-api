@@ -108,10 +108,8 @@ func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Confi
 // cause the test to halt if the specified timeout is exceeded.
 func NamespacesMustBeReady(t *testing.T, c client.Client, timeoutConfig config.TimeoutConfig, namespaces []string, statefulSetNames []string) {
 	t.Helper()
-	ctx, cancel := context.WithTimeout(context.Background(), timeoutConfig.NamespacesMustBeReady)
-	defer cancel()
 
-	waitErr := wait.PollImmediate(1*time.Second, timeoutConfig.NamespacesMustBeReady, func() (bool, error) {
+	waitErr := wait.PollUntilContextTimeout(context.Background(), 1*time.Second, timeoutConfig.NamespacesMustBeReady, true, func(ctx context.Context) (bool, error) {
 		for i, ns := range namespaces {
 			statefulSet := &appsv1.StatefulSet{}
 			statefulSetKey := types.NamespacedName{

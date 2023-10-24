@@ -18,6 +18,7 @@ package suite
 
 import (
 	"embed"
+	"strings"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -188,4 +189,17 @@ func (test *ConformanceTest) Run(t *testing.T, suite *ConformanceTestSuite) {
 	}
 
 	test.Test(t, suite)
+}
+
+// ParseSupportedFeatures parses flag arguments and converts the string to
+// sets.Set[suite.SupportedFeature]
+func ParseSupportedFeatures(f string) sets.Set[SupportedFeature] {
+	if f == "" {
+		return nil
+	}
+	res := sets.Set[SupportedFeature]{}
+	for _, value := range strings.Split(f, ",") {
+		res.Insert(SupportedFeature(value))
+	}
+	return res
 }

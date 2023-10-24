@@ -30,3 +30,15 @@ var (
 	ExemptFeatures             = flag.String("exempt-features", "", "Exempt Features excluded from conformance tests suites")
 	EnableAllSupportedFeatures = flag.Bool("all-features", false, "Whether to enable all supported features for conformance tests")
 )
+
+// Required for Conformance Profiles
+var (
+	ImplementationOrganization          = flag.String("organization", "", "Implementation's Organization to issue conformance to")
+	ImplementationProject               = flag.String("project", "", "Implementation's project to issue conformance to")
+	ImplementationURL                   = flag.String("url", "", "Implementation's url to issue conformance to")
+	ImplementationVersion               = flag.String("version", "", "Implementation's version to issue conformance to")
+	ImplementationContact               = flag.String("contact", "", "Comma-separated list of contact information for the maintainers")
+	ImplementationAdditionalInformation = flag.String("additional-info", "", "Link to implementation's CI integration that shows how the report was generated")
+	ConformanceProfiles                 = flag.String("conformance-profiles", "", "Comma-separated list of the conformance profiles to run")
+	ReportOutput                        = flag.String("report-output", "", "The file where to write the conformance report")
+)
