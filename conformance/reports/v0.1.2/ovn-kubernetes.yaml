@@ -1,0 +1,29 @@
+apiVersion: policy.networking.k8s.io/v1alpha1
+date: "2023-10-19T19:03:23+02:00"
+implementation:
+  additionalInformation: "https://github.com/ovn-org/ovn-kubernetes/blob/e0d2ab8afd043a03c6e6b2935a0d773810dad0f7/test/conformance/network_policy_v2_test.go#L50"
+  contact:
+  - '@tssurya'
+  organization: ovn-org
+  project: ovn-kubernetes
+  url: https://github.com/ovn-org/ovn-kubernetes
+  version: 0.1.2
+kind: ConformanceReport
+networkPolicyV2APIVersion: v0.1.2
+profiles:
+  - core:
+    result: success
+    statistics:
+      Failed: 0
+      Passed: 7
+      Skipped: 0
+    summary: ""
+    name: AdminNetworkPolicy
+  - core:
+    result: success
+    statistics:
+      Failed: 0
+      Passed: 7
+      Skipped: 0
+    summary: ""
+    name: BaselineAdminNetworkPolicy
