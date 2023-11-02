@@ -13,9 +13,9 @@ type StepResult struct {
 	KubeProbes     []*probe.Table
 	Policy         *matcher.Policy
 	KubePolicies   []*networkingv1.NetworkPolicy
-	ANPs        []*v1alpha1.AdminNetworkPolicy
-	BANP        *v1alpha1.BaselineAdminNetworkPolicy
-	comparisons []*ComparisonTable
+	ANPs           []*v1alpha1.AdminNetworkPolicy
+	BANP           *v1alpha1.BaselineAdminNetworkPolicy
+	comparisons    []*ComparisonTable
 }
 
 func NewStepResult(simulated *probe.Table, policy *matcher.Policy, kubePolicies []*networkingv1.NetworkPolicy) *StepResult {
