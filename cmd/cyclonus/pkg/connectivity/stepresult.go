@@ -13,7 +13,6 @@ type StepResult struct {
 	KubeProbes     []*probe.Table
 	Policy         *matcher.Policy
 	KubePolicies   []*networkingv1.NetworkPolicy
-	// FIXME use ANP and BANP here
 	ANPs        []*v1alpha1.AdminNetworkPolicy
 	BANP        *v1alpha1.BaselineAdminNetworkPolicy
 	comparisons []*ComparisonTable

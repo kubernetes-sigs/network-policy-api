@@ -58,7 +58,7 @@ func BuildTarget(netpol *networkingv1.NetworkPolicy) (*Target, *Target) {
 	var ingress *Target
 	var egress *Target
 	if len(netpol.Spec.PolicyTypes) == 0 {
-		panic(errors.Errorf("invalid network policy: need at least 1 type"))
+		panic(errors.Errorf("invalid NetworkPolicy: need at least 1 type"))
 	}
 	policyNamespace := getPolicyNamespace(netpol)
 	for _, pType := range netpol.Spec.PolicyTypes {
@@ -208,7 +208,7 @@ func BuildSinglePortMatcher(npPort networkingv1.NetworkPolicyPort) (*PortProtoco
 
 func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 	if len(anp.Spec.Ingress) == 0 && len(anp.Spec.Egress) == 0 {
-		panic(errors.Errorf("invalid network policy: need at least one egress or ingress rule"))
+		panic(errors.Errorf("invalid AdminNetworkPolicy: need at least one egress or ingress rule"))
 	}
 
 	var ingress *Target
@@ -251,7 +251,7 @@ func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 
 func BuildTargetBANP(banp *v1alpha1.BaselineAdminNetworkPolicy) (*Target, *Target) {
 	if len(banp.Spec.Ingress) == 0 && len(banp.Spec.Egress) == 0 {
-		panic(errors.Errorf("invalid network policy: need at least one egress or ingress rule"))
+		panic(errors.Errorf("invalid BaselineAdminNetworkPolicy: need at least one egress or ingress rule"))
 	}
 
 	var ingress *Target

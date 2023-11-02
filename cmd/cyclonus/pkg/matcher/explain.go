@@ -89,7 +89,7 @@ func (s *SliceBuilder) IPPeerMatcherTableLines(ip *IPPeerMatcher) {
 }
 
 func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher, e Effect) {
-	// FIXME add action/priority column using e
+	// FIXME add action/priority column using fields of the Effect parameter "e"
 	var namespaces string
 	switch ns := nsPodMatcher.Namespace.(type) {
 	case *AllNamespaceMatcher:
