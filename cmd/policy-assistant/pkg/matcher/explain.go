@@ -9,7 +9,6 @@ import (
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
-	networkingv1 "k8s.io/api/networking/v1"
 )
 
 type SliceBuilder struct {
@@ -27,11 +26,13 @@ func (p *Policy) ExplainTable() string {
 	table.SetAutoWrapText(false)
 	table.SetRowLine(true)
 	table.SetAutoMergeCells(true)
-	table.SetHeader([]string{"Type", "Target", "Source rules", "Peer", "Port/Protocol"})
+	// FIXME add action/priority column
+	table.SetHeader([]string{"Type", "Subject", "Source rules", "Peer", "Port/Protocol"})
 
 	builder := &SliceBuilder{}
 	ingresses, egresses := p.SortedTargets()
 	builder.TargetsTableLines(ingresses, true)
+	// FIXME add action/priority column
 	builder.Elements = append(builder.Elements, []string{"", "", "", "", ""})
 	builder.TargetsTableLines(egresses, false)
 
@@ -49,28 +50,30 @@ func (s *SliceBuilder) TargetsTableLines(targets []*Target, isIngress bool) {
 		ruleType = "Egress"
 	}
 	for _, target := range targets {
-		sourceRules := slice.Sort(
-			slice.Map(func(sr *networkingv1.NetworkPolicy) string {
-				return fmt.Sprintf("%s/%s", sr.Namespace, sr.Name)
-			}, target.SourceRules))
-		targetString := fmt.Sprintf("namespace: %s\n%s", target.Namespace, kube.LabelSelectorTableLines(target.PodSelector))
-		rules := strings.Join(sourceRules, "\n")
-		s.Prefix = []string{ruleType, targetString, rules}
+		sourceRules := slice.Sort(target.SourceRules)
+		sourceRulesStrings := make([]string, 0, len(sourceRules))
+		for _, rule := range sourceRules {
+			sourceRulesStrings = append(sourceRulesStrings, string(rule))
+		}
+		rules := strings.Join(sourceRulesStrings, "\n")
+		s.Prefix = []string{ruleType, target.TargetString(), rules}
 
 		if len(target.Peers) == 0 {
 			s.Append("no pods, no ips", "no ports, no protocols")
 		} else {
 			for _, peer := range slice.SortOn(func(p PeerMatcher) string { return json.MustMarshalToString(p) }, target.Peers) {
 				switch a := peer.(type) {
+				case *PeerMatcherAdmin:
+					s.PodPeerMatcherTableLines(a.PodPeerMatcher, a.effectFromMatch)
 				case *AllPeersMatcher:
 					s.Append("all pods, all ips", "all ports, all protocols")
 				case *PortsForAllPeersMatcher:
-					pps := PortMatcherTableLines(a.Port)
+					pps := PortMatcherTableLines(a.Port, NetworkPolicyV1)
 					s.Append("all pods, all ips", strings.Join(pps, "\n"))
 				case *IPPeerMatcher:
 					s.IPPeerMatcherTableLines(a)
 				case *PodPeerMatcher:
-					s.PodPeerMatcherTableLines(a)
+					s.PodPeerMatcherTableLines(a, NewV1Effect(true))
 				default:
 					panic(errors.Errorf("invalid PeerMatcher type %T", a))
 				}
@@ -81,17 +84,19 @@ func (s *SliceBuilder) TargetsTableLines(targets []*Target, isIngress bool) {
 
 func (s *SliceBuilder) IPPeerMatcherTableLines(ip *IPPeerMatcher) {
 	peer := ip.IPBlock.CIDR + "\n" + fmt.Sprintf("except %+v", ip.IPBlock.Except)
-	pps := PortMatcherTableLines(ip.Port)
+	pps := PortMatcherTableLines(ip.Port, NetworkPolicyV1)
 	s.Append(peer, strings.Join(pps, "\n"))
 }
 
-func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher) {
+func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher, e Effect) {
+	// FIXME add action/priority column using fields of the Effect parameter "e"
 	var namespaces string
 	switch ns := nsPodMatcher.Namespace.(type) {
 	case *AllNamespaceMatcher:
 		namespaces = "all"
 	case *LabelSelectorNamespaceMatcher:
 		namespaces = kube.LabelSelectorTableLines(ns.Selector)
+	// FIXME handle SameLabels, NotSameLabels
 	case *ExactNamespaceMatcher:
 		namespaces = ns.Namespace
 	default:
@@ -106,10 +111,10 @@ func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher) {
 	default:
 		panic(errors.Errorf("invalid PodMatcher type %T", p))
 	}
-	s.Append("namespace: "+namespaces+"\n"+"pods: "+pods, strings.Join(PortMatcherTableLines(nsPodMatcher.Port), "\n"))
+	s.Append("namespace: "+namespaces+"\n"+"pods: "+pods, strings.Join(PortMatcherTableLines(nsPodMatcher.Port, e.PolicyKind), "\n"))
 }
 
-func PortMatcherTableLines(pm PortMatcher) []string {
+func PortMatcherTableLines(pm PortMatcher, kind PolicyKind) []string {
 	switch port := pm.(type) {
 	case *AllPortMatcher:
 		return []string{"all ports, all protocols"}
@@ -118,8 +123,14 @@ func PortMatcherTableLines(pm PortMatcher) []string {
 		for _, portProtocol := range port.Ports {
 			if portProtocol.Port == nil {
 				lines = append(lines, "all ports on protocol "+string(portProtocol.Protocol))
+			} else if portProtocol.Port.StrVal != "" {
+				if kind == NetworkPolicyV1 {
+					lines = append(lines, fmt.Sprintf("namedport '%s' on protocol %s", portProtocol.Port.StrVal, portProtocol.Protocol))
+				} else {
+					lines = append(lines, fmt.Sprintf("namedport '%s'", portProtocol.Port.StrVal))
+				}
 			} else {
-				lines = append(lines, "port "+portProtocol.Port.String()+" on protocol "+string(portProtocol.Protocol))
+				lines = append(lines, fmt.Sprintf("port %d on protocol %s", portProtocol.Port.IntVal, portProtocol.Protocol))
 			}
 		}
 		for _, portRange := range port.PortRanges {

@@ -2,11 +2,12 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/mattfenwick/collections/pkg/slice"
 	"github.com/olekukonko/tablewriter"
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
-	"strings"
 )
 
 type Traffic struct {
@@ -71,10 +72,9 @@ func (p *TrafficPeer) IsExternal() bool {
 }
 
 type InternalPeer struct {
-	PodLabels map[string]string
-	//Pod             string
+	PodLabels       map[string]string
 	NamespaceLabels map[string]string
 	Namespace       string
-	//NodeLabels      map[string]string
-	//Node            string
+	NodeLabels      map[string]string
+	Node            string
 }

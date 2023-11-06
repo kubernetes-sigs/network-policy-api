@@ -5,10 +5,8 @@ import (
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/json"
-	"github.com/mattfenwick/collections/pkg/set"
 	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
 	"github.com/mattfenwick/cyclonus/pkg/generator"
-	"github.com/mattfenwick/cyclonus/pkg/linter"
 
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
@@ -25,7 +23,6 @@ import (
 const (
 	ParseMode        = "parse"
 	ExplainMode      = "explain"
-	LintMode         = "lint"
 	QueryTrafficMode = "query-traffic"
 	QueryTargetMode  = "query-target"
 	ProbeMode        = "probe"
@@ -34,7 +31,6 @@ const (
 var AllModes = []string{
 	ParseMode,
 	ExplainMode,
-	LintMode,
 	QueryTrafficMode,
 	QueryTargetMode,
 	ProbeMode,
@@ -135,9 +131,6 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 		case ExplainMode:
 			fmt.Println("explained policies:")
 			ExplainPolicies(policies)
-		case LintMode:
-			fmt.Println("policy lint:")
-			Lint(kubePolicies)
 		case QueryTargetMode:
 			pods := make([]*QueryTargetPod, len(kubePods))
 			for i, p := range kubePods {
@@ -168,11 +161,6 @@ func ExplainPolicies(explainedPolicies *matcher.Policy) {
 	fmt.Printf("%s\n", explainedPolicies.ExplainTable())
 }
 
-func Lint(kubePolicies []*networkingv1.NetworkPolicy) {
-	warnings := linter.Lint(kubePolicies, set.FromSlice[linter.Check](nil))
-	fmt.Println(linter.WarningsTable(warnings))
-}
-
 // QueryTargetPod matches targets; targets exist in only a single namespace and can't be matched by namespace
 //
 //	label, therefore we match by exact namespace and by pod labels.
@@ -199,10 +187,14 @@ func QueryTargets(explainedPolicies *matcher.Policy, podPath string, pods []*Que
 }
 
 func QueryTargetHelper(policies *matcher.Policy, pod *QueryTargetPod) (*matcher.Policy, *matcher.Policy) {
-	ingressTargets := policies.TargetsApplyingToPod(true, pod.Namespace, pod.Labels)
+	podInfo := &matcher.InternalPeer{
+		Namespace: pod.Namespace,
+		PodLabels: pod.Labels,
+	}
+	ingressTargets := policies.TargetsApplyingToPod(true, podInfo)
 	combinedIngressTarget := matcher.CombineTargetsIgnoringPrimaryKey(pod.Namespace, metav1.LabelSelector{MatchLabels: pod.Labels}, ingressTargets)
 
-	egressTargets := policies.TargetsApplyingToPod(false, pod.Namespace, pod.Labels)
+	egressTargets := policies.TargetsApplyingToPod(false, podInfo)
 	combinedEgressTarget := matcher.CombineTargetsIgnoringPrimaryKey(pod.Namespace, metav1.LabelSelector{MatchLabels: pod.Labels}, egressTargets)
 
 	var combinedIngresses []*matcher.Target

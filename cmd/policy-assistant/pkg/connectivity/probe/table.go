@@ -1,11 +1,14 @@
 package probe
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/mattfenwick/collections/pkg/slice"
 	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
-	"strings"
+	v1 "k8s.io/api/core/v1"
 )
 
 type Item struct {
@@ -24,6 +27,73 @@ func (p *Item) AddJobResult(jr *JobResult) error {
 
 type Table struct {
 	Wrapped *TruthTable
+}
+
+func NewTableWithDefaultConnectivity(r *Resources, ingress, egress Connectivity) *Table {
+	return &Table{Wrapped: NewTruthTableFromItems(r.SortedPodNames(), func(fr, to string) interface{} {
+		results := make(map[string]*JobResult, len(r.ports)*len(r.protocols))
+		for _, proto := range r.protocols {
+			for _, port := range r.ports {
+				jr := &JobResult{
+					Job: &Job{
+						FromKey:          fr,
+						ToKey:            to,
+						ResolvedPort:     port,
+						ResolvedPortName: "",
+						Protocol:         proto,
+						TimeoutSeconds:   3,
+					},
+					Ingress: &ingress,
+					Egress:  &egress,
+				}
+
+				setCombined(jr)
+
+				k := fmt.Sprintf("%s/%d", proto, port)
+				results[k] = jr
+			}
+		}
+
+		return &Item{
+			From:       fr,
+			To:         to,
+			JobResults: results,
+		}
+	})}
+}
+
+// SetEgress should be used to set connectivity for tables with connectivity already specified via NewTableWithDefaultConnectivity()
+func (t *Table) SetEgress(egress Connectivity, from, to string, port int, proto v1.Protocol) {
+	portProto := fmt.Sprintf("%s/%d", proto, port)
+	jr, ok := t.Get(from, to).JobResults[portProto]
+	if !ok || jr.Ingress == nil || jr.Egress == nil {
+		panic(errors.Errorf("cannot set connectivity: job result non-existent/invalid for %s/%d", proto, port))
+	}
+
+	jr.Egress = &egress
+	setCombined(jr)
+}
+
+// SetIngress should be used to set connectivity for tables with connectivity already specified via NewTableWithDefaultConnectivity()
+func (t *Table) SetIngress(ingress Connectivity, from, to string, port int, proto v1.Protocol) {
+	portProto := fmt.Sprintf("%s/%d", proto, port)
+	jr, ok := t.Get(from, to).JobResults[portProto]
+	if !ok || jr.Ingress == nil || jr.Egress == nil {
+		panic(errors.Errorf("cannot set connectivity: job result non-existent/invalid for %s/%d", proto, port))
+	}
+
+	jr.Ingress = &ingress
+	setCombined(jr)
+}
+
+func setCombined(jr *JobResult) {
+	if *jr.Ingress == ConnectivityBlocked || *jr.Egress == ConnectivityBlocked {
+		jr.Combined = ConnectivityBlocked
+	}
+
+	if *jr.Ingress == ConnectivityAllowed && *jr.Egress == ConnectivityAllowed {
+		jr.Combined = ConnectivityAllowed
+	}
 }
 
 func NewTable(items []string) *Table {
