@@ -120,13 +120,13 @@ type PortRange struct {
 	End int32 `json:"end"`
 }
 
-// AdminNetworkPolicyPeer defines an in-cluster peer to allow traffic to/from.
+// AdminNetworkPolicyIngressPeer defines an in-cluster peer to allow traffic from.
 // Exactly one of the selector pointers must be set for a given peer. If a
 // consumer observes none of its fields are set, they must assume an unknown
 // option has been specified and fail closed.
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
-type AdminNetworkPolicyPeer struct {
+type AdminNetworkPolicyIngressPeer struct {
 	// Namespaces defines a way to select all pods within a set of Namespaces.
 	// Note that host-networked pods are not included in this type of peer.
 	//
@@ -135,7 +135,31 @@ type AdminNetworkPolicyPeer struct {
 	// +optional
 	Namespaces *NamespacedPeer `json:"namespaces,omitempty"`
 	// Pods defines a way to select a set of pods in
-	// in a set of namespaces. Note that host-networked pods
+	// a set of namespaces. Note that host-networked pods
+	// are not included in this type of peer.
+	//
+	// Support: Core
+	//
+	// +optional
+	Pods *NamespacedPodPeer `json:"pods,omitempty"`
+}
+
+// AdminNetworkPolicyEgressPeer defines an in-cluster peer to allow traffic to.
+// Exactly one of the selector pointers must be set for a given peer. If a
+// consumer observes none of its fields are set, they must assume an unknown
+// option has been specified and fail closed.
+// +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:MinProperties=1
+type AdminNetworkPolicyEgressPeer struct {
+	// Namespaces defines a way to select all pods within a set of Namespaces.
+	// Note that host-networked pods are not included in this type of peer.
+	//
+	// Support: Core
+	//
+	// +optional
+	Namespaces *NamespacedPeer `json:"namespaces,omitempty"`
+	// Pods defines a way to select a set of pods in
+	// a set of namespaces. Note that host-networked pods
 	// are not included in this type of peer.
 	//
 	// Support: Core
