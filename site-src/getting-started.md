@@ -12,7 +12,7 @@ The following commands will install the latest release version of the `AdminNetw
 `BaselineAdminNetworkPolicy` CRDs in your K8s cluster:
 
 ```bash
-kubectl apply -f https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.1.0/install.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.1.1/install.yaml
 ```
 
 **3. Try out one of the sample yamls for specific user stories**
