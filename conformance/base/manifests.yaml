@@ -52,6 +52,10 @@ spec:
         - name: harry-potter-80
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+          ports:
+            - containerPort: 80
+              protocol: TCP
+              name: web
         - name: harry-potter-8080
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
@@ -61,6 +65,10 @@ spec:
         - name: harry-potter-53
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+          ports:
+            - containerPort: 53
+              protocol: UDP
+              name: dns
         - name: harry-potter-9003
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost porter"]
@@ -95,6 +103,10 @@ spec:
         - name: draco-malfoy-80
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+          ports:
+            - containerPort: 80
+              protocol: TCP
+              name: web
         - name: draco-malfoy-8080
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
@@ -104,6 +116,10 @@ spec:
         - name: draco-malfoy-53
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+          ports:
+            - containerPort: 53
+              protocol: UDP
+              name: dns
         - name: draco-malfoy-9003
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost porter"]
@@ -138,6 +154,10 @@ spec:
         - name: cedric-diggory-80
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+          ports:
+            - containerPort: 80
+              protocol: TCP
+              name: web
         - name: cedric-diggory-8080
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
@@ -147,6 +167,10 @@ spec:
         - name: cedric-diggory-53
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+          ports:
+            - containerPort: 53
+              protocol: UDP
+              name: dns
         - name: cedric-diggory-9003
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost porter"]
@@ -181,6 +205,10 @@ spec:
         - name: luna-lovegood-80
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+          ports:
+            - containerPort: 80
+              protocol: TCP
+              name: web
         - name: luna-lovegood-8080
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
@@ -190,6 +218,10 @@ spec:
         - name: luna-lovegood-53
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+          ports:
+            - containerPort: 53
+              protocol: UDP
+              name: dns
         - name: luna-lovegood-9003
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost porter"]
