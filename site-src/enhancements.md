@@ -56,7 +56,7 @@ To start NPEP process, create a PR adding `npep-<issue number>.md` file in the
 [npep folder](https://github.com/kubernetes-sigs/network-policy-api/tree/master/npep)
 using the [template NPEP](https://github.com/kubernetes-sigs/network-policy-api/blob/master/npep/npep-95.md) as a
 starting point. Make sure to also add your new NPEP to the website, this can be done within
-the `index.md` file at the root of the repo.
+the `mkdocs.yml` file at the root of the repo.
 
 ### 4. Provisional: Agree on the Goals and applicable User-Stories
 
