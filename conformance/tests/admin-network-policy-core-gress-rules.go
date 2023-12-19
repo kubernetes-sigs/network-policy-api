@@ -33,7 +33,72 @@ import (
 func init() {
 	ConformanceTests = append(ConformanceTests,
 		AdminNetworkPolicyGress,
+		AdminNetworkPolicyEgressPodSelectorGress,
 	)
+}
+
+var AdminNetworkPolicyEgressPodSelectorGress = suite.ConformanceTest{
+	ShortName:   "AdminNetworkPolicyPodSelectorGress",
+	Description: "Tests suppot for combined ingress and egress traffic on a pod selector using admin network policy api based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportAdminNetworkPolicy,
+	},
+	Manifests: []string{"base/admin_network_policy/core-gress-rules-combined.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+
+		t.Run("Should support a 'allow-gress' policy across different protocols at the specified ports", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `gress-rules` ANP
+
+			// harry-potter-0 is our server pod in gryffindor namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-gryffindor",
+				Name:      "harry-potter-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "tcp",
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "udp",
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+
+		})
+
+		t.Run("Should support a 'deny-gress' policy across different protocols at the specified ports", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `gress-rules` ANP
+
+			// harry-potter-0 is our server pod in gryffindor namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-gryffindor",
+				Name:      "harry-potter-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-0", "tcp",
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-0", "udp",
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+		})
+	},
 }
 
 var AdminNetworkPolicyGress = suite.ConformanceTest{

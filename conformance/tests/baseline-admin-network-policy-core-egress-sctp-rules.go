@@ -33,7 +33,53 @@ import (
 func init() {
 	ConformanceTests = append(ConformanceTests,
 		BaselineAdminNetworkPolicyEgressSCTP,
+		BaselineAdminNetworkPolicyEgressPodSelectorSCTP,
 	)
+}
+
+var BaselineAdminNetworkPolicyEgressPodSelectorSCTP = suite.ConformanceTest{
+	ShortName:   "BaselineAdminNetworkPolicyEgressPodSelectorSCTP",
+	Description: "Tests support for egress traffic (SCTP protocol) at specific pods using baseline admin network policy API based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportBaselineAdminNetworkPolicy,
+	},
+	Manifests: []string{"base/baseline_admin_network_policy/core-egress-sctp-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+
+		t.Run("Should support an 'allow-egress' policy for SCTP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hogwarts-staff",
+				Name:      "professor-dumbledore-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// ensure egress is ALLOWED to Professor Dumbledore from ravenclaw
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+		})
+
+		t.Run("Should support a 'deny-egress' policy for SCTP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hogwarts-staff",
+				Name:      "professor-quirrell-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// ensure egress is DENIED to professor quirrell from ravenclaw
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+		})
+	},
 }
 
 var BaselineAdminNetworkPolicyEgressSCTP = suite.ConformanceTest{

@@ -34,7 +34,40 @@ func init() {
 	ConformanceTests = append(ConformanceTests,
 		AdminNetworkPolicyEgressTCP,
 		AdminNetworkPolicyEgressNamedPort,
+		AdminNetworkPolicyEgressPodSelectorTCP,
 	)
+}
+
+var AdminNetworkPolicyEgressPodSelectorTCP = suite.ConformanceTest{
+	ShortName:   "AdminNetworkPolicyEgressPodSelectorTCP",
+	Description: "Tests suppot for egress traffic (TCP) on a pod selector using admin network policy api based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportAdminNetworkPolicy,
+	},
+	Manifests: []string{"base/admin_network_policy/core-egress-tcp-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+
+		t.Run("Should support an 'allow-egress' policy for TCP Pod Selector", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `egress-tcp` ANP
+			// luna-lovegood-0 is our server pod in ravenclaw namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-ravenclaw",
+				Name:      "luna-lovegood-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "tcp",
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+		})
+	},
 }
 
 var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{

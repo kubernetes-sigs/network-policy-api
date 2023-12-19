@@ -33,7 +33,52 @@ import (
 func init() {
 	ConformanceTests = append(ConformanceTests,
 		BaselineAdminNetworkPolicyIngressUDP,
+		BaselineAdminNetworkPolicyIngressPodSelectorUDP,
 	)
+}
+
+var BaselineAdminNetworkPolicyIngressPodSelectorUDP = suite.ConformanceTest{
+	ShortName:   "BaselineAdminNetworkPolicyIngressPodSelectorUDP",
+	Description: "Tests support for ingress traffic (UDP protocol) at the specific targeted pod using baseline admin network policy API based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportBaselineAdminNetworkPolicy,
+	},
+	Manifests: []string{"base/baseline_admin_network_policy/core-ingress-udp-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+		t.Run("Should support an 'allow-ingress' policy for UDP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `default` BANP
+			// luna-lovegood-0 is our server pod in ravenclaw namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hufflepuff",
+				Name:      "cedric-diggory-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+		})
+
+		t.Run("Should support a 'deny-ingress' policy for UDP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `default` BANP
+			// luna-lovegood-0 is our server pod in ravenclaw namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hufflepuff",
+				Name:      "cedric-diggory-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-0", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+		})
+	},
 }
 
 var BaselineAdminNetworkPolicyIngressUDP = suite.ConformanceTest{

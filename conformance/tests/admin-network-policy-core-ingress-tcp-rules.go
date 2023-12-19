@@ -33,7 +33,57 @@ import (
 func init() {
 	ConformanceTests = append(ConformanceTests,
 		AdminNetworkPolicyIngressTCP,
+		AdminNetworkPolicyIngressPodSelectorTCP,
 	)
+}
+
+var AdminNetworkPolicyIngressPodSelectorTCP = suite.ConformanceTest{
+	ShortName:   "AdminNetworkPolicyIngressPodSelectorTCP",
+	Description: "Tests support for ingress traffic (TCP protocol) using admin network policy API for the specified pod based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportAdminNetworkPolicy,
+	},
+	Manifests: []string{"base/admin_network_policy/core-ingress-tcp-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+
+		t.Run("Should support an 'allow-ingress' policy for TCP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `ingress-tcp` ANP
+			// harry-potter-0 is our server pod in gryffindor namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-gryffindor",
+				Name:      "harry-potter-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// ensure ingress is ALLOWED from dumbledore and DENIED from professor quirrell. Both pods are in the hogwarts-staff namespace
+			// Within the same namespace, hogwarts-staff, we target pods by their podSelector
+			// ingressRule at index9 will ALLOW traffic from dumbledore pod
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "tcp",
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+		})
+
+		t.Run("Should support a 'deny-ingress' policy for TCP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `ingress-tcp` ANP
+			// harry-potter-0 is our server pod in gryffindor namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-gryffindor",
+				Name:      "harry-potter-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// IngressRule at index8 will DENY traffic from professor quirrell pod
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-0", "tcp",
+				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+		})
+	},
 }
 
 var AdminNetworkPolicyIngressTCP = suite.ConformanceTest{
@@ -56,6 +106,7 @@ var AdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 				Name:      "harry-potter-0",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
+
 			// luna-lovegood-0 is our client pod in ravenclaw namespace
 			// ensure ingress is ALLOWED from ravenclaw to gryffindor
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
@@ -145,6 +196,7 @@ var AdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-1", "tcp",
 				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, true)
 			assert.True(t, success)
+
 		})
 
 		t.Run("Should support an 'pass-ingress' policy for TCP protocol; ensure rule ordering is respected", func(t *testing.T) {

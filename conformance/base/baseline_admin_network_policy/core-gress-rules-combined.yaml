@@ -63,6 +63,48 @@ spec:
         namespaceSelector:
           matchLabels:
             kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+  - name: "allow-from-dumbledore-at-tcp-udp-sctp"
+    action: "Allow"
+    to:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-dumbledore-0
+    ports:
+      - portNumber:
+          protocol: TCP
+          port: 8080
+      - portNumber:
+          protocol: UDP
+          port: 5353
+      - portNumber:
+          protocol: SCTP
+          port: 9003
+  - name: "deny-to-quirrell-at-tcp-udp-sctp"
+    action: "Deny"
+    to:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-quirrell-0
+    ports:
+      - portNumber:
+          protocol: TCP
+          port: 8080
+      - portNumber:
+          protocol: UDP
+          port: 5353
+      - portNumber:
+          protocol: SCTP
+          port: 9003
   ingress:
   - name: "allow-from-ravenclaw-everything"
     action: "Allow"

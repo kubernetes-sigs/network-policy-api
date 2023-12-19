@@ -32,8 +32,61 @@ import (
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
+		AdminNetworkPolicyEgressPodSelectorSCTP,
 		AdminNetworkPolicyEgressSCTP,
 	)
+}
+
+var AdminNetworkPolicyEgressPodSelectorSCTP = suite.ConformanceTest{
+	ShortName:   "AdminNetworkPolicyEgressPodSelectorSCTP",
+	Description: "Tests suppot for egress traffic (SCTP) on a pod selector using admin network policy api based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportAdminNetworkPolicy,
+	},
+	Manifests: []string{"base/admin_network_policy/core-egress-sctp-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+
+		t.Run("Should support an 'allow-egress' policy for SCTP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `egress-sctp` ANP
+			// professor-dumbledore-0 is our server pod in the hogwarts-staff namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hogwarts-staff",
+				Name:      "professor-dumbledore-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// ensure egress is ALOWED to professor-dumbledore from ravenclaw for sctp; egressRule at index8 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+
+			// ensure egress is DENIED to professor-dumbledore from ravenclaw for all other ports; egressrule at index9 should take effect
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
+				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+		})
+
+		t.Run("Should support a 'deny-egress' policy for SCTP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `egress-sctp` ANP
+			// professor-quirrel-0 is our server pod in the hogwarts-staff namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hogwarts-staff",
+				Name:      "professor-quirrell-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// ensure egress is DENIED to professor-quirrel from ravenclaw for all traffic; egressRule at index7 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+		})
+	},
 }
 
 var AdminNetworkPolicyEgressSCTP = suite.ConformanceTest{
