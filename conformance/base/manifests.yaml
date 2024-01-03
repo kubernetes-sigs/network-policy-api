@@ -26,6 +26,13 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: network-policy-conformance-hogwarts-staff
+  labels:
+    conformance-house: hogwarts-staff
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: network-policy-conformance-ravenclaw
   labels:
     conformance-house: ravenclaw
@@ -76,6 +83,92 @@ spec:
           - name: SERVE_SCTP_PORT_9003
             value: "foo"
         - name: harry-potter-9005
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9005
+            value: "foo"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: professor-dumbledore
+  namespace: network-policy-conformance-hogwarts-staff
+spec:
+  selector:
+    matchLabels:
+      conformance-house: hogwarts-staff
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        conformance-house: hogwarts-staff
+    spec:
+      containers:
+        - name: professor-dumbledore-client
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+        - name: professor-dumbledore-80
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+        - name: professor-dumbledore-8080
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
+        - name: professor-dumbledore-5353
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 5353"]
+        - name: professor-dumbledore-53
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+        - name: professor-dumbledore-9003
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9003
+            value: "foo"
+        - name: professor-dumbledore-9005
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9005
+            value: "foo"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: professor-quirrell
+  namespace: network-policy-conformance-hogwarts-staff
+spec:
+  selector:
+    matchLabels:
+      conformance-house: hogwarts-staff
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        conformance-house: hogwarts-staff
+    spec:
+      containers:
+        - name: professor-quirrell-client
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+        - name: professor-quirrell-80
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+        - name: professor-quirrell-8080
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
+        - name: professor-quirrell-5353
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 5353"]
+        - name: professor-quirrell-53
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+        - name: professor-quirrell-9003
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9003
+            value: "foo"
+        - name: professor-quirrell-9005
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost porter"]
           env:

@@ -51,3 +51,33 @@ spec:
         namespaceSelector:
           matchLabels:
             kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+  - name: "deny-professor-quirrell-at-80"
+    action: "Deny"
+    from:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-quirrell-0
+    ports:
+      - portNumber:
+          protocol: TCP
+          port: 80
+  - name: "allow-professor-dumbledore-at-80"
+    action: "Allow"
+    from:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-dumbledore-0
+    ports:
+      - portNumber:
+          protocol: TCP
+          port: 80

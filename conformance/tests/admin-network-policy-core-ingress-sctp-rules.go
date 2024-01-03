@@ -33,7 +33,67 @@ import (
 func init() {
 	ConformanceTests = append(ConformanceTests,
 		AdminNetworkPolicyIngressSCTP,
+		AdminNetworkPolicyIngressPodSelector,
 	)
+}
+
+var AdminNetworkPolicyIngressPodSelector = suite.ConformanceTest{
+	ShortName:   "AdminNetworkPolicyIngressPodSelector",
+	Description: "Tests suppot for ingress traffic (SCTP) on a pod selector using admin network policy api based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportAdminNetworkPolicy,
+	},
+	Manifests: []string{"base/admin_network_policy/core-ingress-sctp-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+
+		t.Run("Should support an 'allow-ingress' policy for the specified pod (SCTP)", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `ingress-sctp` ANP
+			// luna-lovegood-0 is our server pod in ravenclaw namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-ravenclaw",
+				Name:      "luna-lovegood-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// ensure ingress is ALLOWED from dumbledore pods, ingressRule at index9 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+
+			// ensure ingress is DENIED from dumbledore pods for everything but sctp
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+
+		})
+
+		t.Run("Should support an 'deny-ingress' policy for the specified pod (SCTP)", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `ingress-sctp` ANP
+			// luna-lovegood-0 is our server pod in ravenclaw namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-ravenclaw",
+				Name:      "luna-lovegood-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// ensure ingress is DENIED from professor-quirrel pod, ingressRule at index8 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+
+			// ingress is ALLOWED from professor-quirrell for all other protocols since we didn't explicitly DENY them
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-0", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+		})
+
+	},
 }
 
 var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
@@ -65,6 +125,17 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
+
+			// ensure ingress is ALLOWED from dumbledore pods, ingressRule at index9 should take effect
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+
+			// ensure ingress is DENIED from dumbledore pods for everything but sctp
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+			assert.Equal(t, true, success)
+
 		})
 
 		t.Run("Should support an 'allow-ingress' policy for SCTP protocol at the specified port", func(t *testing.T) {
@@ -145,6 +216,7 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
 			assert.Equal(t, true, success)
+
 		})
 
 		t.Run("Should support an 'pass-ingress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {

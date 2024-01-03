@@ -34,7 +34,65 @@ func init() {
 	ConformanceTests = append(ConformanceTests,
 		AdminNetworkPolicyIngressUDP,
 		AdminNetworkPolicyIngressNamedPort,
+		AdminNetworkPolicyIngressPodSelectorUDP,
 	)
+}
+
+var AdminNetworkPolicyIngressPodSelectorUDP = suite.ConformanceTest{
+	ShortName:   "AdminNetworkPolicyIngressPodSelectorUDP",
+	Description: "Tests support for ingress traffic (UDP protocol) targeting specific pods using admin network policy API based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportAdminNetworkPolicy,
+	},
+	Manifests: []string{"base/admin_network_policy/core-ingress-udp-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+
+		t.Run("Should support an 'allow-ingress' policy for UDP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `ingress-udp` ANP
+			// cedric-diggory-0 is our server pod in hufflepuff namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hufflepuff",
+				Name:      "cedric-diggory-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// Within namespace hogwarts-staff, we target pods by their podSelector
+			// ingressRule at index10 will ALLOW traffic from dumbledore pod to hufflepuff on port 53
+			// ingressRule at index11 will ALLOW traffic from dumbledore pod to hufflepuff on port 5353
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-0", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
+			assert.Equal(t, true, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-dumbledore-1", "udp",
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+
+		})
+
+		t.Run("Should support an 'deny-ingress' policy for UDP protocol at the specified pod", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+			defer cancel()
+			// This test uses `ingress-udp` ANP
+			// cedric-diggory-0 is our server pod in hufflepuff namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hufflepuff",
+				Name:      "cedric-diggory-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+
+			// Within namespace hogwarts-staff, we target pods by their podSelector
+			// ensure ingress from professor-quirrell pod to hufflepuff is DENIED on both ports
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-0", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hogwarts-staff", "professor-quirrell-1", "udp",
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+		})
+	},
 }
 
 var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
@@ -66,6 +124,7 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
 			assert.True(t, success)
+
 		})
 
 		t.Run("Should support an 'allow-ingress' policy for UDP protocol at the specified port", func(t *testing.T) {
@@ -146,6 +205,7 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-1", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.True(t, success)
+
 		})
 
 		t.Run("Should support an 'pass-ingress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {

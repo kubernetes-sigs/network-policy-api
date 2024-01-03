@@ -70,3 +70,85 @@ spec:
         namespaceSelector:
           matchLabels:
             kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+  - name: "deny-from-professor-quirrell-port-53"
+    action: "Deny"
+    from:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-quirrell-0
+    ports:
+      - portNumber:
+          protocol: UDP
+          port: 53
+  - name: "deny-from-professor-quirrell-port-5353"
+    action: "Deny"
+    from:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-quirrell-1
+    ports:
+      - portNumber:
+          protocol: UDP
+          port: 5353
+  - name: "allow-from-professor-dumbledore-at-ports-53"
+    action: "Allow"
+    from:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-dumbledore-0
+    ports:
+      - portNumber:
+          protocol: UDP
+          port: 53
+  - name: "allow-from-professor-dumbledore-at-ports-5353"
+    action: "Allow"
+    from:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-dumbledore-1
+    ports:
+      - portNumber:
+          protocol: UDP
+          port: 5353
+  - name: "deny-from-dumbledore-everything-else"
+    action: "Deny"
+    from:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-dumbledore-0
+  - name: "deny-from-dumbledore-everything-else"
+    action: "Deny"
+    from:
+    - pods:
+        namespaces:
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: network-policy-conformance-hogwarts-staff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: professor-dumbledore-1
