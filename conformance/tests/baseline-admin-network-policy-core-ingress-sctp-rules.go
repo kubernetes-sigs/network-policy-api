@@ -61,10 +61,10 @@ var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support an 'allow-ingress' policy for SCTP protocol at the specified port", func(t *testing.T) {
@@ -82,12 +82,12 @@ var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 			// ensure ingress is ALLOWED from hufflepuff to ravenclaw at port 9003; ingressRule at index5 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// cedric-diggory-1 is our client pod in hufflepuff namespace
 			// ensure ingress is DENIED from hufflepuff to ravenclaw for rest of the traffic; ingressRule at index6 should take effect
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support an 'deny-ingress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {
@@ -117,11 +117,11 @@ var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// harry-potter-1 is our client pod in gryffindor namespace
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support a 'deny-ingress' policy for SCTP protocol at the specified port", func(t *testing.T) {
@@ -139,12 +139,12 @@ var BaselineAdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 			// ensure ingress from slytherin is DENIED to ravenclaw at port 9003; ingressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			// ensure ingress from slytherin is ALLOWED to ravenclaw for rest of the traffic; matches no rules hence allowed
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 	},
 }
