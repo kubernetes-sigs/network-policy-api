@@ -61,11 +61,11 @@ var BaselineAdminNetworkPolicyEgressSCTP = suite.ConformanceTest{
 			// egressRule at index0 will take precedence over egressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// luna-lovegood-1 is our client pod in ravenclaw namespace
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support an 'allow-egress' policy for SCTP protocol at the specified port", func(t *testing.T) {
@@ -83,12 +83,12 @@ var BaselineAdminNetworkPolicyEgressSCTP = suite.ConformanceTest{
 			// ensure egress is ALLOWED to hufflepuff from ravenclaw at port 9003; egressRule at index5 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// luna-lovegood-1 is our client pod in ravenclaw namespace
 			// ensure egress is DENIED to hufflepuff from ravenclaw for rest of the traffic; egressRule at index6 should take effect
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support an 'deny-egress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {
@@ -118,11 +118,11 @@ var BaselineAdminNetworkPolicyEgressSCTP = suite.ConformanceTest{
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// luna-lovegood-1 is our client pod in ravenclaw namespace
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 
 		t.Run("Should support a 'deny-egress' policy for SCTP protocol at the specified port", func(t *testing.T) {
@@ -140,12 +140,12 @@ var BaselineAdminNetworkPolicyEgressSCTP = suite.ConformanceTest{
 			// ensure egress to slytherin is DENIED from ravenclaw at port 9003; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 			// luna-lovegood-1 is our client pod in ravenclaw namespace
 			// ensure egress to slytherin is ALLOWED from ravenclaw for rest of the traffic; matches no rules hence allowed
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig.RequestTimeout, true)
-			assert.Equal(t, true, success)
+			assert.True(t, success)
 		})
 	},
 }
