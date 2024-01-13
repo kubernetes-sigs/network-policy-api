@@ -224,7 +224,7 @@ func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 			v := AdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.From, r.Ports)
 			for _, m := range matchers {
-				matcherAdmin := NewPeerMatcherANP(m, v, int(anp.Spec.Priority))
+				matcherAdmin := NewPeerMatcherANP(m, v, int(anp.Spec.Priority), r.Name)
 				ingress.Peers = append(ingress.Peers, matcherAdmin)
 			}
 		}
@@ -240,7 +240,7 @@ func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 			v := AdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.To, r.Ports)
 			for _, m := range matchers {
-				matcherAdmin := NewPeerMatcherANP(m, v, int(anp.Spec.Priority))
+				matcherAdmin := NewPeerMatcherANP(m, v, int(anp.Spec.Priority), r.Name)
 				egress.Peers = append(egress.Peers, matcherAdmin)
 			}
 		}
@@ -267,7 +267,7 @@ func BuildTargetBANP(banp *v1alpha1.BaselineAdminNetworkPolicy) (*Target, *Targe
 			v := BaselineAdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.From, r.Ports)
 			for _, m := range matchers {
-				matcherAdmin := NewPeerMatcherBANP(m, v)
+				matcherAdmin := NewPeerMatcherBANP(m, v, r.Name)
 				ingress.Peers = append(ingress.Peers, matcherAdmin)
 			}
 		}
@@ -283,7 +283,7 @@ func BuildTargetBANP(banp *v1alpha1.BaselineAdminNetworkPolicy) (*Target, *Targe
 			v := BaselineAdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.To, r.Ports)
 			for _, m := range matchers {
-				matcherAdmin := NewPeerMatcherBANP(m, v)
+				matcherAdmin := NewPeerMatcherBANP(m, v, r.Name)
 				egress.Peers = append(egress.Peers, matcherAdmin)
 			}
 		}
