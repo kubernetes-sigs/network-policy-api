@@ -62,12 +62,12 @@ nav:
     - Enhancement Proposals:
       - Overview: enhancements.md
       - Template: npeps/npep-95.md
-      - Provisional: 
-        - npeps/npep-126-egress-traffic-control.md
+      - Provisional:
         - npeps/npep-122.md
         - npeps/npep-133.md
       - Implementable:
         - npeps/npep-137-conformance-profiles.md
+        - npeps/npep-126-egress-traffic-control.md
         # - Experimental:
         # - Standard:
         # - Declined:
