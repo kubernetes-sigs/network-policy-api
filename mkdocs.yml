@@ -73,3 +73,14 @@ nav:
         # - Declined:
   - Blog:
     - blog/index.md
+
+plugins:
+  - blog:
+      # NOTE: configuration options can be found at
+      # https://squidfunk.github.io/mkdocs-material/setup/setting-up-a-blog/
+      blog_dir: blog
+      blog_toc: true
+      post_excerpt: required
+      post_excerpt_max_authors: 2
+  - search
+  - mike

@@ -1,5 +1,8 @@
 astoycos:
-  name: Alex Stoycos
+  name: Andrew Stoycos
   description: Senior Software Engineer at Red Hat. network-policy-api co-lead.
   avatar: https://github.com/astoycos.png
-  
+Dyanngg:
+  name: Yang Ding
+  description: Senior Member of Technical Staff at VMware. network-policy-api co-lead.
+  avatar: https://github.com/dyanngg.png  
