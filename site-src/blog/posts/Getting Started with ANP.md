@@ -12,6 +12,8 @@ how it interoperates with the existing NetworkPolicy API, you've landed at the r
 This blog post will take you through the ins-and-outs of the AdminNetworkPolicy objects, as
 well as providing some basic sample specs for typical use-cases that the API solves.
 
+<!-- more -->
+
 ### Problem Statement
 
 Let's first consider a couple of very typical networking requirements for cluster admins:
