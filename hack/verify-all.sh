@@ -17,15 +17,16 @@
 set -o errexit
 set -o nounset
 set -o pipefail
+shopt -s nullglob
 
-SCRIPT_ROOT=$(dirname "${BASH_SOURCE}")/..
+SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 source "${SCRIPT_ROOT}/hack/kube-env.sh"
 
 SILENT=true
 
 function is-excluded {
   for e in $EXCLUDE; do
-    if [[ $1 -ef ${BASH_SOURCE} ]]; then
+    if [[ $1 -ef ${BASH_SOURCE[0]} ]]; then
       return
     fi
     if [[ $1 -ef "$SCRIPT_ROOT/hack/$e" ]]; then
@@ -54,9 +55,10 @@ fi
 EXCLUDE="verify-all.sh"
 
 ret=0
-for t in `ls $SCRIPT_ROOT/hack/verify-*.sh`
+for t in "$SCRIPT_ROOT"/hack/verify-*.sh
 do
-  if is-excluded $t ; then
+  [[ -e "$t" ]] || break;
+  if is-excluded "$t" ; then
     echo "Skipping $t"
     continue
   fi

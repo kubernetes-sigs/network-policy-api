@@ -19,7 +19,8 @@ set -o nounset
 set -o pipefail
 
 readonly VERSION="v1.55.2"
-readonly KUBE_ROOT=$(dirname "${BASH_SOURCE}")/..
+KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
+readonly KUBE_ROOT
 
 cd "${KUBE_ROOT}"
 
