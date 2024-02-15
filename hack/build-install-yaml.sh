@@ -17,8 +17,8 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-
-thisyear=`date +"%Y"`
+shopt -s nullglob
+thisyear=$(date +"%Y")
 
 mkdir -p release/
 
@@ -39,22 +39,28 @@ cat << EOF >> release/standard-install.yaml
 #
 EOF
 
-for file in `ls config/crd/experimental/policy*.yaml`
+for file in config/crd/experimental/policy*.yaml
 do
-    echo "---" >> release/experimental-install.yaml
-    echo "#" >> release/experimental-install.yaml
-    echo "# $file" >> release/experimental-install.yaml
-    echo "#" >> release/experimental-install.yaml
-    cat $file >> release/experimental-install.yaml
+    [[ -e "$file" ]] || break;
+    {
+      echo "---"
+      echo "#"
+      echo "# $file"
+      echo "#"
+      cat "$file"
+    } >> release/experimental-install.yaml
 done
 
-for file in `ls config/crd/standard/policy*.yaml`
+for file in config/crd/standard/policy*.yaml
 do
-    echo "---" >> release/standard-install.yaml
-    echo "#" >> release/standard-install.yaml
-    echo "# $file" >> release/standard-install.yaml
-    echo "#" >> release/standard-install.yaml
-    cat $file >> release/standard-install.yaml
+    [[ -e "$file" ]] || break;
+    {
+      echo "---"
+      echo "#"
+      echo "# $file"
+      echo "#"
+      cat "$file"
+    } >> release/standard-install.yaml
 done
 
 

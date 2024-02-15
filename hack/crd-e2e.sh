@@ -18,8 +18,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-readonly GOPATH="$(mktemp -d)"
-readonly CLUSTER_NAME="verify-network-policy-api"
+GOPATH="$(mktemp -d)"
+readonly GOPATH
+CLUSTER_NAME="verify-network-policy-api"
+readonly CLUSTER_NAME
 
 export KUBECONFIG="${GOPATH}/.kubeconfig"
 export GOFLAGS GO111MODULE GOPATH
@@ -49,8 +51,9 @@ res=0
 # Create cluster
 KIND_CREATE_ATTEMPTED=true
 kind create cluster --name "${CLUSTER_NAME}" || res=$?
-
-for KUST_FOLDER in bases patches; do
+#echo $bases
+#echo $patches
+for _ in bases patches; do
   go run sigs.k8s.io/controller-tools/cmd/controller-gen rbac:roleName=manager-role crd paths=./apis/... output:crd:dir=./config/crd/bases output:stdout || res=$?
   kubectl kustomize config/crd | kubectl apply -f - || res=$?
 

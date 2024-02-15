@@ -18,8 +18,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-readonly SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE}")"/.. && pwd)"
-cd $SCRIPT_ROOT
+readonly SCRIPT_ROOT
+SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
+cd "$SCRIPT_ROOT"
 
 # Wrap sed to deal with GNU and BSD sed flags.
 run::sed() {

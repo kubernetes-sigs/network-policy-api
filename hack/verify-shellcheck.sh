@@ -60,4 +60,5 @@ rm -rf "${tmpdir}"
 echo "Running shellcheck scan..."
 
 #scanning all .sh scripts inside the hack directory
-./bin/shellcheck hack/*.sh
+#ignoring SC2001 in shellcheck because complex sed substitution is required.
+./bin/shellcheck -e SC2001 hack/*.sh

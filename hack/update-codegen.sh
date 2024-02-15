@@ -18,14 +18,17 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-readonly SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE}")"/.. && pwd)"
+readonly SCRIPT_ROOT
+SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 
 # Keep outer module cache so we don't need to redownload them each time.
 # The build cache already is persisted.
-readonly GOMODCACHE="$(go env GOMODCACHE)"
+readonly GOMODCACHE
+GOMODCACHE="$(go env GOMODCACHE)"
 readonly GO111MODULE="on"
 readonly GOFLAGS="-mod=readonly"
-readonly GOPATH="$(mktemp -d)"
+readonly GOPATH
+GOPATH="$(mktemp -d)"
 readonly MIN_REQUIRED_GO_VER="1.19"
 
 function go_version_matches {
@@ -63,13 +66,13 @@ go run k8s.io/code-generator/cmd/client-gen \
 --input-base "" \
 --input "${API_DIR}" \
 --output-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}" \
-${COMMON_FLAGS}
+"${COMMON_FLAGS}"
 
 echo "Generating listers at ${OUTPUT_PKG}/listers"
 go run k8s.io/code-generator/cmd/lister-gen \
 --input-dirs "${API_DIR}" \
 --output-package "${OUTPUT_PKG}/listers" \
-${COMMON_FLAGS}
+"${COMMON_FLAGS}"
 
 echo "Generating informers at ${OUTPUT_PKG}/informers"
 go run k8s.io/code-generator/cmd/informer-gen \
@@ -77,18 +80,17 @@ go run k8s.io/code-generator/cmd/informer-gen \
 --versioned-clientset-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}/${CLIENTSET_NAME}" \
 --listers-package "${OUTPUT_PKG}/listers" \
 --output-package "${OUTPUT_PKG}/informers" \
-${COMMON_FLAGS}
+"${COMMON_FLAGS}"
 
-for VERSION in v1alpha1 ## Add more versions eventually
-do
-  echo "Generating ${VERSION} register at ${APIS_PKG}/apis/${VERSION}"
-  go run k8s.io/code-generator/cmd/register-gen \
+VERSION=v1alpha1 ## Add more versions eventually
+echo "Generating ${VERSION} register at ${APIS_PKG}/apis/${VERSION}"
+go run k8s.io/code-generator/cmd/register-gen \
     --input-dirs "${APIS_PKG}/apis/${VERSION}" \
     --output-package "${APIS_PKG}/apis/${VERSION}" \
-    ${COMMON_FLAGS}
+    "${COMMON_FLAGS}"
 
-  echo "Generating ${VERSION} deepcopy at ${APIS_PKG}/apis/${VERSION}"
-  go run sigs.k8s.io/controller-tools/cmd/controller-gen \
-    object:headerFile=${SCRIPT_ROOT}/hack/boilerplate.generatego.txt \
+echo "Generating ${VERSION} deepcopy at ${APIS_PKG}/apis/${VERSION}"
+go run sigs.k8s.io/controller-tools/cmd/controller-gen \
+    object:headerFile="${SCRIPT_ROOT}"/hack/boilerplate.generatego.txt \
     paths="${APIS_PKG}/apis/${VERSION}" 
-done
+
