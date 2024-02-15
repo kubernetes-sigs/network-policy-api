@@ -18,6 +18,8 @@ set -euo pipefail
 
 echo "Verifying govet"
 
-go vet "$(go list ./... | grep -v vendor)"
+for key in $(go list ./... | grep -v vendor); do
+    go vet "$key"
+done
 
 echo "Done"
