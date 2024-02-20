@@ -249,6 +249,31 @@ spec:
                                 maxItems: 100
                                 type: array
                             type: object
+                          networks:
+                            description: "Networks defines a way to select peers via
+                              CIDR blocks (both v4 & v6). This is intended for representing
+                              entities that live outside the cluster, which can't
+                              be selected by pods, namespaces and nodes peers, but
+                              note that cluster-internal traffic will be checked against
+                              the rule as well. So if you Allow or Deny traffic to
+                              `\"0.0.0.0/0\"`, that will allow or deny all IPv4 pod-to-pod
+                              traffic as well. If you don't want that, add a rule
+                              that Passes all pod traffic before the Networks rule.
+                              \n Each item in Networks should be provided in the CIDR
+                              format and should be IPv4 or IPv6, for example \"10.0.0.0/8\"
+                              or \"fd00::/8\". \n Support: Extended \n <network-policy-api:experimental>"
+                            items:
+                              description: 'CIDR is a string that contains a valid
+                                (parsed by GoLang net.ParseCIDR) network CIDR Length
+                                48 is taken from: https://elixir.bootlin.com/linux/latest/source/include/linux/inet.h#L50'
+                              maxLength: 48
+                              type: string
+                              x-kubernetes-validations:
+                              - message: Invalid CIDR provided
+                                rule: isCIDR(self)
+                            maxItems: 45
+                            minItems: 1
+                            type: array
                           nodes:
                             description: "Nodes defines a way to select a set of nodes
                               in the cluster. This field follows standard label selector
