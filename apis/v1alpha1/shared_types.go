@@ -175,6 +175,24 @@ type AdminNetworkPolicyEgressPeer struct {
 	// <network-policy-api:experimental>
 	// +optional
 	Nodes *metav1.LabelSelector `json:"nodes,omitempty"`
+	// Networks defines a way to select peers via CIDR blocks (both v4 & v6).
+	// This is intended for representing entities that live outside the cluster,
+	// which can't be selected by pods, namespaces and nodes peers, but note
+	// that cluster-internal traffic will be checked against the rule as
+	// well. So if you Allow or Deny traffic to `"0.0.0.0/0"`, that will allow
+	// or deny all IPv4 pod-to-pod traffic as well. If you don't want that,
+	// add a rule that Passes all pod traffic before the Networks rule.
+	//
+	// Each item in Networks should be provided in the CIDR format and should be
+	// IPv4 or IPv6, for example "10.0.0.0/8" or "fd00::/8".
+	//
+	// Support: Extended
+	//
+	// <network-policy-api:experimental>
+	// +optional
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=45
+	Networks []CIDR `json:"networks,omitempty"`
 }
 
 // NamespacedPeer defines a flexible way to select Namespaces in a cluster.
@@ -237,3 +255,9 @@ type NamespacedPodPeer struct {
 	//
 	PodSelector metav1.LabelSelector `json:"podSelector"`
 }
+
+// CIDR is a string that contains a valid (parsed by GoLang net.ParseCIDR) network CIDR
+// Length 48 is taken from: https://elixir.bootlin.com/linux/latest/source/include/linux/inet.h#L50
+// +kubebuilder:validation:XValidation:rule="isCIDR(self)",message="Invalid CIDR provided"
+// +kubebuilder:validation:MaxLength=48
+type CIDR string
