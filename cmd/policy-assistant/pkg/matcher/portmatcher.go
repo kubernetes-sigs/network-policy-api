@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"encoding/json"
+	"fmt"
 	"sort"
 
 	collectionsjson "github.com/mattfenwick/collections/pkg/json"
@@ -12,6 +13,7 @@ import (
 
 type PortMatcher interface {
 	Matches(portInt int, portName string, protocol v1.Protocol) bool
+	GetPrimaryKey() string
 }
 
 type AllPortMatcher struct{}
@@ -24,6 +26,10 @@ func (ap *AllPortMatcher) MarshalJSON() (b []byte, e error) {
 	return json.Marshal(map[string]interface{}{
 		"Type": "all ports",
 	})
+}
+
+func (ap *AllPortMatcher) GetPrimaryKey() string {
+	return "all ports"
 }
 
 // PortProtocolMatcher models a matcher based on:
@@ -62,6 +68,10 @@ func (p *PortProtocolMatcher) Equals(other *PortProtocolMatcher) bool {
 	return isIntStringEqual(*p.Port, *other.Port)
 }
 
+func (p *PortProtocolMatcher) GetPrimaryKey() string {
+	return fmt.Sprintf("Type: %s, Port: %s, Protocol: %s", "Port Protocol", p.Port.String(), p.Protocol)
+}
+
 // PortRangeMatcher works with endports to specify a range of matched numeric ports.
 type PortRangeMatcher struct {
 	From     int
@@ -80,6 +90,10 @@ func (prm *PortRangeMatcher) MarshalJSON() (b []byte, e error) {
 		"To":       prm.To,
 		"Protocol": prm.Protocol,
 	})
+}
+
+func (prm *PortRangeMatcher) GetPrimaryKey() string {
+	return fmt.Sprintf("Type: %s, From: %d, To: %d, Protocol: %s", "port range", prm.From, prm.To, prm.Protocol)
 }
 
 // SpecificPortMatcher models the case where traffic must match a named or numbered port
@@ -108,6 +122,20 @@ func (s *SpecificPortMatcher) MarshalJSON() (b []byte, e error) {
 		"Ports":      s.Ports,
 		"PortRanges": s.PortRanges,
 	})
+}
+
+func (s *SpecificPortMatcher) GetPrimaryKey() string {
+	var p string
+	for _, v := range s.Ports {
+		p += v.GetPrimaryKey()
+	}
+
+	var pr string
+	for _, v := range s.PortRanges {
+		pr += v.GetPrimaryKey()
+	}
+
+	return fmt.Sprintf("Type: %s, Ports: %s, PortRanges: %s", "specific port", p, pr)
 }
 
 func (s *SpecificPortMatcher) Combine(other *SpecificPortMatcher) *SpecificPortMatcher {

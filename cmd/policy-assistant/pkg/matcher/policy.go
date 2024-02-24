@@ -300,19 +300,23 @@ func (p *Policy) IsIngressOrEgressAllowed(traffic *Traffic, isIngress bool) Dire
 	// 3. Check if any matching targets allow this traffic
 	effects := make([]Effect, 0)
 	for _, target := range matchingTargets {
-		for _, m := range target.Peers {
-			// check if m is a PeerMatcherAdmin
-			e := NewV1Effect(true)
-			matcherAdmin, ok := m.(*PeerMatcherAdmin)
-			if ok {
-				e = matcherAdmin.effectFromMatch
-			}
+		for _, g := range target.Peers {
+			for _, m := range g {
+				_ = m
+				_ = peer
+				// check if m is a PeerMatcherAdmin
+				e := NewV1Effect(true)
+				matcherAdmin, ok := m.(*PeerMatcherAdmin)
+				if ok {
+					e = matcherAdmin.effectFromMatch
+				}
 
-			if !m.Matches(subject, peer, traffic.ResolvedPort, traffic.ResolvedPortName, traffic.Protocol) {
-				e.Verdict = None
-			}
+				if !m.Matches(subject, peer, traffic.ResolvedPort, traffic.ResolvedPortName, traffic.Protocol) {
+					e.Verdict = None
+				}
 
-			effects = append(effects, e)
+				effects = append(effects, e)
+			}
 		}
 	}
 
