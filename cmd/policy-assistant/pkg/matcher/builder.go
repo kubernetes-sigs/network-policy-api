@@ -21,30 +21,21 @@ func BuildV1AndV2NetPols(simplify bool, netpols []*networkingv1.NetworkPolicy, a
 		np.AddTarget(false, egress)
 	}
 
-	var banpIngress *Target
-	var banpEgress *Target
-
-	if banp != nil {
-		// there can only be one BANP by definition
-		banpIngress, banpEgress = BuildTargetBANP(banp)
-		np.AddTarget(true, banpIngress)
-		np.AddTarget(false, banpEgress)
-	}
-
 	priorities := make(map[int32]struct{})
 	for _, p := range anps {
 		if _, ok := priorities[p.Spec.Priority]; ok {
-			panic(errors.Errorf("duplicate priorities are now allowed. priority: %d", p.Spec.Priority))
+			panic(errors.Errorf("duplicate priorities are undefined. priority: %d", p.Spec.Priority))
 		}
 		priorities[p.Spec.Priority] = struct{}{}
 
 		ingress, egress := BuildTargetANP(p)
-		if banpIngress != nil && ingress.GetPrimaryKey() == banpIngress.GetPrimaryKey() {
-			ingress.CombineCommonPeers(banpIngress)
-			egress.CombineCommonPeers(banpEgress)
+		np.AddTarget(true, ingress)
+		np.AddTarget(false, egress)
+	}
 
-		}
-
+	if banp != nil {
+		// there can only be one BANP by definition
+		ingress, egress := BuildTargetBANP(banp)
 		np.AddTarget(true, ingress)
 		np.AddTarget(false, egress)
 	}
@@ -73,27 +64,16 @@ func BuildTarget(netpol *networkingv1.NetworkPolicy) (*Target, *Target) {
 	for _, pType := range netpol.Spec.PolicyTypes {
 		switch pType {
 		case networkingv1.PolicyTypeIngress:
-			p := map[string][]PeerMatcher{}
-			ingressPeers := BuildIngressMatcher(policyNamespace, netpol.Spec.Ingress)
-			if len(ingressPeers) > 0 {
-				p[""] = ingressPeers
-			}
-
 			ingress = &Target{
 				SubjectMatcher: NewSubjectV1(policyNamespace, netpol.Spec.PodSelector),
 				SourceRules:    []NetPolID{netPolID(netpol)},
-				Peers:          p,
+				Peers:          BuildIngressMatcher(policyNamespace, netpol.Spec.Ingress),
 			}
 		case networkingv1.PolicyTypeEgress:
-			p := map[string][]PeerMatcher{}
-			egressPeers := BuildEgressMatcher(policyNamespace, netpol.Spec.Egress)
-			if len(egressPeers) > 0 {
-				p[""] = egressPeers
-			}
 			egress = &Target{
 				SubjectMatcher: NewSubjectV1(policyNamespace, netpol.Spec.PodSelector),
 				SourceRules:    []NetPolID{netPolID(netpol)},
-				Peers:          p,
+				Peers:          BuildEgressMatcher(policyNamespace, netpol.Spec.Egress),
 			}
 		}
 	}
@@ -238,7 +218,6 @@ func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 		ingress = &Target{
 			SubjectMatcher: NewSubjectAdmin(&anp.Spec.Subject),
 			SourceRules:    []NetPolID{netPolID(anp)},
-			Peers:          make(map[string][]PeerMatcher),
 		}
 
 		for _, r := range anp.Spec.Ingress {
@@ -246,16 +225,15 @@ func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 			matchers := BuildPeerMatcherAdmin(r.From, r.Ports)
 			for _, m := range matchers {
 				matcherAdmin := NewPeerMatcherANP(m, v, int(anp.Spec.Priority), anp.Name)
-				k := m.Pod.PrimaryKey() + m.Namespace.PrimaryKey() + m.Port.GetPrimaryKey()
-				ingress.Peers[k] = append(ingress.Peers[k], matcherAdmin)
+				ingress.Peers = append(ingress.Peers, matcherAdmin)
 			}
 		}
 	}
+
 	if len(anp.Spec.Egress) > 0 {
 		egress = &Target{
 			SubjectMatcher: NewSubjectAdmin(&anp.Spec.Subject),
 			SourceRules:    []NetPolID{netPolID(anp)},
-			Peers:          make(map[string][]PeerMatcher),
 		}
 
 		for _, r := range anp.Spec.Egress {
@@ -263,11 +241,11 @@ func BuildTargetANP(anp *v1alpha1.AdminNetworkPolicy) (*Target, *Target) {
 			matchers := BuildPeerMatcherAdmin(r.To, r.Ports)
 			for _, m := range matchers {
 				matcherAdmin := NewPeerMatcherANP(m, v, int(anp.Spec.Priority), anp.Name)
-				k := m.Pod.PrimaryKey() + m.Namespace.PrimaryKey() + m.Port.GetPrimaryKey()
-				egress.Peers[k] = append(egress.Peers[k], matcherAdmin)
+				egress.Peers = append(egress.Peers, matcherAdmin)
 			}
 		}
 	}
+
 	return ingress, egress
 }
 
@@ -283,16 +261,14 @@ func BuildTargetBANP(banp *v1alpha1.BaselineAdminNetworkPolicy) (*Target, *Targe
 		ingress = &Target{
 			SubjectMatcher: NewSubjectAdmin(&banp.Spec.Subject),
 			SourceRules:    []NetPolID{netPolID(banp)},
-			Peers:          make(map[string][]PeerMatcher),
 		}
 
 		for _, r := range banp.Spec.Ingress {
 			v := BaselineAdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.From, r.Ports)
 			for _, m := range matchers {
-				matcherAdmin := NewPeerMatcherBANP(m, v, r.Name)
-				k := m.Pod.PrimaryKey() + m.Namespace.PrimaryKey() + m.Port.GetPrimaryKey()
-				ingress.Peers[k] = append(ingress.Peers[k], matcherAdmin)
+				matcherAdmin := NewPeerMatcherBANP(m, v, banp.Name)
+				ingress.Peers = append(ingress.Peers, matcherAdmin)
 			}
 		}
 	}
@@ -301,16 +277,14 @@ func BuildTargetBANP(banp *v1alpha1.BaselineAdminNetworkPolicy) (*Target, *Targe
 		egress = &Target{
 			SubjectMatcher: NewSubjectAdmin(&banp.Spec.Subject),
 			SourceRules:    []NetPolID{netPolID(banp)},
-			Peers:          make(map[string][]PeerMatcher),
 		}
 
 		for _, r := range banp.Spec.Egress {
 			v := BaselineAdminActionToVerdict(r.Action)
 			matchers := BuildPeerMatcherAdmin(r.To, r.Ports)
 			for _, m := range matchers {
-				matcherAdmin := NewPeerMatcherBANP(m, v, r.Name)
-				k := m.Pod.PrimaryKey() + m.Namespace.PrimaryKey() + m.Port.GetPrimaryKey()
-				egress.Peers[k] = append(egress.Peers[k], matcherAdmin)
+				matcherAdmin := NewPeerMatcherBANP(m, v, banp.Name)
+				egress.Peers = append(egress.Peers, matcherAdmin)
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"github.com/mattfenwick/collections/pkg/slice"
 	"github.com/mattfenwick/cyclonus/examples"
 	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
 	. "github.com/onsi/ginkgo/v2"
@@ -29,7 +28,7 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoIngress)
 
 			Expect(ingress).ToNot(BeNil())
-			Expect(ingress.Peers).To(BeEmpty())
+			Expect(ingress.Peers).To(BeNil())
 
 			Expect(egress).To(BeNil())
 		})
@@ -38,7 +37,7 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoEgress)
 
 			Expect(egress).ToNot(BeNil())
-			Expect(egress.Peers).To(BeEmpty())
+			Expect(egress.Peers).To(BeNil())
 
 			Expect(ingress).To(BeNil())
 		})
@@ -47,10 +46,10 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoIngressAllowNoEgress)
 
 			Expect(egress).ToNot(BeNil())
-			Expect(egress.Peers).To(BeEmpty())
+			Expect(egress.Peers).To(BeNil())
 
 			Expect(ingress).ToNot(BeNil())
-			Expect(ingress.Peers).To(BeEmpty())
+			Expect(ingress.Peers).To(BeNil())
 		})
 	})
 
@@ -76,7 +75,7 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoIngress_EmptyIngress)
 
 			Expect(ingress).ToNot(BeNil())
-			Expect(ingress.Peers).To(BeEmpty())
+			Expect(ingress.Peers).To(BeNil())
 
 			Expect(egress).To(BeNil())
 		})
@@ -85,7 +84,7 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoEgress_EmptyEgress)
 
 			Expect(egress).ToNot(BeNil())
-			Expect(egress.Peers).To(BeEmpty())
+			Expect(egress.Peers).To(BeNil())
 
 			Expect(ingress).To(BeNil())
 		})
@@ -94,10 +93,10 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoIngressAllowNoEgress_EmptyEgressEmptyIngress)
 
 			Expect(egress).ToNot(BeNil())
-			Expect(egress.Peers).To(BeEmpty())
+			Expect(egress.Peers).To(BeNil())
 
 			Expect(ingress).ToNot(BeNil())
-			Expect(ingress.Peers).To(BeEmpty())
+			Expect(ingress.Peers).To(BeNil())
 		})
 	})
 
@@ -106,25 +105,21 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowAllIngress)
 
 			Expect(egress).To(BeNil())
-			Expect(ingress.Peers).To(Equal(map[string][]PeerMatcher{
-				"": {AllPeersPorts},
-			}))
+			Expect(ingress.Peers).To(Equal([]PeerMatcher{AllPeersPorts}))
 		})
 
 		It("allow-all-egress", func() {
 			ingress, egress := BuildTarget(netpol.AllowAllEgress)
 
-			Expect(egress.Peers).To(Equal(map[string][]PeerMatcher{
-				"": {AllPeersPorts},
-			}))
+			Expect(egress.Peers).To(Equal([]PeerMatcher{AllPeersPorts}))
 			Expect(ingress).To(BeNil())
 		})
 
 		It("allow-all-both", func() {
 			ingress, egress := BuildTarget(netpol.AllowAllIngressAllowAllEgress)
 
-			Expect(egress.Peers).To(Equal(map[string][]PeerMatcher{"": {AllPeersPorts}}))
-			Expect(ingress.Peers).To(Equal(map[string][]PeerMatcher{"": {AllPeersPorts}}))
+			Expect(egress.Peers).To(Equal([]PeerMatcher{AllPeersPorts}))
+			Expect(ingress.Peers).To(Equal([]PeerMatcher{AllPeersPorts}))
 		})
 	})
 
@@ -349,52 +344,11 @@ func RunBuilderTests() {
 
 	Describe("BuildV1AndV2NetPols", func() {
 		It("it combines ANPs with same subject", func() {
-			result := BuildV1AndV2NetPols(false, nil, examples.SimpleANPs, nil)
+			result := BuildV1AndV2NetPols(true, nil, examples.SimpleANPs, nil)
 			Expect(result.Egress).To(HaveLen(1))
 			k := maps.Keys(result.Egress)
 			firstRule := result.Egress[k[0]]
 			Expect(firstRule.SourceRules).To(HaveLen(2))
-
-		})
-
-		It("it combines ANPs with same peers and protocol targets", func() {
-			result := BuildV1AndV2NetPols(false, nil, examples.SimpleANPs, nil)
-			k := maps.Keys(result.Egress)
-			firstRule := result.Egress[k[0]]
-			pk := maps.Keys(firstRule.Peers)
-			peers := firstRule.Peers[pk[0]]
-			Expect(peers).To(HaveLen(2))
-
-		})
-
-		It("it adds BANPs rules to ANPs if peers and protocol match", func() {
-			result := BuildV1AndV2NetPols(false, nil, examples.SimpleANPs, examples.SimpleBANP)
-			k := maps.Keys(result.Egress)
-			firstRule := result.Egress[k[0]]
-			pk := maps.Keys(firstRule.Peers)
-			peers := firstRule.Peers[pk[0]]
-			anps := slice.Filter(func(a PeerMatcher) bool {
-				switch t := a.(type) {
-				case *PeerMatcherAdmin:
-					return t.effectFromMatch.PolicyKind == AdminNetworkPolicy
-				default:
-					return false
-				}
-			}, peers)
-
-			Expect(anps).To(HaveLen(2))
-
-			banps := slice.Filter(func(a PeerMatcher) bool {
-				switch t := a.(type) {
-				case *PeerMatcherAdmin:
-					return t.effectFromMatch.PolicyKind == BaselineAdminNetworkPolicy
-				default:
-					return false
-				}
-			}, peers)
-
-			Expect(banps).To(HaveLen(1))
-
 		})
 	})
 }

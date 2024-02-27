@@ -9,7 +9,7 @@ import (
 var CoreGressRulesCombinedANB = []*v1alpha1.AdminNetworkPolicy{
 	{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "Example ANP",
+			Name: "example-anp",
 		},
 		Spec: v1alpha1.AdminNetworkPolicySpec{
 			Priority: 20,
@@ -19,7 +19,6 @@ var CoreGressRulesCombinedANB = []*v1alpha1.AdminNetworkPolicy{
 						{
 							Key:      "kubernetes.io/metadata.name",
 							Operator: v1.LabelSelectorOpExists,
-							Values:   []string{"network-policy-conformance-gryffindor"},
 						},
 					},
 				},
@@ -308,7 +307,7 @@ var CoreGressRulesCombinedANB = []*v1alpha1.AdminNetworkPolicy{
 	},
 	{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "Example ANP 2",
+			Name: "example-anp-2",
 		},
 		Spec: v1alpha1.AdminNetworkPolicySpec{
 			Priority: 16,
@@ -318,7 +317,6 @@ var CoreGressRulesCombinedANB = []*v1alpha1.AdminNetworkPolicy{
 						{
 							Key:      "kubernetes.io/metadata.name",
 							Operator: v1.LabelSelectorOpExists,
-							Values:   []string{"network-policy-conformance-gryffindor"},
 						},
 					},
 				},
@@ -618,7 +616,6 @@ var CoreGressRulesCombinedBANB *v1alpha1.BaselineAdminNetworkPolicy = &v1alpha1.
 					{
 						Key:      "kubernetes.io/metadata.name",
 						Operator: v1.LabelSelectorOpExists,
-						Values:   []string{"network-policy-conformance-gryffindor"},
 					},
 				},
 			},
@@ -657,7 +654,6 @@ var CoreGressRulesCombinedBANB *v1alpha1.BaselineAdminNetworkPolicy = &v1alpha1.
 									{
 										Key:      "kubernetes.io/metadata.name",
 										Operator: v1.LabelSelectorOpExists,
-										Values:   []string{"network-policy-conformance-gryffindor"},
 									},
 								},
 							},
@@ -808,7 +804,7 @@ var CoreGressRulesCombinedBANB *v1alpha1.BaselineAdminNetworkPolicy = &v1alpha1.
 var SimpleANPs = []*v1alpha1.AdminNetworkPolicy{
 	{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "Simple ANP 1",
+			Name: "simple-anp-1",
 		},
 		Spec: v1alpha1.AdminNetworkPolicySpec{
 			Priority: 34,
@@ -840,7 +836,7 @@ var SimpleANPs = []*v1alpha1.AdminNetworkPolicy{
 	},
 	{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "Simple ANP 2",
+			Name: "simple-anp-2",
 		},
 		Spec: v1alpha1.AdminNetworkPolicySpec{
 			Priority: 50,
@@ -862,38 +858,6 @@ var SimpleANPs = []*v1alpha1.AdminNetworkPolicy{
 									MatchLabels: map[string]string{
 										"kubernetes.io/metadata.name": "network-policy-conformance-ravenclaw",
 									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	},
-}
-
-var SimpleBANP *v1alpha1.BaselineAdminNetworkPolicy = &v1alpha1.BaselineAdminNetworkPolicy{
-	ObjectMeta: v1.ObjectMeta{
-		Name: "Simple BANP",
-	},
-	Spec: v1alpha1.BaselineAdminNetworkPolicySpec{
-		Subject: v1alpha1.AdminNetworkPolicySubject{
-			Namespaces: &v1.LabelSelector{
-				MatchLabels: map[string]string{
-					"test": "test",
-				},
-			},
-		},
-		Egress: []v1alpha1.BaselineAdminNetworkPolicyEgressRule{
-			{
-				Name:   "allow-to-ravenclaw-everything",
-				Action: v1alpha1.BaselineAdminNetworkPolicyRuleActionAllow,
-				To: []v1alpha1.AdminNetworkPolicyPeer{
-					{
-						Namespaces: &v1alpha1.NamespacedPeer{
-							NamespaceSelector: &v1.LabelSelector{
-								MatchLabels: map[string]string{
-									"kubernetes.io/metadata.name": "network-policy-conformance-ravenclaw",
 								},
 							},
 						},

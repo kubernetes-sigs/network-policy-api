@@ -2,13 +2,13 @@ package matcher
 
 import (
 	"fmt"
-	"github.com/mattfenwick/collections/pkg/slice"
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/pkg/errors"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"strings"
 )
 
 // string of the form "[policyKind] namespace/name"
@@ -49,7 +49,7 @@ type Target struct {
 	// Peers contains all matchers for a Target.
 	// Order matters for rules in the same ANP or BANP.
 	// Priority matters for rules in different ANPs.
-	Peers map[string][]PeerMatcher
+	Peers []PeerMatcher
 }
 
 func (t *Target) String() string {
@@ -57,7 +57,7 @@ func (t *Target) String() string {
 }
 
 func (t *Target) Simplify() {
-	//t.Peers = Simplify(t.Peers)
+	t.Peers = Simplify(t.Peers)
 }
 
 // Combine creates a new Target combining the egress and ingress rules
@@ -70,63 +70,11 @@ func (t *Target) Combine(other *Target) *Target {
 		panic(errors.Errorf("cannot combine targets: primary keys differ -- '%s' vs '%s'", myPk, otherPk))
 	}
 
-	peers := map[string][]PeerMatcher{}
-
-	peers = combinePeers(peers, t.Peers)
-	peers = combinePeers(peers, other.Peers)
-
-	// ensure that we have only one banp after combining
-	for k := range peers {
-		var banp bool
-		peers[k] = slice.Filter(func(a PeerMatcher) bool {
-			switch t := a.(type) {
-			case *PeerMatcherAdmin:
-				if t.effectFromMatch.PolicyKind == BaselineAdminNetworkPolicy {
-					if banp {
-						return false
-					}
-					banp = true
-					return true
-
-				}
-				return true
-			default:
-				return true
-			}
-		}, peers[k])
-
-	}
-
 	return &Target{
 		SubjectMatcher: t.SubjectMatcher,
-		Peers:          peers,
+		Peers:          append(t.Peers, other.Peers...),
 		SourceRules:    sets.New(t.SourceRules...).Insert(other.SourceRules...).UnsortedList(),
 	}
-}
-
-func (t *Target) CombineCommonPeers(other *Target) {
-	if other == nil || len(other.Peers) == 0 {
-		return
-	}
-
-	rules := sets.New(t.SourceRules...)
-	for k := range t.Peers {
-		if _, ok := other.Peers[k]; ok {
-			t.Peers[k] = append(t.Peers[k], other.Peers[k]...)
-			rules.Insert(other.SourceRules...)
-		}
-	}
-	t.SourceRules = rules.UnsortedList()
-}
-
-func combinePeers(dest map[string][]PeerMatcher, source map[string][]PeerMatcher) map[string][]PeerMatcher {
-	for i, v := range source {
-		if _, ok := dest[i]; !ok {
-			dest[i] = []PeerMatcher{}
-		}
-		dest[i] = append(dest[i], v...)
-	}
-	return dest
 }
 
 // CombineTargetsIgnoringPrimaryKey creates a new v1 target from the given namespace and pod selector,
@@ -140,10 +88,10 @@ func CombineTargetsIgnoringPrimaryKey(namespace string, podSelector metav1.Label
 		Peers:          targets[0].Peers,
 		SourceRules:    targets[0].SourceRules,
 	}
-	//for _, t := range targets[1:] {
-	//	target.Peers = append(target.Peers, t.Peers...)
-	//	target.SourceRules = append(target.SourceRules, t.SourceRules...)
-	//}
+	for _, t := range targets[1:] {
+		target.Peers = append(target.Peers, t.Peers...)
+		target.SourceRules = append(target.SourceRules, t.SourceRules...)
+	}
 	return target
 }
 
@@ -181,7 +129,7 @@ func (s *SubjectV1) TargetString() string {
 	if pods == "all" {
 		pods = "all pods"
 	}
-	return fmt.Sprintf("namespace: %s\n%s", s.namespace, pods)
+	return fmt.Sprintf("Namespace:\n   %s\nPod:\n   %s", strings.TrimSpace(s.namespace), strings.TrimSpace(pods))
 }
 
 func (s *SubjectV1) GetPrimaryKey() string {
@@ -225,9 +173,12 @@ func (s *SubjectAdmin) Matches(candidate *InternalPeer) bool {
 
 func (s *SubjectAdmin) TargetString() string {
 	if s.subject.Namespaces != nil {
-		return fmt.Sprintf("Namespace labels:\n%s", kube.LabelSelectorTableLines(*s.subject.Namespaces))
+		namespace := kube.LabelSelectorTableLines(*s.subject.Namespaces)
+		return fmt.Sprintf("Namespace:\n   %s", strings.TrimSpace(namespace))
 	} else {
-		return fmt.Sprintf("Namespace labels:\n%s\nPod labels:\n%s", kube.LabelSelectorTableLines(s.subject.Pods.NamespaceSelector), kube.LabelSelectorTableLines(s.subject.Pods.PodSelector))
+		namespace := kube.LabelSelectorTableLines(s.subject.Pods.NamespaceSelector)
+		pod := kube.LabelSelectorTableLines(s.subject.Pods.PodSelector)
+		return fmt.Sprintf("Namespace:\n   %s\nPod:\n   %s", strings.TrimSpace(namespace), strings.TrimSpace(pod))
 	}
 }
 

@@ -2,14 +2,33 @@ package matcher
 
 import (
 	"fmt"
-	"golang.org/x/exp/maps"
+	"github.com/mattfenwick/collections/pkg/json"
+	"github.com/mattfenwick/collections/pkg/slice"
 	"golang.org/x/exp/slices"
+	v1 "k8s.io/api/core/v1"
 	"strings"
 
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 )
+
+type peerProtocolGroup struct {
+	port     string
+	subject  string
+	policies map[string]*anpGroup
+}
+
+func (p *peerProtocolGroup) Matches(subject, peer *TrafficPeer, portInt int, portName string, protocol v1.Protocol) bool {
+	return false
+}
+
+type anpGroup struct {
+	name     string
+	priority int
+	effects  []string
+	kind     PolicyKind
+}
 
 type SliceBuilder struct {
 	Prefix   []string
@@ -59,116 +78,80 @@ func (s *SliceBuilder) TargetsTableLines(targets []*Target, isIngress bool) {
 		rules := strings.Join(sourceRulesStrings, "\n")
 		s.Prefix = []string{ruleType, target.TargetString(), rules}
 
-		for _, peers := range target.Peers {
-			if len(peers) == 0 {
-				s.Append("no pods, no ips", "NPv1: All peers allowed", "no ports, no protocols")
-				continue
+		if len(target.Peers) == 0 {
+			s.Append("no pods, no ips", "NPv1: All peers allowed", "no ports, no protocols")
+			continue
+		}
+
+		peers := groupAnbAndBanp(target.Peers)
+		for _, p := range slice.SortOn(func(p PeerMatcher) string { return json.MustMarshalToString(p) }, peers) {
+			switch t := p.(type) {
+			case *AllPeersMatcher:
+				s.Append("all pods, all ips", "NPv1: All peers allowed", "all ports, all protocols")
+			case *PortsForAllPeersMatcher:
+				pps := PortMatcherTableLines(t.Port, NetworkPolicyV1)
+				s.Append("all pods, all ips", "NPv1: All peers allowed", strings.Join(pps, "\n"))
+			case *IPPeerMatcher:
+				s.IPPeerMatcherTableLines(t)
+			case *PodPeerMatcher:
+				s.Append(resolveSubject(t), "NPv1: All peers allowed", strings.Join(PortMatcherTableLines(t.Port, NewV1Effect(true).PolicyKind), "\n"))
+			case *peerProtocolGroup:
+				s.peerProtocolGroupTableLines(t)
+			default:
+				panic(errors.Errorf("invalid PeerMatcher type %T", p))
 			}
-			var subject string
-			var ports string
-			var action string
-
-			anps := []*PeerMatcherAdmin{}
-			banps := []*PeerMatcherAdmin{}
-
-			for _, p := range peers {
-				switch t := p.(type) {
-				case *AllPeersMatcher:
-					s.Append("all pods, all ips", "NPv1: All peers allowed", "all ports, all protocols")
-				case *PortsForAllPeersMatcher:
-					pps := PortMatcherTableLines(t.Port, NetworkPolicyV1)
-					s.Append("all pods, all ips", "", strings.Join(pps, "\n"))
-				case *IPPeerMatcher:
-					s.IPPeerMatcherTableLines(t)
-				case *PodPeerMatcher:
-					s.PodPeerMatcherTableLines(t, NewV1Effect(true), "")
-				case *PeerMatcherAdmin:
-					subject = resolveSubject(t.PodPeerMatcher)
-					ports = strings.Join(PortMatcherTableLines(t.PodPeerMatcher.Port, t.effectFromMatch.PolicyKind), "\n")
-
-					switch t.effectFromMatch.PolicyKind {
-					case AdminNetworkPolicy:
-						anps = append(anps, t)
-					case BaselineAdminNetworkPolicy:
-						banps = append(banps, t)
-					default:
-						panic("This should not be possible")
-					}
-				}
-			}
-
-			if len(anps) > 1 {
-				g := map[string]*AnpGroup{}
-				for _, v := range anps {
-					e := string(v.effectFromMatch.Verdict)
-					if _, ok := g[v.Name]; !ok {
-						g[v.Name] = &AnpGroup{
-							name:     v.Name,
-							priority: v.effectFromMatch.Priority,
-							effects:  []string{},
-						}
-					}
-					g[v.Name].effects = append(g[v.Name].effects, e)
-				}
-
-				groups := maps.Values(g)
-
-				slices.SortFunc(groups, func(a, b *AnpGroup) bool {
-					return a.priority > b.priority
-				})
-
-				r := []string{"ANP:"}
-				for _, a := range groups {
-					if len(a.effects[1:]) > 0 {
-						r = append(r, fmt.Sprintf("   pri=%d (%s): %s (ineffective rules: %s)", a.priority, a.name, a.effects[0], strings.Join(a.effects[1:], ", ")))
-					} else {
-						r = append(r, fmt.Sprintf("   pri=%d (%s): %s", a.priority, a.name, a.effects[0]))
-					}
-				}
-				action = strings.Join(r, "\n") + "\n"
-			}
-
-			if len(banps) >= 1 {
-				g := map[string]*AnpGroup{}
-				for _, v := range banps {
-					e := string(v.effectFromMatch.Verdict)
-					if _, ok := g[v.Name]; !ok {
-						g[v.Name] = &AnpGroup{
-							name:     v.Name,
-							priority: v.effectFromMatch.Priority,
-							effects:  []string{},
-						}
-					}
-					g[v.Name].effects = append(g[v.Name].effects, e)
-				}
-				for _, a := range g {
-					if len(a.effects[1:]) > 0 {
-						action += fmt.Sprintf("BNP: %s (ineffective rules: %s)", a.priority, a.name, a.effects[0], strings.Join(a.effects[1:], ", "))
-					} else {
-						action += fmt.Sprintf("BNP: %s", a.effects[0])
-					}
-				}
-			}
-			s.Append(subject, action, ports)
 		}
 
 	}
 }
 
-type AnpGroup struct {
-	name     string
-	priority int
-	effects  []string
-}
-
 func (s *SliceBuilder) IPPeerMatcherTableLines(ip *IPPeerMatcher) {
 	peer := ip.IPBlock.CIDR + "\n" + fmt.Sprintf("except %+v", ip.IPBlock.Except)
 	pps := PortMatcherTableLines(ip.Port, NetworkPolicyV1)
-	s.Append(peer, "", strings.Join(pps, "\n"))
+	s.Append(peer, "NPv1: All peers allowed", strings.Join(pps, "\n"))
 }
 
-func (s *SliceBuilder) PodPeerMatcherTableLines(nsPodMatcher *PodPeerMatcher, e Effect, name string) {
-	s.Append(resolveSubject(nsPodMatcher), priorityTableLine(e, name), strings.Join(PortMatcherTableLines(nsPodMatcher.Port, e.PolicyKind), "\n"))
+func (s *SliceBuilder) peerProtocolGroupTableLines(t *peerProtocolGroup) {
+	actions := []string{}
+
+	anps := make([]*anpGroup, 0, len(t.policies))
+	for _, v := range t.policies {
+		if v.kind == AdminNetworkPolicy {
+			anps = append(anps, v)
+		}
+	}
+	if len(anps) > 0 {
+		actions = append(actions, "ANP:")
+		slices.SortFunc(anps, func(a, b *anpGroup) bool {
+			return a.priority < b.priority
+		})
+		for _, v := range anps {
+			if len(v.effects) > 1 {
+				actions = append(actions, fmt.Sprintf("   pri=%d (%s): %s (ineffective rules: %s)", v.priority, v.name, v.effects[0], strings.Join(v.effects[1:], ", ")))
+			} else {
+				actions = append(actions, fmt.Sprintf("   pri=%d (%s): %s", v.priority, v.name, v.effects[0]))
+			}
+		}
+	}
+
+	banps := make([]*anpGroup, 0, len(t.policies))
+	for _, v := range t.policies {
+		if v.kind == BaselineAdminNetworkPolicy {
+			banps = append(banps, v)
+		}
+	}
+	if len(banps) > 0 {
+		actions = append(actions, "BANP:")
+		for _, v := range banps {
+			if len(v.effects) > 1 {
+				actions = append(actions, fmt.Sprintf("   (%s): %s (ineffective rules: %s)", v.name, v.effects[0], strings.Join(v.effects[1:], ", ")))
+			} else {
+				actions = append(actions, fmt.Sprintf("   (%s): %s", v.name, v.effects[0]))
+			}
+		}
+	}
+
+	s.Append(t.subject, strings.Join(actions, "\n"), t.port)
 }
 
 func PortMatcherTableLines(pm PortMatcher, kind PolicyKind) []string {
@@ -199,16 +182,49 @@ func PortMatcherTableLines(pm PortMatcher, kind PolicyKind) []string {
 	}
 }
 
-func priorityTableLine(e Effect, name string) string {
-	if e.PolicyKind == NetworkPolicyV1 {
-		return "NPv1: All peers allowed"
-	} else if e.PolicyKind == AdminNetworkPolicy {
-		return fmt.Sprintf("   (pri=%d) %s: %s ", e.Priority, name, e.Verdict)
-	} else if e.PolicyKind == BaselineAdminNetworkPolicy {
-		return fmt.Sprintf("   (%s): %s", name, e.Verdict)
-	} else {
-		panic(errors.Errorf("Invalid effect %s", e.PolicyKind))
+func groupAnbAndBanp(p []PeerMatcher) []PeerMatcher {
+	result := make([]PeerMatcher, 0, len(p))
+	groups := map[string]*peerProtocolGroup{}
+
+	for _, v := range p {
+		switch t := v.(type) {
+		case *PeerMatcherAdmin:
+			k := t.Port.GetPrimaryKey() + t.Pod.PrimaryKey()
+			if _, ok := groups[k]; !ok {
+				groups[k] = &peerProtocolGroup{
+					port:     strings.Join(PortMatcherTableLines(t.PodPeerMatcher.Port, t.effectFromMatch.PolicyKind), "\n"),
+					subject:  resolveSubject(t.PodPeerMatcher),
+					policies: map[string]*anpGroup{},
+				}
+			}
+			kg := t.Name
+			if _, ok := groups[k].policies[kg]; !ok {
+				groups[k].policies[kg] = &anpGroup{
+					name:     t.Name,
+					priority: t.effectFromMatch.Priority,
+					effects:  []string{},
+					kind:     t.effectFromMatch.PolicyKind,
+				}
+			}
+			groups[k].policies[kg].effects = append(groups[k].policies[kg].effects, string(t.effectFromMatch.Verdict))
+		default:
+			result = append(result, v)
+		}
 	}
+
+	groupResult := make([]*peerProtocolGroup, 0, len(groups))
+	for _, v := range groups {
+		groupResult = append(groupResult, v)
+	}
+	slices.SortFunc(groupResult, func(a, b *peerProtocolGroup) bool {
+		return a.port < b.port
+	})
+
+	for _, v := range groupResult {
+		result = append(result, v)
+	}
+
+	return result
 }
 
 func resolveSubject(nsPodMatcher *PodPeerMatcher) string {
