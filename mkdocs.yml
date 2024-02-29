@@ -65,11 +65,11 @@ nav:
       - Provisional:
         - npeps/npep-122.md
         - npeps/npep-133.md
-      - Implementable:
-        - npeps/npep-137-conformance-profiles.md
+      # - Implementable:
+      - Experimental:
         - npeps/npep-126-egress-traffic-control.md
-        # - Experimental:
-        # - Standard:
+      - Standard:
+        - npeps/npep-137-conformance-profiles.md
         # - Declined:
   - Blog:
     - blog/index.md

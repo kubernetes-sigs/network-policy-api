@@ -1,7 +1,7 @@
 # NPEP-137: Conformance Profiles
 
 * Issue: [#137](https://github.com/kubernetes-sigs/network-policy-api/issues/137)
-* Status: Implementable
+* Status: Standard
 
 ## TLDR
 

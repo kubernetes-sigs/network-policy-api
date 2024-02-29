@@ -189,6 +189,15 @@ spec:
                       items:
                         description: |-
                           AdminNetworkPolicyEgressPeer defines a peer to allow traffic to.
+
+
+                          Note that presence of a Service object with this peer as its backend
+                          has no impact on the behavior of the policy applied to the subject
+                          trying to talk to the Service. It will work in the same way as if the
+                          Service didn't exist since policy is applied after ServiceVIP (clusterIP,
+                          externalIP, loadBalancerIngressIP) is rewritten to the backendIPs.
+
+
                           Exactly one of the selector pointers must be set for a given peer. If a
                           consumer observes none of its fields are set, they must assume an unknown
                           option has been specified and fail closed.
@@ -433,6 +442,15 @@ spec:
                       items:
                         description: |-
                           AdminNetworkPolicyIngressPeer defines an in-cluster peer to allow traffic from.
+
+
+                          Note that presence of a Service object with this policy subject as its backend
+                          has no impact on the behavior of the policy applied to the peer
+                          trying to talk to the Service. It will work in the same way as if the
+                          Service didn't exist since policy is applied after ServiceVIP (clusterIP,
+                          externalIP, loadBalancerIngressIP) is rewritten to the backendIPs.
+
+
                           Exactly one of the selector pointers must be set for a given peer. If a
                           consumer observes none of its fields are set, they must assume an unknown
                           option has been specified and fail closed.

@@ -1,7 +1,7 @@
 # NPEP-126: Add northbound traffic support in (B)ANP API
 
 * Issue: [#126](https://github.com/kubernetes-sigs/network-policy-api/issues/126)
-* Status: Implementable
+* Status: Experimental
 
 ## TLDR
 
@@ -187,6 +187,13 @@ namespaces, pods, nodes peers to express such entities. Not all implementations 
 correctly define the boundary between "internal" and "external" destinations with respect
 to a Kubernetes cluster which is why this field is generic enough to select any CIDR
 destination.
+
+Note2: Note that because policies are applied after Service VIPs (clusterIPs, externalIPs
+load balancer IPs(WIP: For services of type LoadBalancer there are discrepancies based on the type
+of load balancer, see https://github.com/kubernetes-sigs/network-policy-api/issues/203
+for details)) are rewritten to endpoint IPs, a Networks selector cannot match
+such a VIP. For example, a Networks selector that denies traffic to the entire
+service CIDR will not actually block any service traffic.
 
 Example: Let's define ANP and BANP that refer to some CIDR networks:
 ```
