@@ -1,7 +1,7 @@
 # NPEP-126: Add northbound traffic support in (B)ANP API
 
 * Issue: [#126](https://github.com/kubernetes-sigs/network-policy-api/issues/126)
-* Status: Implementable
+* Status: Experimental
 
 ## TLDR
 
