@@ -13,12 +13,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+// peerProtocolGroup groups all anps and banps in single struct
 type peerProtocolGroup struct {
 	port     string
 	subject  string
 	policies map[string]*anpGroup
 }
 
+// dummy implementation of the interface so we add the struct to the targer peers
 func (p *peerProtocolGroup) Matches(subject, peer *TrafficPeer, portInt int, portName string, protocol v1.Protocol) bool {
 	return false
 }
@@ -144,9 +146,9 @@ func (s *SliceBuilder) peerProtocolGroupTableLines(t *peerProtocolGroup) {
 		actions = append(actions, "BANP:")
 		for _, v := range banps {
 			if len(v.effects) > 1 {
-				actions = append(actions, fmt.Sprintf("   (%s): %s (ineffective rules: %s)", v.name, v.effects[0], strings.Join(v.effects[1:], ", ")))
+				actions = append(actions, fmt.Sprintf("   %s (ineffective rules: %s)", v.effects[0], strings.Join(v.effects[1:], ", ")))
 			} else {
-				actions = append(actions, fmt.Sprintf("   (%s): %s", v.name, v.effects[0]))
+				actions = append(actions, fmt.Sprintf("   %s", v.effects[0]))
 			}
 		}
 	}
@@ -189,7 +191,7 @@ func groupAnbAndBanp(p []PeerMatcher) []PeerMatcher {
 	for _, v := range p {
 		switch t := v.(type) {
 		case *PeerMatcherAdmin:
-			k := t.Port.GetPrimaryKey() + t.Pod.PrimaryKey()
+			k := t.Port.GetPrimaryKey() + t.Pod.PrimaryKey() + t.Namespace.PrimaryKey()
 			if _, ok := groups[k]; !ok {
 				groups[k] = &peerProtocolGroup{
 					port:     strings.Join(PortMatcherTableLines(t.PodPeerMatcher.Port, t.effectFromMatch.PolicyKind), "\n"),
@@ -217,6 +219,9 @@ func groupAnbAndBanp(p []PeerMatcher) []PeerMatcher {
 		groupResult = append(groupResult, v)
 	}
 	slices.SortFunc(groupResult, func(a, b *peerProtocolGroup) bool {
+		if a.port == b.port {
+			return a.subject < b.subject
+		}
 		return a.port < b.port
 	})
 
