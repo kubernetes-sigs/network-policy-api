@@ -2,12 +2,13 @@ package matcher
 
 import (
 	"fmt"
-
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/pkg/errors"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"strings"
 )
 
 // string of the form "[policyKind] namespace/name"
@@ -72,7 +73,7 @@ func (t *Target) Combine(other *Target) *Target {
 	return &Target{
 		SubjectMatcher: t.SubjectMatcher,
 		Peers:          append(t.Peers, other.Peers...),
-		SourceRules:    append(t.SourceRules, other.SourceRules...),
+		SourceRules:    sets.New(t.SourceRules...).Insert(other.SourceRules...).UnsortedList(),
 	}
 }
 
@@ -128,7 +129,7 @@ func (s *SubjectV1) TargetString() string {
 	if pods == "all" {
 		pods = "all pods"
 	}
-	return fmt.Sprintf("namespace: %s\n%s", s.namespace, pods)
+	return fmt.Sprintf("Namespace:\n   %s\nPod:\n   %s", strings.TrimSpace(s.namespace), strings.TrimSpace(pods))
 }
 
 func (s *SubjectV1) GetPrimaryKey() string {
@@ -171,8 +172,14 @@ func (s *SubjectAdmin) Matches(candidate *InternalPeer) bool {
 }
 
 func (s *SubjectAdmin) TargetString() string {
-	// FIXME
-	return "FIXME: implement target string like v1's except it supports namespace selector and (not) same labels"
+	if s.subject.Namespaces != nil {
+		namespace := kube.LabelSelectorTableLines(*s.subject.Namespaces)
+		return fmt.Sprintf("Namespace:\n   %s", strings.TrimSpace(namespace))
+	} else {
+		namespace := kube.LabelSelectorTableLines(s.subject.Pods.NamespaceSelector)
+		pod := kube.LabelSelectorTableLines(s.subject.Pods.PodSelector)
+		return fmt.Sprintf("Namespace:\n   %s\nPod:\n   %s", strings.TrimSpace(namespace), strings.TrimSpace(pod))
+	}
 }
 
 func (s *SubjectAdmin) GetPrimaryKey() string {

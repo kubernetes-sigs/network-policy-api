@@ -1,9 +1,11 @@
 package matcher
 
 import (
+	"github.com/mattfenwick/cyclonus/examples"
 	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -337,6 +339,16 @@ func RunBuilderTests() {
 				Protocol: v1.ProtocolUDP,
 				Port:     &portName,
 			}}}))
+		})
+	})
+
+	Describe("BuildV1AndV2NetPols", func() {
+		It("it combines ANPs with same subject", func() {
+			result := BuildV1AndV2NetPols(true, nil, examples.SimpleANPs, nil)
+			Expect(result.Egress).To(HaveLen(1))
+			k := maps.Keys(result.Egress)
+			firstRule := result.Egress[k[0]]
+			Expect(firstRule.SourceRules).To(HaveLen(2))
 		})
 	})
 }

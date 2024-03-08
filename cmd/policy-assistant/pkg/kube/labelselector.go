@@ -107,19 +107,17 @@ func LabelSelectorTableLines(selector metav1.LabelSelector) string {
 	}
 	var lines []string
 	if len(selector.MatchLabels) > 0 {
-		lines = append(lines, "Match labels:")
 		for _, key := range slice.Sort(maps.Keys(selector.MatchLabels)) {
 			val := selector.MatchLabels[key]
-			lines = append(lines, fmt.Sprintf("  %s: %s", key, val))
+			lines = append(lines, fmt.Sprintf("   %s = %s", key, val))
 		}
 	}
 	if len(selector.MatchExpressions) > 0 {
-		lines = append(lines, "Match expressions:")
 		sortedMatchExpressions := slice.SortOn(
 			func(l metav1.LabelSelectorRequirement) string { return l.Key },
 			selector.MatchExpressions)
 		for _, exp := range sortedMatchExpressions {
-			lines = append(lines, fmt.Sprintf("  %s %s %+v", exp.Key, exp.Operator, slice.Sort(exp.Values)))
+			lines = append(lines, fmt.Sprintf("   %s %s %+v", exp.Key, exp.Operator, slice.Sort(exp.Values)))
 		}
 	}
 	return strings.Join(lines, "\n")

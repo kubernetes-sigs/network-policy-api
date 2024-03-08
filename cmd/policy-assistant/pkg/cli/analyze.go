@@ -2,6 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"github.com/mattfenwick/cyclonus/examples"
+	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
+	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/json"
@@ -9,7 +12,6 @@ import (
 	"github.com/mattfenwick/cyclonus/pkg/generator"
 
 	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
 	"github.com/mattfenwick/cyclonus/pkg/matcher"
 	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
@@ -87,6 +89,8 @@ func SetupAnalyzeCommand() *cobra.Command {
 func RunAnalyzeCommand(args *AnalyzeArgs) {
 	// 1. read policies from kube
 	var kubePolicies []*networkingv1.NetworkPolicy
+	var kubeANPs []*v1alpha1.AdminNetworkPolicy
+	var kubeBANPs *v1alpha1.BaselineAdminNetworkPolicy
 	var kubePods []v1.Pod
 	var kubeNamespaces []v1.Namespace
 	if args.AllNamespaces || len(args.Namespaces) > 0 {
@@ -118,10 +122,13 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 	// 3. read example policies
 	if args.UseExamplePolicies {
 		kubePolicies = append(kubePolicies, netpol.AllExamples...)
+
+		kubeANPs = examples.CoreGressRulesCombinedANB
+		kubeBANPs = examples.CoreGressRulesCombinedBANB
 	}
 
 	logrus.Debugf("parsed policies:\n%s", json.MustMarshalToString(kubePolicies))
-	policies := matcher.BuildNetworkPolicies(args.SimplifyPolicies, kubePolicies)
+	policies := matcher.BuildV1AndV2NetPols(args.SimplifyPolicies, kubePolicies, kubeANPs, kubeBANPs)
 
 	for _, mode := range args.Modes {
 		switch mode {

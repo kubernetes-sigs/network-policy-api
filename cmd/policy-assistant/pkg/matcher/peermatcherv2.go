@@ -10,13 +10,15 @@ import (
 // This is because ANP and BANP only deal with Pod to Pod traffic, and do not deal with external IPs.
 type PeerMatcherAdmin struct {
 	*PodPeerMatcher
+	Name            string
 	effectFromMatch Effect
 }
 
 // NewPeerMatcherANP creates a PeerMatcherAdmin for an ANP rule
-func NewPeerMatcherANP(peer *PodPeerMatcher, v Verdict, priority int) *PeerMatcherAdmin {
+func NewPeerMatcherANP(peer *PodPeerMatcher, v Verdict, priority int, source string) *PeerMatcherAdmin {
 	return &PeerMatcherAdmin{
 		PodPeerMatcher: peer,
+		Name:           source,
 		effectFromMatch: Effect{
 			PolicyKind: AdminNetworkPolicy,
 			Priority:   priority,
@@ -26,9 +28,10 @@ func NewPeerMatcherANP(peer *PodPeerMatcher, v Verdict, priority int) *PeerMatch
 }
 
 // NewPeerMatcherBANP creates a new PeerMatcherAdmin for a BANP rule
-func NewPeerMatcherBANP(peer *PodPeerMatcher, v Verdict) *PeerMatcherAdmin {
+func NewPeerMatcherBANP(peer *PodPeerMatcher, v Verdict, source string) *PeerMatcherAdmin {
 	return &PeerMatcherAdmin{
 		PodPeerMatcher: peer,
+		Name:           source,
 		effectFromMatch: Effect{
 			PolicyKind: BaselineAdminNetworkPolicy,
 			Verdict:    v,
