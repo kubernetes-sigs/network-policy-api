@@ -107,7 +107,7 @@ func main() {
 			channelCrd := crdRaw.DeepCopy()
 			for _, version := range channelCrd.Spec.Versions {
 				version.Schema.OpenAPIV3Schema.Properties = channelTweaks(channel, version.Schema.OpenAPIV3Schema.Properties)
-				if _, ok := version.Schema.OpenAPIV3Schema.Properties["notSameLabels"]; ok {
+				if _, ok := version.Schema.OpenAPIV3Schema.Properties["namedPort"]; ok {
 					fmt.Println("Changes not persisted")
 				}
 			}

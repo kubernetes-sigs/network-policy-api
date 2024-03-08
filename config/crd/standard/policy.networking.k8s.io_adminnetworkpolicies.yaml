@@ -211,17 +211,61 @@ spec:
 
 
                               Support: Core
-                            maxProperties: 1
-                            minProperties: 1
+                            properties:
+                              matchExpressions:
+                                description: matchExpressions is a list of label selector
+                                  requirements. The requirements are ANDed.
+                                items:
+                                  description: |-
+                                    A label selector requirement is a selector that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: key is the label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: |-
+                                        operator represents a key's relationship to a set of values.
+                                        Valid operators are In, NotIn, Exists and DoesNotExist.
+                                      type: string
+                                    values:
+                                      description: |-
+                                        values is an array of string values. If the operator is In or NotIn,
+                                        the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                        the values array must be empty. This array is replaced during a strategic
+                                        merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                  - key
+                                  - operator
+                                  type: object
+                                type: array
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                  map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                  operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                type: object
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          pods:
+                            description: |-
+                              Pods defines a way to select a set of pods in
+                              a set of namespaces. Note that host-networked pods
+                              are not included in this type of peer.
+
+
+                              Support: Core
                             properties:
                               namespaceSelector:
                                 description: |-
-                                  NamespaceSelector is a labelSelector used to select Namespaces, This field
-                                  follows standard label selector semantics; if present but empty, it selects
-                                  all Namespaces.
-
-
-                                  Support: Core
+                                  NamespaceSelector follows standard label selector semantics; if empty,
+                                  it selects all Namespaces.
                                 properties:
                                   matchExpressions:
                                     description: matchExpressions is a list of label
@@ -265,85 +309,10 @@ spec:
                                     type: object
                                 type: object
                                 x-kubernetes-map-type: atomic
-                            type: object
-                          pods:
-                            description: |-
-                              Pods defines a way to select a set of pods in
-                              a set of namespaces. Note that host-networked pods
-                              are not included in this type of peer.
-
-
-                              Support: Core
-                            properties:
-                              namespaces:
-                                description: |-
-                                  Namespaces is used to select a set of Namespaces.
-
-
-                                  Support: Core
-                                maxProperties: 1
-                                minProperties: 1
-                                properties:
-                                  namespaceSelector:
-                                    description: |-
-                                      NamespaceSelector is a labelSelector used to select Namespaces, This field
-                                      follows standard label selector semantics; if present but empty, it selects
-                                      all Namespaces.
-
-
-                                      Support: Core
-                                    properties:
-                                      matchExpressions:
-                                        description: matchExpressions is a list of
-                                          label selector requirements. The requirements
-                                          are ANDed.
-                                        items:
-                                          description: |-
-                                            A label selector requirement is a selector that contains values, a key, and an operator that
-                                            relates the key and values.
-                                          properties:
-                                            key:
-                                              description: key is the label key that
-                                                the selector applies to.
-                                              type: string
-                                            operator:
-                                              description: |-
-                                                operator represents a key's relationship to a set of values.
-                                                Valid operators are In, NotIn, Exists and DoesNotExist.
-                                              type: string
-                                            values:
-                                              description: |-
-                                                values is an array of string values. If the operator is In or NotIn,
-                                                the values array must be non-empty. If the operator is Exists or DoesNotExist,
-                                                the values array must be empty. This array is replaced during a strategic
-                                                merge patch.
-                                              items:
-                                                type: string
-                                              type: array
-                                          required:
-                                          - key
-                                          - operator
-                                          type: object
-                                        type: array
-                                      matchLabels:
-                                        additionalProperties:
-                                          type: string
-                                        description: |-
-                                          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-                                          map is equivalent to an element of matchExpressions, whose key field is "key", the
-                                          operator is "In", and the values array contains only "value". The requirements are ANDed.
-                                        type: object
-                                    type: object
-                                    x-kubernetes-map-type: atomic
-                                type: object
                               podSelector:
                                 description: |-
-                                  PodSelector is a labelSelector used to select Pods, This field is NOT optional,
-                                  follows standard label selector semantics and if present but empty, it selects
-                                  all Pods.
-
-
-                                  Support: Core
+                                  PodSelector is used to explicitly select pods within a namespace; if empty,
+                                  it selects all Pods.
                                 properties:
                                   matchExpressions:
                                     description: matchExpressions is a list of label
@@ -388,7 +357,7 @@ spec:
                                 type: object
                                 x-kubernetes-map-type: atomic
                             required:
-                            - namespaces
+                            - namespaceSelector
                             - podSelector
                             type: object
                         type: object
@@ -458,17 +427,61 @@ spec:
 
 
                               Support: Core
-                            maxProperties: 1
-                            minProperties: 1
+                            properties:
+                              matchExpressions:
+                                description: matchExpressions is a list of label selector
+                                  requirements. The requirements are ANDed.
+                                items:
+                                  description: |-
+                                    A label selector requirement is a selector that contains values, a key, and an operator that
+                                    relates the key and values.
+                                  properties:
+                                    key:
+                                      description: key is the label key that the selector
+                                        applies to.
+                                      type: string
+                                    operator:
+                                      description: |-
+                                        operator represents a key's relationship to a set of values.
+                                        Valid operators are In, NotIn, Exists and DoesNotExist.
+                                      type: string
+                                    values:
+                                      description: |-
+                                        values is an array of string values. If the operator is In or NotIn,
+                                        the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                        the values array must be empty. This array is replaced during a strategic
+                                        merge patch.
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                  - key
+                                  - operator
+                                  type: object
+                                type: array
+                              matchLabels:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                  map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                  operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                type: object
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          pods:
+                            description: |-
+                              Pods defines a way to select a set of pods in
+                              a set of namespaces. Note that host-networked pods
+                              are not included in this type of peer.
+
+
+                              Support: Core
                             properties:
                               namespaceSelector:
                                 description: |-
-                                  NamespaceSelector is a labelSelector used to select Namespaces, This field
-                                  follows standard label selector semantics; if present but empty, it selects
-                                  all Namespaces.
-
-
-                                  Support: Core
+                                  NamespaceSelector follows standard label selector semantics; if empty,
+                                  it selects all Namespaces.
                                 properties:
                                   matchExpressions:
                                     description: matchExpressions is a list of label
@@ -512,85 +525,10 @@ spec:
                                     type: object
                                 type: object
                                 x-kubernetes-map-type: atomic
-                            type: object
-                          pods:
-                            description: |-
-                              Pods defines a way to select a set of pods in
-                              a set of namespaces. Note that host-networked pods
-                              are not included in this type of peer.
-
-
-                              Support: Core
-                            properties:
-                              namespaces:
-                                description: |-
-                                  Namespaces is used to select a set of Namespaces.
-
-
-                                  Support: Core
-                                maxProperties: 1
-                                minProperties: 1
-                                properties:
-                                  namespaceSelector:
-                                    description: |-
-                                      NamespaceSelector is a labelSelector used to select Namespaces, This field
-                                      follows standard label selector semantics; if present but empty, it selects
-                                      all Namespaces.
-
-
-                                      Support: Core
-                                    properties:
-                                      matchExpressions:
-                                        description: matchExpressions is a list of
-                                          label selector requirements. The requirements
-                                          are ANDed.
-                                        items:
-                                          description: |-
-                                            A label selector requirement is a selector that contains values, a key, and an operator that
-                                            relates the key and values.
-                                          properties:
-                                            key:
-                                              description: key is the label key that
-                                                the selector applies to.
-                                              type: string
-                                            operator:
-                                              description: |-
-                                                operator represents a key's relationship to a set of values.
-                                                Valid operators are In, NotIn, Exists and DoesNotExist.
-                                              type: string
-                                            values:
-                                              description: |-
-                                                values is an array of string values. If the operator is In or NotIn,
-                                                the values array must be non-empty. If the operator is Exists or DoesNotExist,
-                                                the values array must be empty. This array is replaced during a strategic
-                                                merge patch.
-                                              items:
-                                                type: string
-                                              type: array
-                                          required:
-                                          - key
-                                          - operator
-                                          type: object
-                                        type: array
-                                      matchLabels:
-                                        additionalProperties:
-                                          type: string
-                                        description: |-
-                                          matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
-                                          map is equivalent to an element of matchExpressions, whose key field is "key", the
-                                          operator is "In", and the values array contains only "value". The requirements are ANDed.
-                                        type: object
-                                    type: object
-                                    x-kubernetes-map-type: atomic
-                                type: object
                               podSelector:
                                 description: |-
-                                  PodSelector is a labelSelector used to select Pods, This field is NOT optional,
-                                  follows standard label selector semantics and if present but empty, it selects
-                                  all Pods.
-
-
-                                  Support: Core
+                                  PodSelector is used to explicitly select pods within a namespace; if empty,
+                                  it selects all Pods.
                                 properties:
                                   matchExpressions:
                                     description: matchExpressions is a list of label
@@ -635,7 +573,7 @@ spec:
                                 type: object
                                 x-kubernetes-map-type: atomic
                             required:
-                            - namespaces
+                            - namespaceSelector
                             - podSelector
                             type: object
                         type: object

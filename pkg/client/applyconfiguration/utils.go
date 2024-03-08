@@ -57,12 +57,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apisv1alpha1.BaselineAdminNetworkPolicySpecApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("BaselineAdminNetworkPolicyStatus"):
 		return &apisv1alpha1.BaselineAdminNetworkPolicyStatusApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("NamespacedPeer"):
-		return &apisv1alpha1.NamespacedPeerApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("NamespacedPodPeer"):
-		return &apisv1alpha1.NamespacedPodPeerApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("NamespacedPodSubject"):
-		return &apisv1alpha1.NamespacedPodSubjectApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("NamespacedPod"):
+		return &apisv1alpha1.NamespacedPodApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Port"):
 		return &apisv1alpha1.PortApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PortRange"):

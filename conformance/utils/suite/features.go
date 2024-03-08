@@ -38,7 +38,7 @@ const (
 )
 
 // CoreFeatures are the features that are required to be conformant with
-// the Core API features (e.g. all fields in the API except for NamedPorts, SameLabels, NotSameLabels).
+// the Core API features (e.g. all fields in the API except for NamedPorts).
 var CoreFeatures = sets.New(
 	SupportAdminNetworkPolicy,
 	SupportBaselineAdminNetworkPolicy,
@@ -49,16 +49,12 @@ var CoreFeatures = sets.New(
 // -----------------------------------------------------------------------------
 
 const (
-	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers, EgressInlineCIDRPeers, SameLabels and NotSameLabels
+	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers, EgressInlineCIDRPeers
 	// fall under the extended test conformance.
 	SupportAdminNetworkPolicyNamedPorts                    SupportedFeature = "AdminNetworkPolicyNamedPorts"
-	SupportAdminNetworkPolicySameLabels                    SupportedFeature = "AdminNetworkPolicySameLabels"
-	SupportAdminNetworkPolicyNotSameLabels                 SupportedFeature = "AdminNetworkPolicyNotSameLabels"
 	SupportAdminNetworkPolicyEgressNodePeers               SupportedFeature = "AdminNetworkPolicyEgressNodePeers"
 	SupportAdminNetworkPolicyEgressInlineCIDRPeers         SupportedFeature = "AdminNetworkPolicyEgressInlineCIDRPeers"
 	SupportBaselineAdminNetworkPolicyNamedPorts            SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
-	SupportBaselineAdminNetworkPolicySameLabels            SupportedFeature = "BaselineAdminNetworkPolicySameLabels"
-	SupportBaselineAdminNetworkPolicyNotSameLabels         SupportedFeature = "BaselineAdminNetworkPolicyNotSameLabels"
 	SupportBaselineAdminNetworkPolicyEgressNodePeers       SupportedFeature = "BaselineAdminNetworkPolicyEgressNodePeers"
 	SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers SupportedFeature = "BaselineAdminNetworkPolicyEgressInlineCIDRPeers"
 )
@@ -67,13 +63,9 @@ const (
 // choose to support as an opt-in.
 var ExtendedFeatures = sets.New(
 	SupportAdminNetworkPolicyNamedPorts,
-	SupportAdminNetworkPolicySameLabels,
-	SupportAdminNetworkPolicyNotSameLabels,
 	SupportAdminNetworkPolicyEgressNodePeers,
 	SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 	SupportBaselineAdminNetworkPolicyNamedPorts,
-	SupportBaselineAdminNetworkPolicySameLabels,
-	SupportBaselineAdminNetworkPolicyNotSameLabels,
 	SupportBaselineAdminNetworkPolicyEgressNodePeers,
 	SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 ).Insert(CoreFeatures.UnsortedList()...)

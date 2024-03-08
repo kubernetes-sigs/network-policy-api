@@ -11,8 +11,8 @@ spec:
     - action: Pass # Pass inter-tenant traffic to any defined NetworkPolicies
       from:
       - namespaces:
-          sameLabels:
-          - tenant
+          # This user story is currently not implementable.
+          # See https://network-policy-api.sigs.k8s.io/npeps/npep-122/ for more details.
     - action: Deny   # Deny everything else other than same tenant traffic
       from:
       - namespaces:
