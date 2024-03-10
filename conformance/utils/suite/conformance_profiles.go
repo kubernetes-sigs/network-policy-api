@@ -77,6 +77,7 @@ var (
 			SupportBaselineAdminNetworkPolicyNamedPorts,
 			SupportBaselineAdminNetworkPolicySameLabels,
 			SupportBaselineAdminNetworkPolicyNotSameLabels,
+			SupportBaselineAdminNetworkPolicyEgressNodePeers,
 		),
 	}
 )
