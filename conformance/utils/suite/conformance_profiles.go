@@ -64,6 +64,7 @@ var (
 			SupportAdminNetworkPolicySameLabels,
 			SupportAdminNetworkPolicyNotSameLabels,
 			SupportAdminNetworkPolicyEgressNodePeers,
+			SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 		),
 	}
 

@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/utils/net"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
@@ -34,6 +35,7 @@ func init() {
 	ConformanceTests = append(ConformanceTests,
 		AdminNetworkPolicyEgressNamedPort,
 		AdminNetworkPolicyEgressNodePeers,
+		AdminNetworkPolicyEgressInlineCIDRPeers,
 	)
 }
 
@@ -101,7 +103,7 @@ var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()
-		// This test uses `node-selector-as-peer-example` ANP
+		// This test uses `node-and-cidr-as-peers-example` ANP
 		// centaur-1 is our server host-networked pod in forbidden-forrest namespace
 		serverPod := &v1.Pod{}
 		err := s.Client.Get(ctx, client.ObjectKey{
@@ -136,6 +138,131 @@ var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 			assert.True(t, success)
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+		})
+	},
+}
+
+var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
+	ShortName:   "AdminNetworkPolicyEgressInlineCIDRPeers",
+	Description: "Tests support for egress traffic to CIDR peers using admin network policy API based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportAdminNetworkPolicy,
+		suite.SupportAdminNetworkPolicyEgressInlineCIDRPeers,
+	},
+	Manifests: []string{"base/admin_network_policy/extended-egress-selector-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+		defer cancel()
+		// This test uses `node-and-cidr-as-peers-example` ANP
+		t.Run("Should support a 'deny-egress' rule policy for egress-cidr-peer", func(t *testing.T) {
+			// harry-potter-1 is our client pod in gryffindor namespace
+			// Let us pick a pod in ravenclaw namespace and try to connect, it won't work
+			// ensure egress is DENIED to 0.0.0.0/0 from gryffindor; egressRule at index2 should take effect
+			// luna-lovegood-0 is our server pod in ravenclaw namespace
+			serverPod := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-ravenclaw",
+				Name:      "luna-lovegood-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+			// Let us pick a pod in hufflepuff namespace and try to connect, it won't work
+			// ensure egress is DENIED to 0.0.0.0/0 from gryffindor; egressRule at index2 should take effect
+			// cedric-diggory-0 is our server pod in hufflepuff namespace
+			serverPod = &v1.Pod{}
+			err = s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hufflepuff",
+				Name:      "cedric-diggory-0",
+			}, serverPod)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+		})
+		// To test allow CIDR rule, insert the following rule at index0
+		//- name: "allow-egress-to-specific-podIPs"
+		//  action: "Allow"
+		//  to:
+		//  - networks:
+		//	  - luna-lovegood-0.IP
+		//    - cedric-diggory-0.IP
+		t.Run("Should support an 'allow-egress' rule policy for egress-cidr-peer", func(t *testing.T) {
+			serverPodRavenclaw := &v1.Pod{}
+			err := s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-ravenclaw",
+				Name:      "luna-lovegood-0",
+			}, serverPodRavenclaw)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+			serverPodHufflepuff := &v1.Pod{}
+			err = s.Client.Get(ctx, client.ObjectKey{
+				Namespace: "network-policy-conformance-hufflepuff",
+				Name:      "cedric-diggory-0",
+			}, serverPodHufflepuff)
+			require.NoErrorf(t, err, "unable to fetch the server pod")
+			anp := &v1alpha1.AdminNetworkPolicy{}
+			err = s.Client.Get(ctx, client.ObjectKey{
+				Name: "node-and-cidr-as-peers-example",
+			}, anp)
+			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			var mask string
+			if net.IsIPv4String(serverPodRavenclaw.Status.PodIP) {
+				mask = "/32"
+			} else {
+				mask = "/128"
+			}
+			// insert new rule at index0; append the rest of the rules in the node-and-cidr-as-peers-example
+			newRule := []v1alpha1.AdminNetworkPolicyEgressRule{
+				{
+					Name:   "allow-egress-to-specific-podIPs",
+					Action: "Allow",
+					To: []v1alpha1.AdminNetworkPolicyEgressPeer{
+						{
+							Networks: []v1alpha1.CIDR{
+								v1alpha1.CIDR(serverPodRavenclaw.Status.PodIP + mask),
+								v1alpha1.CIDR(serverPodHufflepuff.Status.PodIP + mask),
+							},
+						},
+					},
+				},
+			}
+			anp.Spec.Egress = append(newRule, anp.DeepCopy().Spec.Egress...)
+			err = s.Client.Update(ctx, anp)
+			require.NoErrorf(t, err, "unable to update the admin network policy")
+			// harry-potter-0 is our client pod in gryffindor namespace
+			// ensure egress is ALLOWED to luna-lovegood-0.IP and cedric-diggory-0.IP
+			// new egressRule at index0 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPodRavenclaw.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPodRavenclaw.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPodRavenclaw.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPodHufflepuff.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPodHufflepuff.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPodHufflepuff.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
 			assert.True(t, success)
 		})
 	},

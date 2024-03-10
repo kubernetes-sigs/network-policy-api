@@ -1,7 +1,7 @@
 apiVersion: policy.networking.k8s.io/v1alpha1
 kind: AdminNetworkPolicy
 metadata:
-  name: node-selector-as-peer-example
+  name: node-and-cidr-as-peers-example
 spec:
   priority: 75
   subject:
@@ -33,7 +33,7 @@ spec:
       - portNumber:
           protocol: UDP
           port: 5353
-  - name: "deny-egress-to-slytherin-and-nodes"
+  - name: "deny-egress-to-slytherin-and-nodes-and-internet"
     action: "Deny"
     to:
     - pods:
@@ -47,3 +47,6 @@ spec:
     - nodes:
         matchLabels:
           kubernetes.io/os: linux
+    - networks:
+        - 0.0.0.0/0
+        - ::/0

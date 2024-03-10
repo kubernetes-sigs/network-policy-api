@@ -49,12 +49,13 @@ var CoreFeatures = sets.New(
 // -----------------------------------------------------------------------------
 
 const (
-	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers, SameLabels and NotSameLabels
+	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers, EgressInlineCIDRPeers, SameLabels and NotSameLabels
 	// fall under the extended test conformance.
 	SupportAdminNetworkPolicyNamedPorts              SupportedFeature = "AdminNetworkPolicyNamedPorts"
 	SupportAdminNetworkPolicySameLabels              SupportedFeature = "AdminNetworkPolicySameLabels"
 	SupportAdminNetworkPolicyNotSameLabels           SupportedFeature = "AdminNetworkPolicyNotSameLabels"
 	SupportAdminNetworkPolicyEgressNodePeers         SupportedFeature = "AdminNetworkPolicyEgressNodePeers"
+	SupportAdminNetworkPolicyEgressInlineCIDRPeers   SupportedFeature = "AdminNetworkPolicyEgressInlineCIDRPeers"
 	SupportBaselineAdminNetworkPolicyNamedPorts      SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
 	SupportBaselineAdminNetworkPolicySameLabels      SupportedFeature = "BaselineAdminNetworkPolicySameLabels"
 	SupportBaselineAdminNetworkPolicyNotSameLabels   SupportedFeature = "BaselineAdminNetworkPolicyNotSameLabels"
@@ -68,6 +69,7 @@ var ExtendedFeatures = sets.New(
 	SupportAdminNetworkPolicySameLabels,
 	SupportAdminNetworkPolicyNotSameLabels,
 	SupportAdminNetworkPolicyEgressNodePeers,
+	SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 	SupportBaselineAdminNetworkPolicyNamedPorts,
 	SupportBaselineAdminNetworkPolicySameLabels,
 	SupportBaselineAdminNetworkPolicyNotSameLabels,
