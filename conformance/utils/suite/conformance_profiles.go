@@ -79,6 +79,7 @@ var (
 			SupportBaselineAdminNetworkPolicySameLabels,
 			SupportBaselineAdminNetworkPolicyNotSameLabels,
 			SupportBaselineAdminNetworkPolicyEgressNodePeers,
+			SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 		),
 	}
 )

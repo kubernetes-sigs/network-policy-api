@@ -19,9 +19,12 @@ spec:
           protocol: TCP
           start: 36363
           end: 36364
-  - name: "deny-egress-to-nodes"
+  - name: "deny-egress-to-nodes-and-internet"
     action: "Deny"
     to:
     - nodes:
         matchLabels:
           kubernetes.io/os: linux
+    - networks:
+        - 0.0.0.0/0
+        - ::/0
