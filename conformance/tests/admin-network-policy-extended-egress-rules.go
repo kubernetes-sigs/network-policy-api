@@ -30,6 +30,13 @@ import (
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
+func init() {
+	ConformanceTests = append(ConformanceTests,
+		AdminNetworkPolicyEgressNamedPort,
+		AdminNetworkPolicyEgressNodePeers,
+	)
+}
+
 var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 	ShortName:   "AdminNetworkPolicyEgressNamedPort",
 	Description: "Tests support for egress traffic on a named port using admin network policy API based on a server and client model",
@@ -80,5 +87,56 @@ var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 			assert.True(t, success)
 		})
 
+	},
+}
+
+var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
+	ShortName:   "AdminNetworkPolicyEgressNodePeers",
+	Description: "Tests support for egress traffic to node peers using admin network policy API based on a server and client model",
+	Features: []suite.SupportedFeature{
+		suite.SupportAdminNetworkPolicy,
+		suite.SupportAdminNetworkPolicyEgressNodePeers,
+	},
+	Manifests: []string{"base/admin_network_policy/extended-egress-selector-rules.yaml"},
+	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
+		defer cancel()
+		// This test uses `node-selector-as-peer-example` ANP
+		// centaur-1 is our server host-networked pod in forbidden-forrest namespace
+		serverPod := &v1.Pod{}
+		err := s.Client.Get(ctx, client.ObjectKey{
+			Namespace: "network-policy-conformance-forbidden-forrest",
+			Name:      "centaur-1",
+		}, serverPod)
+		require.NoErrorf(t, err, "unable to fetch the server pod")
+		t.Run("Should support an 'allow-egress' rule policy for egress-node-peer", func(t *testing.T) {
+			// harry-potter-0 is our client pod in gryffindor namespace
+			// ensure egress is ALLOWED to forbidden-forrest from gryffindor at the 36363 TCP port
+			// egressRule at index0 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
+				serverPod.Status.PodIP, int32(36363), s.TimeoutConfig.RequestTimeout, true)
+			assert.True(t, success)
+		})
+		t.Run("Should support a 'pass-egress' rule policy for egress-node-peer", func(t *testing.T) {
+			// harry-potter-0 is our client pod in gryffindor namespace
+			// ensure egress is PASSED to forbidden-forrest from gryffindor at the 5353 UDP port
+			// egressRule at index1 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true) // Pass rule at index2 takes effect
+			assert.True(t, success)
+		})
+		t.Run("Should support a 'deny-egress' rule policy for egress-node-peer", func(t *testing.T) {
+			// harry-potter-1 is our client pod in gryffindor namespace
+			// ensure egress is DENIED to rest of the nodes from gryffindor; egressRule at index2 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(36364), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
+			assert.True(t, success)
+		})
 	},
 }
