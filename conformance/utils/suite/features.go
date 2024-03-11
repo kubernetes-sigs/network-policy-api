@@ -49,14 +49,18 @@ var CoreFeatures = sets.New(
 // -----------------------------------------------------------------------------
 
 const (
-	// This option indicates AdminNetworkPolicy's NamedPorts, SameLabels and NotSameLabels
+	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers, EgressInlineCIDRPeers, SameLabels and NotSameLabels
 	// fall under the extended test conformance.
-	SupportAdminNetworkPolicyNamedPorts            SupportedFeature = "AdminNetworkPolicyNamedPorts"
-	SupportAdminNetworkPolicySameLabels            SupportedFeature = "AdminNetworkPolicySameLabels"
-	SupportAdminNetworkPolicyNotSameLabels         SupportedFeature = "AdminNetworkPolicyNotSameLabels"
-	SupportBaselineAdminNetworkPolicyNamedPorts    SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
-	SupportBaselineAdminNetworkPolicySameLabels    SupportedFeature = "BaselineAdminNetworkPolicySameLabels"
-	SupportBaselineAdminNetworkPolicyNotSameLabels SupportedFeature = "BaselineAdminNetworkPolicyNotSameLabels"
+	SupportAdminNetworkPolicyNamedPorts                    SupportedFeature = "AdminNetworkPolicyNamedPorts"
+	SupportAdminNetworkPolicySameLabels                    SupportedFeature = "AdminNetworkPolicySameLabels"
+	SupportAdminNetworkPolicyNotSameLabels                 SupportedFeature = "AdminNetworkPolicyNotSameLabels"
+	SupportAdminNetworkPolicyEgressNodePeers               SupportedFeature = "AdminNetworkPolicyEgressNodePeers"
+	SupportAdminNetworkPolicyEgressInlineCIDRPeers         SupportedFeature = "AdminNetworkPolicyEgressInlineCIDRPeers"
+	SupportBaselineAdminNetworkPolicyNamedPorts            SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
+	SupportBaselineAdminNetworkPolicySameLabels            SupportedFeature = "BaselineAdminNetworkPolicySameLabels"
+	SupportBaselineAdminNetworkPolicyNotSameLabels         SupportedFeature = "BaselineAdminNetworkPolicyNotSameLabels"
+	SupportBaselineAdminNetworkPolicyEgressNodePeers       SupportedFeature = "BaselineAdminNetworkPolicyEgressNodePeers"
+	SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers SupportedFeature = "BaselineAdminNetworkPolicyEgressInlineCIDRPeers"
 )
 
 // ExtendedFeatures are extra generic features that implementations may
@@ -65,9 +69,13 @@ var ExtendedFeatures = sets.New(
 	SupportAdminNetworkPolicyNamedPorts,
 	SupportAdminNetworkPolicySameLabels,
 	SupportAdminNetworkPolicyNotSameLabels,
+	SupportAdminNetworkPolicyEgressNodePeers,
+	SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 	SupportBaselineAdminNetworkPolicyNamedPorts,
 	SupportBaselineAdminNetworkPolicySameLabels,
 	SupportBaselineAdminNetworkPolicyNotSameLabels,
+	SupportBaselineAdminNetworkPolicyEgressNodePeers,
+	SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 ).Insert(CoreFeatures.UnsortedList()...)
 
 // -----------------------------------------------------------------------------

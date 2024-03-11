@@ -1,0 +1,30 @@
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: BaselineAdminNetworkPolicy
+metadata:
+  name: default
+spec:
+  subject:
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+  egress:
+  - name: "allow-egress-to-36363-on-nodes"
+    action: "Allow"
+    to:
+    - nodes:
+        matchLabels:
+          kubernetes.io/os: linux
+    ports:
+      - portRange:
+          protocol: TCP
+          start: 36363
+          end: 36364
+  - name: "deny-egress-to-nodes-and-internet"
+    action: "Deny"
+    to:
+    - nodes:
+        matchLabels:
+          kubernetes.io/os: linux
+    - networks:
+        - 0.0.0.0/0
+        - ::/0

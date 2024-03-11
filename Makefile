@@ -64,11 +64,18 @@ conformance-profiles-default:
 	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy
 
 ##@ Deployment
-install: generate ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	kubectl kustomize config/crd | kubectl apply -f -
+install: generate ## Install standard CRDs into the K8s cluster specified in ~/.kube/config.
+	kubectl kustomize config/crd/standard | kubectl apply -f -
 
-uninstall: generate kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
-	kubectl kustomize config/crd | kubectl delete -f -
+uninstall: generate kustomize ## Uninstall standard CRDs from the K8s cluster specified in ~/.kube/config.
+	kubectl kustomize config/crd/standard | kubectl delete -f -
+
+##@ Deployment
+install-experimental: generate ## Install experimental CRDs into the K8s cluster specified in ~/.kube/config.
+	kubectl kustomize config/crd/experimental | kubectl apply -f -
+
+uninstall-experimental: generate kustomize ## Uninstall experimental CRDs from the K8s cluster specified in ~/.kube/config.
+	kubectl kustomize config/crd/experimental | kubectl delete -f -
 
 .PHONY: docs ## Build the documentation website
 docs:

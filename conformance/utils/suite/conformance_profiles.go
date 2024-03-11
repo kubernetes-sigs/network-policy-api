@@ -29,7 +29,7 @@ import (
 // ConformanceProfile is a group of features that have a related purpose, e.g.
 // to cover a specific feature present in Network Policy V2 API.
 //
-// For more details see the relevant GEP: https://network-policy-api.sigs.k8s.io/npeps/npep-137/
+// For more details see the relevant NPEP: https://network-policy-api.sigs.k8s.io/npeps/npep-137/
 type ConformanceProfile struct {
 	Name             ConformanceProfileName
 	CoreFeatures     sets.Set[SupportedFeature]
@@ -63,6 +63,8 @@ var (
 			SupportAdminNetworkPolicyNamedPorts,
 			SupportAdminNetworkPolicySameLabels,
 			SupportAdminNetworkPolicyNotSameLabels,
+			SupportAdminNetworkPolicyEgressNodePeers,
+			SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 		),
 	}
 
@@ -76,6 +78,8 @@ var (
 			SupportBaselineAdminNetworkPolicyNamedPorts,
 			SupportBaselineAdminNetworkPolicySameLabels,
 			SupportBaselineAdminNetworkPolicyNotSameLabels,
+			SupportBaselineAdminNetworkPolicyEgressNodePeers,
+			SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 		),
 	}
 )

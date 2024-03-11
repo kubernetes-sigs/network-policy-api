@@ -29,6 +29,13 @@ metadata:
   name: network-policy-conformance-ravenclaw
   labels:
     conformance-house: ravenclaw
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: network-policy-conformance-forbidden-forrest
+  labels:
+    conformance-house: forbidden-forrest
 # Create 4 deployments; 2 pods each under these namespaces
 ---
 apiVersion: apps/v1
@@ -229,6 +236,62 @@ spec:
           - name: SERVE_SCTP_PORT_9003
             value: "foo"
         - name: luna-lovegood-9005
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9005
+            value: "foo"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: centaur
+  namespace: network-policy-conformance-forbidden-forrest
+spec:
+  selector:
+    matchLabels:
+      conformance-house: forbidden-forrest
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        conformance-house: forbidden-forrest
+    spec:
+      hostNetwork: true
+      containers:
+        - name: centaur-client
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+        - name: centaur-36363
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 36363"]
+          ports:
+            - containerPort: 36363
+              protocol: TCP
+              name: web-36363
+        - name: centaur-36364
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 36364"]
+          ports:
+            - containerPort: 36364
+              protocol: TCP
+              name: web-36364
+        - name: centaur-5353
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 5353"]
+        - name: centaur-53
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+          ports:
+            - containerPort: 53
+              protocol: UDP
+              name: dns
+        - name: centaur-9003
+          image: registry.k8s.io/e2e-test-images/agnhost:2.43
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9003
+            value: "foo"
+        - name: centaur-9005
           image: registry.k8s.io/e2e-test-images/agnhost:2.43
           command: ["/bin/bash", "-c", "/agnhost porter"]
           env:

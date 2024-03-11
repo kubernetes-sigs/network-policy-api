@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Kubernetes Authors.
+Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,77 +33,76 @@ import (
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyEgressNamedPort,
-		AdminNetworkPolicyEgressNodePeers,
-		AdminNetworkPolicyEgressInlineCIDRPeers,
+		BaselineAdminNetworkPolicyEgressNamedPort,
+		BaselineAdminNetworkPolicyEgressNodePeers,
+		BaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 	)
 }
 
-var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyEgressNamedPort",
-	Description: "Tests support for egress traffic on a named port using admin network policy API based on a server and client model",
+var BaselineAdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
+	ShortName:   "BaselineAdminNetworkPolicyEgressNamedPort",
+	Description: "Tests support for egress traffic on a named port using baseline admin network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
-		suite.SupportAdminNetworkPolicyNamedPorts,
+		suite.SupportBaselineAdminNetworkPolicy,
+		suite.SupportBaselineAdminNetworkPolicyNamedPorts,
 	},
-	Manifests: []string{"base/admin_network_policy/core-egress-tcp-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/core-egress-udp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for named port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-tcp` ANP
-			// cedric-diggory-1 is our server pod in hufflepuff namespace
+			// This test uses `default` BANP
+			// harry-potter-1 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-hufflepuff",
-				Name:      "cedric-diggory-1",
+				Namespace: "network-policy-conformance-gryffindor",
+				Name:      "harry-potter-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "egress-tcp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			namedPortRule := anp.DeepCopy().Spec.Egress[5]
-			webPort := "web"
-			// replace the tcp port 8080 rule as named port rule which translate to tcp port 80 instead
-			namedPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
+				Name: "default",
+			}, banp)
+			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
+			dnsPortRule := banp.DeepCopy().Spec.Egress[3]
+			dnsPort := "dns"
+			// rewrite the udp port 53 rule as named port rule
+			dnsPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
 				{
-					NamedPort: &webPort,
+					NamedPort: &dnsPort,
 				},
 			}
-			anp.Spec.Egress[5] = namedPortRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
-			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure egress is ALLOWED to hufflepuff from gryffindor at the web port, which is defined as TCP at port 80 in pod spec
-			// egressRule at index5 should take effect
-			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
-				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
+			banp.Spec.Egress[3] = dnsPortRule
+			err = s.Client.Update(ctx, banp)
+			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
+			// cedric-diggory-0 is our client pod in hufflepuff namespace
+			// ensure egress is ALLOWED to gryffindor from hufflepuff at the dns port, which is defined as UDP at port 53 in pod spec
+			// modified ingressRule at index3 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.True(t, success)
-			// harry-potter-1 is our client pod in gryffindor namespace
-			// ensure egress is DENIED to hufflepuff from gryffindor for rest of the traffic; egressRule at index6 should take effect
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig.RequestTimeout, false)
+			// cedric-diggory-1 is our client pod in hufflepuff namespace
+			// ensure egress is DENIED to gryffindor from hufflepuff for rest of the traffic; egressRule at index4 should take effect
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
 			assert.True(t, success)
 		})
 
 	},
 }
 
-var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyEgressNodePeers",
-	Description: "Tests support for egress traffic to node peers using admin network policy API based on a server and client model",
+var BaselineAdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
+	ShortName:   "BaselineAdminNetworkPolicyEgressNodePeers",
+	Description: "Tests support for egress traffic to node peers using  baseline admin network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
-		suite.SupportAdminNetworkPolicyEgressNodePeers,
+		suite.SupportBaselineAdminNetworkPolicy,
+		suite.SupportBaselineAdminNetworkPolicyEgressNodePeers,
 	},
-	Manifests: []string{"base/admin_network_policy/extended-egress-selector-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/extended-egress-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()
-		// This test uses `node-and-cidr-as-peers-example` ANP
 		// centaur-1 is our server host-networked pod in forbidden-forrest namespace
 		serverPod := &v1.Pod{}
 		err := s.Client.Get(ctx, client.ObjectKey{
@@ -118,22 +117,14 @@ var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
 				serverPod.Status.PodIP, int32(36363), s.TimeoutConfig.RequestTimeout, true)
 			assert.True(t, success)
-		})
-		t.Run("Should support a 'pass-egress' rule policy for egress-node-peer", func(t *testing.T) {
-			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure egress is PASSED to forbidden-forrest from gryffindor at the 5353 UDP port
-			// egressRule at index1 should take effect
-			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true) // Pass rule at index2 takes effect
+			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(36364), s.TimeoutConfig.RequestTimeout, true) // Pass rule at index2 takes effect
 			assert.True(t, success)
 		})
 		t.Run("Should support a 'deny-egress' rule policy for egress-node-peer", func(t *testing.T) {
 			// harry-potter-1 is our client pod in gryffindor namespace
-			// ensure egress is DENIED to rest of the nodes from gryffindor; egressRule at index2 should take effect
-			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPod.Status.PodIP, int32(36364), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+			// ensure egress is DENIED to rest of the nodes from gryffindor; egressRule at index1 should take effect
+			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
 			assert.True(t, success)
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
@@ -143,22 +134,21 @@ var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 	},
 }
 
-var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyEgressInlineCIDRPeers",
-	Description: "Tests support for egress traffic to CIDR peers using admin network policy API based on a server and client model",
+var BaselineAdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
+	ShortName:   "BaselineAdminNetworkPolicyEgressInlineCIDRPeers",
+	Description: "Tests support for egress traffic to CIDR peers using baseline admin network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
-		suite.SupportAdminNetworkPolicyEgressInlineCIDRPeers,
+		suite.SupportBaselineAdminNetworkPolicy,
+		suite.SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 	},
-	Manifests: []string{"base/admin_network_policy/extended-egress-selector-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/extended-egress-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()
-		// This test uses `node-and-cidr-as-peers-example` ANP
 		t.Run("Should support a 'deny-egress' rule policy for egress-cidr-peer", func(t *testing.T) {
 			// harry-potter-1 is our client pod in gryffindor namespace
 			// Let us pick a pod in ravenclaw namespace and try to connect, it won't work
-			// ensure egress is DENIED to 0.0.0.0/0 from gryffindor; egressRule at index2 should take effect
+			// ensure egress is DENIED to 0.0.0.0/0 from gryffindor; egressRule at index1 should take effect
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -214,19 +204,19 @@ var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 				Name:      "cedric-diggory-0",
 			}, serverPodHufflepuff)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "node-and-cidr-as-peers-example",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+				Name: "default",
+			}, banp)
+			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
 			var mask string
 			if net.IsIPv4String(serverPodRavenclaw.Status.PodIP) {
 				mask = "/32"
 			} else {
 				mask = "/128"
 			}
-			// insert new rule at index0; append the rest of the rules in the node-and-cidr-as-peers-example
-			newRule := []v1alpha1.AdminNetworkPolicyEgressRule{
+			// insert new rule at index0; append the rest of the rules in the default BANP
+			newRule := []v1alpha1.BaselineAdminNetworkPolicyEgressRule{
 				{
 					Name:   "allow-egress-to-specific-podIPs",
 					Action: "Allow",
@@ -240,9 +230,9 @@ var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 					},
 				},
 			}
-			anp.Spec.Egress = append(newRule, anp.DeepCopy().Spec.Egress...)
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			banp.Spec.Egress = append(newRule, banp.DeepCopy().Spec.Egress...)
+			err = s.Client.Update(ctx, banp)
+			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to luna-lovegood-0.IP and cedric-diggory-0.IP
 			// new egressRule at index0 should take effect
