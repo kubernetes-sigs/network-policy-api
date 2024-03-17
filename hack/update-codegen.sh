@@ -56,11 +56,18 @@ readonly APIS_PKG=sigs.k8s.io/network-policy-api
 readonly API_DIR=${APIS_PKG}/apis/v1alpha1
 readonly CLIENTSET_NAME=versioned
 readonly CLIENTSET_PKG_NAME=clientset
+readonly APPLYCONFIG_PKG_NAME=applyconfiguration
 
 readonly COMMON_FLAGS="${VERIFY_FLAG:-} --go-header-file ${SCRIPT_ROOT}/hack/boilerplate.generatego.txt"
 
 echo "Generating CRDs"
 go run ./pkg/generator
+
+echo "Generating applyconfig at ${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}"
+go run k8s.io/code-generator/cmd/applyconfiguration-gen \
+--input-dirs "${API_DIR}" \
+--output-package "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
+${COMMON_FLAGS}
 
 echo "Generating clientset at ${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}"
 go run k8s.io/code-generator/cmd/client-gen \
@@ -68,6 +75,7 @@ go run k8s.io/code-generator/cmd/client-gen \
 --input-base "" \
 --input "${API_DIR}" \
 --output-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}" \
+--apply-configuration-package "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
 ${COMMON_FLAGS}
 
 echo "Generating listers at ${OUTPUT_PKG}/listers"
