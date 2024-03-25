@@ -61,8 +61,6 @@ var (
 		),
 		ExtendedFeatures: sets.New(
 			SupportAdminNetworkPolicyNamedPorts,
-			SupportAdminNetworkPolicySameLabels,
-			SupportAdminNetworkPolicyNotSameLabels,
 			SupportAdminNetworkPolicyEgressNodePeers,
 			SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 		),
@@ -76,8 +74,6 @@ var (
 		),
 		ExtendedFeatures: sets.New(
 			SupportBaselineAdminNetworkPolicyNamedPorts,
-			SupportBaselineAdminNetworkPolicySameLabels,
-			SupportBaselineAdminNetworkPolicyNotSameLabels,
 			SupportBaselineAdminNetworkPolicyEgressNodePeers,
 			SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 		),

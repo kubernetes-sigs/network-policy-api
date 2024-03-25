@@ -25,8 +25,8 @@ import (
 // AdminNetworkPolicySubjectApplyConfiguration represents an declarative configuration of the AdminNetworkPolicySubject type for use
 // with apply.
 type AdminNetworkPolicySubjectApplyConfiguration struct {
-	Namespaces *v1.LabelSelector                       `json:"namespaces,omitempty"`
-	Pods       *NamespacedPodSubjectApplyConfiguration `json:"pods,omitempty"`
+	Namespaces *v1.LabelSelector                `json:"namespaces,omitempty"`
+	Pods       *NamespacedPodApplyConfiguration `json:"pods,omitempty"`
 }
 
 // AdminNetworkPolicySubjectApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicySubject type for use with
@@ -46,7 +46,7 @@ func (b *AdminNetworkPolicySubjectApplyConfiguration) WithNamespaces(value v1.La
 // WithPods sets the Pods field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Pods field is set to the value of the last call.
-func (b *AdminNetworkPolicySubjectApplyConfiguration) WithPods(value *NamespacedPodSubjectApplyConfiguration) *AdminNetworkPolicySubjectApplyConfiguration {
+func (b *AdminNetworkPolicySubjectApplyConfiguration) WithPods(value *NamespacedPodApplyConfiguration) *AdminNetworkPolicySubjectApplyConfiguration {
 	b.Pods = value
 	return b
 }

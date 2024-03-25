@@ -12,5 +12,5 @@ spec:
     - action: Deny
       from:
       - namespaces:
-          notSameLabels:
-          - tenant
+          # This user story is currently not implementable.
+          # See https://network-policy-api.sigs.k8s.io/npeps/npep-122/ for more details.

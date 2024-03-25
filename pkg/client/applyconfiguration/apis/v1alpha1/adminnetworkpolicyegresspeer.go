@@ -26,10 +26,10 @@ import (
 // AdminNetworkPolicyEgressPeerApplyConfiguration represents an declarative configuration of the AdminNetworkPolicyEgressPeer type for use
 // with apply.
 type AdminNetworkPolicyEgressPeerApplyConfiguration struct {
-	Namespaces *NamespacedPeerApplyConfiguration    `json:"namespaces,omitempty"`
-	Pods       *NamespacedPodPeerApplyConfiguration `json:"pods,omitempty"`
-	Nodes      *v1.LabelSelector                    `json:"nodes,omitempty"`
-	Networks   []apisv1alpha1.CIDR                  `json:"networks,omitempty"`
+	Namespaces *v1.LabelSelector                `json:"namespaces,omitempty"`
+	Pods       *NamespacedPodApplyConfiguration `json:"pods,omitempty"`
+	Nodes      *v1.LabelSelector                `json:"nodes,omitempty"`
+	Networks   []apisv1alpha1.CIDR              `json:"networks,omitempty"`
 }
 
 // AdminNetworkPolicyEgressPeerApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicyEgressPeer type for use with
@@ -41,15 +41,15 @@ func AdminNetworkPolicyEgressPeer() *AdminNetworkPolicyEgressPeerApplyConfigurat
 // WithNamespaces sets the Namespaces field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespaces field is set to the value of the last call.
-func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithNamespaces(value *NamespacedPeerApplyConfiguration) *AdminNetworkPolicyEgressPeerApplyConfiguration {
-	b.Namespaces = value
+func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithNamespaces(value v1.LabelSelector) *AdminNetworkPolicyEgressPeerApplyConfiguration {
+	b.Namespaces = &value
 	return b
 }
 
 // WithPods sets the Pods field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Pods field is set to the value of the last call.
-func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithPods(value *NamespacedPodPeerApplyConfiguration) *AdminNetworkPolicyEgressPeerApplyConfiguration {
+func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithPods(value *NamespacedPodApplyConfiguration) *AdminNetworkPolicyEgressPeerApplyConfiguration {
 	b.Pods = value
 	return b
 }

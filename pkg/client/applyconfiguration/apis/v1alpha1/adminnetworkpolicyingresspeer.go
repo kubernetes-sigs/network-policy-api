@@ -18,11 +18,15 @@ limitations under the License.
 
 package v1alpha1
 
+import (
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 // AdminNetworkPolicyIngressPeerApplyConfiguration represents an declarative configuration of the AdminNetworkPolicyIngressPeer type for use
 // with apply.
 type AdminNetworkPolicyIngressPeerApplyConfiguration struct {
-	Namespaces *NamespacedPeerApplyConfiguration    `json:"namespaces,omitempty"`
-	Pods       *NamespacedPodPeerApplyConfiguration `json:"pods,omitempty"`
+	Namespaces *v1.LabelSelector                `json:"namespaces,omitempty"`
+	Pods       *NamespacedPodApplyConfiguration `json:"pods,omitempty"`
 }
 
 // AdminNetworkPolicyIngressPeerApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicyIngressPeer type for use with
@@ -34,15 +38,15 @@ func AdminNetworkPolicyIngressPeer() *AdminNetworkPolicyIngressPeerApplyConfigur
 // WithNamespaces sets the Namespaces field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespaces field is set to the value of the last call.
-func (b *AdminNetworkPolicyIngressPeerApplyConfiguration) WithNamespaces(value *NamespacedPeerApplyConfiguration) *AdminNetworkPolicyIngressPeerApplyConfiguration {
-	b.Namespaces = value
+func (b *AdminNetworkPolicyIngressPeerApplyConfiguration) WithNamespaces(value v1.LabelSelector) *AdminNetworkPolicyIngressPeerApplyConfiguration {
+	b.Namespaces = &value
 	return b
 }
 
 // WithPods sets the Pods field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Pods field is set to the value of the last call.
-func (b *AdminNetworkPolicyIngressPeerApplyConfiguration) WithPods(value *NamespacedPodPeerApplyConfiguration) *AdminNetworkPolicyIngressPeerApplyConfiguration {
+func (b *AdminNetworkPolicyIngressPeerApplyConfiguration) WithPods(value *NamespacedPodApplyConfiguration) *AdminNetworkPolicyIngressPeerApplyConfiguration {
 	b.Pods = value
 	return b
 }
