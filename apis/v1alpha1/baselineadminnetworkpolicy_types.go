@@ -188,6 +188,7 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 // Support: Core
 //
 // +enum
+// +kubebuilder:validation:Enum={"Allow", "Deny"}
 type BaselineAdminNetworkPolicyRuleAction string
 
 const (

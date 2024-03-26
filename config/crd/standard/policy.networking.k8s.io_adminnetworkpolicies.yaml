@@ -83,6 +83,10 @@ spec:
 
 
                         Support: Core
+                      enum:
+                      - Allow
+                      - Deny
+                      - Pass
                       type: string
                     name:
                       description: |-
@@ -401,6 +405,10 @@ spec:
 
 
                         Support: Core
+                      enum:
+                      - Allow
+                      - Deny
+                      - Pass
                       type: string
                     from:
                       description: |-
