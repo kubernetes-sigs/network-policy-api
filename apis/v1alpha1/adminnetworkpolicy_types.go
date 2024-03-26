@@ -210,6 +210,7 @@ type AdminNetworkPolicyEgressRule struct {
 // Support: Core
 //
 // +enum
+// +kubebuilder:validation:Enum={"Allow", "Deny", "Pass"}
 type AdminNetworkPolicyRuleAction string
 
 const (

@@ -77,6 +77,9 @@ spec:
 
 
                         Support: Core
+                      enum:
+                      - Allow
+                      - Deny
                       type: string
                     name:
                       description: |-
@@ -389,6 +392,9 @@ spec:
 
 
                         Support: Core
+                      enum:
+                      - Allow
+                      - Deny
                       type: string
                     from:
                       description: |-
