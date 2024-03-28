@@ -37,10 +37,9 @@ spec:
     action: "Deny"
     to:
     - pods:
-        namespaces:
-          namespaceSelector:
-            matchLabels:
-              conformance-house: slytherin
+        namespaceSelector:
+          matchLabels:
+            conformance-house: slytherin
         podSelector:
           matchLabels:
             conformance-house: slytherin

@@ -13,30 +13,26 @@ spec:
     action: "Allow"
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   - name: "deny-to-ravenclaw-everything"
     action: "Deny"
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   - name: "pass-to-ravenclaw-everything"
     action: "Pass"
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   - name: "deny-to-slytherin-at-port-5353"
     action: "Deny"
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-slytherin
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
     ports:
       - portNumber:
           protocol: UDP
@@ -45,9 +41,8 @@ spec:
     action: "Pass"
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-slytherin
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
     ports:
       - portNumber:
           protocol: UDP
@@ -56,9 +51,8 @@ spec:
     action: "Allow"
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
     ports:
       - portNumber:
           protocol: UDP
@@ -67,6 +61,5 @@ spec:
     action: "Deny"
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
