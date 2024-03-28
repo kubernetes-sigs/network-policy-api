@@ -12,23 +12,20 @@ spec:
     action: "Allow"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   - name: "deny-from-ravenclaw-everything"
     action: "Deny"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   - name: "deny-from-slytherin-at-port-80"
     action: "Deny"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-slytherin
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
     ports:
       - portNumber:
           protocol: TCP
@@ -37,9 +34,8 @@ spec:
     action: "Allow"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
     ports:
       - portNumber:
           protocol: TCP
@@ -48,6 +44,5 @@ spec:
     action: "Deny"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff

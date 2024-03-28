@@ -13,30 +13,26 @@ spec:
     action: "Allow"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   - name: "deny-from-gryffindor-everything"
     action: "Deny"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   - name: "pass-from-gryffindor-everything"
     action: "Pass"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   - name: "deny-from-slytherin-at-port-9003"
     action: "Deny"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-slytherin
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
     ports:
       - portNumber:
           protocol: SCTP
@@ -45,9 +41,8 @@ spec:
     action: "Pass"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-slytherin
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
     ports:
       - portNumber:
           protocol: SCTP
@@ -56,9 +51,8 @@ spec:
     action: "Allow"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
     ports:
       - portNumber:
           protocol: SCTP
@@ -67,6 +61,5 @@ spec:
     action: "Deny"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff

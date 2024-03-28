@@ -17,10 +17,9 @@ spec:
     action: "Deny"
     from:
     - pods:
-        namespaces:
-          namespaceSelector:
-            matchLabels:
-              conformance-house: slytherin
+        namespaceSelector:
+          matchLabels:
+            conformance-house: slytherin
         podSelector:
           matchLabels:
             conformance-house: slytherin
@@ -29,10 +28,9 @@ spec:
     action: "Deny"
     to:
     - pods:
-        namespaces:
-          namespaceSelector:
-            matchLabels:
-              conformance-house: slytherin
+        namespaceSelector:
+          matchLabels:
+            conformance-house: slytherin
         podSelector:
           matchLabels:
             conformance-house: slytherin
@@ -56,10 +54,9 @@ spec:
     action: "Pass"
     from:
     - pods:
-        namespaces:
-          namespaceSelector:
-            matchLabels:
-              conformance-house: slytherin
+        namespaceSelector:
+          matchLabels:
+            conformance-house: slytherin
         podSelector:
           matchLabels:
             conformance-house: slytherin
@@ -68,10 +65,9 @@ spec:
     action: "Pass"
     to:
     - pods:
-        namespaces:
-          namespaceSelector:
-            matchLabels:
-              conformance-house: slytherin
+        namespaceSelector:
+          matchLabels:
+            conformance-house: slytherin
         podSelector:
           matchLabels:
             conformance-house: slytherin
@@ -94,10 +90,9 @@ spec:
     action: "Allow"
     from:
     - pods:
-        namespaces:
-          namespaceSelector:
-            matchLabels:
-              conformance-house: slytherin
+        namespaceSelector:
+          matchLabels:
+            conformance-house: slytherin
         podSelector:
           matchLabels:
             conformance-house: slytherin
@@ -106,10 +101,9 @@ spec:
     action: "Allow"
     to:
     - pods:
-        namespaces:
-          namespaceSelector:
-            matchLabels:
-              conformance-house: slytherin
+        namespaceSelector:
+          matchLabels:
+            conformance-house: slytherin
         podSelector:
           matchLabels:
             conformance-house: slytherin
