@@ -13,17 +13,15 @@ spec:
     action: "Deny" # test will update to pass
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            conformance-house: slytherin
+        matchLabels:
+          conformance-house: slytherin
   egress:
   - name: "deny-all-egress-to-slytherin" # test will update to pass
     action: "Deny" # test will update to pass
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            conformance-house: slytherin
+        matchLabels:
+          conformance-house: slytherin
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -60,14 +58,12 @@ spec:
     action: "Deny"
     from:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            conformance-house: slytherin
+        matchLabels:
+          conformance-house: slytherin
   egress:
   - name: "deny-all-egress-to-slytherin"
     action: "Deny"
     to:
     - namespaces:
-        namespaceSelector:
-          matchLabels:
-            conformance-house: slytherin
+        matchLabels:
+          conformance-house: slytherin
