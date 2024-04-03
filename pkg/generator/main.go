@@ -134,10 +134,26 @@ func main() {
 func channelTweaks(channel string, props map[string]apiext.JSONSchemaProps) map[string]apiext.JSONSchemaProps {
 	for name := range props {
 		jsonProps := props[name]
-		if channel == "standard" && strings.Contains(jsonProps.Description, "<network-policy-api:experimental>") {
-			log.Printf("Deleting field %s\n", name)
-			delete(props, name)
-			continue
+		if channel == "standard" {
+			if strings.Contains(jsonProps.Description, "<network-policy-api:experimental>") {
+				log.Printf("Deleting experimental field from standard channel %s\n", name)
+				delete(props, name)
+				continue
+			}
+
+			if strings.Contains(jsonProps.Description, "<network-policy-api:experimental:validation>") {
+				log.Printf("Deleting experimental validation for standard field %s %+v\n", name, jsonProps.Items.Schema.XValidations)
+				jsonProps.Items.Schema.XValidations = nil
+			}
+
+			if jsonProps.Items != nil {
+				if jsonProps.Items.Schema != nil {
+					if strings.Contains(jsonProps.Items.Schema.Description, "<network-policy-api:experimental:validation>") {
+						log.Printf("Deleting experimental validation for standard type %s %+v\n", name, jsonProps.Items.Schema.XValidations)
+						jsonProps.Items.Schema.XValidations = nil
+					}
+				}
+			}
 		}
 
 		if channel == "experimental" && strings.Contains(jsonProps.Description, "<network-policy-api:experimental:validation:") {

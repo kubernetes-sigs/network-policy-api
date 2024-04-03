@@ -67,6 +67,7 @@ spec:
                     BaselineAdminNetworkPolicyEgressRule describes an action to take on a particular
                     set of traffic originating from pods selected by a BaselineAdminNetworkPolicy's
                     Subject field.
+                    <network-policy-api:experimental:validation>
                   properties:
                     action:
                       description: |-
@@ -95,7 +96,7 @@ spec:
                     ports:
                       description: |-
                         Ports allows for matching traffic based on port and protocols.
-                        This field is a list of destination ports for the outging egress traffic.
+                        This field is a list of destination ports for the outgoing egress traffic.
                         If Ports is not set then the rule does not filter traffic via port.
                       items:
                         description: |-
@@ -294,6 +295,7 @@ spec:
                             maxItems: 25
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: set
                           nodes:
                             description: |-
                               Nodes defines a way to select a set of nodes in
@@ -462,6 +464,11 @@ spec:
                   - action
                   - to
                   type: object
+                  x-kubernetes-validations:
+                  - message: networks/nodes peer cannot be set with namedPorts since
+                      there are no namedPorts for networks/nodes
+                    rule: '!(self.to.exists(peer, has(peer.networks) || has(peer.nodes))
+                      && has(self.ports) && self.ports.exists(port, has(port.namedPort)))'
                 maxItems: 100
                 type: array
               ingress:

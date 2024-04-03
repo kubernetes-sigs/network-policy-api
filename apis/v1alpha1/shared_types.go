@@ -192,6 +192,7 @@ type AdminNetworkPolicyEgressPeer struct {
 	//
 	// <network-policy-api:experimental>
 	// +optional
+	// +listType=set
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=25
 	Networks []CIDR `json:"networks,omitempty"`
