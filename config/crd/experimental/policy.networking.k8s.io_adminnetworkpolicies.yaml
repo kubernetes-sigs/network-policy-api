@@ -304,6 +304,7 @@ spec:
                             maxItems: 25
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: set
                           nodes:
                             description: |-
                               Nodes defines a way to select a set of nodes in
@@ -472,6 +473,11 @@ spec:
                   - action
                   - to
                   type: object
+                  x-kubernetes-validations:
+                  - message: networks/nodes peer cannot be set with namedPorts since
+                      there are no namedPorts for networks/nodes
+                    rule: '!(self.to.exists(peer, has(peer.networks) || has(peer.nodes))
+                      && has(self.ports) && self.ports.exists(port, has(port.namedPort)))'
                 maxItems: 100
                 type: array
               ingress:

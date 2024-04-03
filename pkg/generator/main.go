@@ -140,6 +140,11 @@ func channelTweaks(channel string, props map[string]apiext.JSONSchemaProps) map[
 			continue
 		}
 
+		if channel == "standard" && name == "egress" {
+			log.Printf("Deleting validation for field %s %+v\n", name, jsonProps.Items.Schema.XValidations)
+			jsonProps.Items.Schema.XValidations = nil
+		}
+
 		if channel == "experimental" && strings.Contains(jsonProps.Description, "<network-policy-api:experimental:validation:") {
 			validationRe := regexp.MustCompile(`<network-policy-api:experimental:validation:Enum=([A-Za-z;]*)>`)
 			match := validationRe.FindStringSubmatch(jsonProps.Description)

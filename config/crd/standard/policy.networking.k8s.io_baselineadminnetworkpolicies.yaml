@@ -95,7 +95,7 @@ spec:
                     ports:
                       description: |-
                         Ports allows for matching traffic based on port and protocols.
-                        This field is a list of destination ports for the outging egress traffic.
+                        This field is a list of destination ports for the outgoing egress traffic.
                         If Ports is not set then the rule does not filter traffic via port.
                       items:
                         description: |-
