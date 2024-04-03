@@ -67,6 +67,7 @@ spec:
                     BaselineAdminNetworkPolicyEgressRule describes an action to take on a particular
                     set of traffic originating from pods selected by a BaselineAdminNetworkPolicy's
                     Subject field.
+                    <network-policy-api:experimental:validation>
                   properties:
                     action:
                       description: |-
