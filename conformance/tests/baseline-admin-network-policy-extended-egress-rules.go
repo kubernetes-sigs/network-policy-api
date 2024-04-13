@@ -125,7 +125,7 @@ var BaselineAdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 			// harry-potter-1 is our client pod in gryffindor namespace
 			// ensure egress is DENIED to rest of the nodes from gryffindor; egressRule at index1 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(34346), s.TimeoutConfig.RequestTimeout, false)
 			assert.True(t, success)
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)

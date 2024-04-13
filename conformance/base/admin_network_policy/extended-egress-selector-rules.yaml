@@ -32,7 +32,7 @@ spec:
     ports:
       - portNumber:
           protocol: UDP
-          port: 5353
+          port: 34345
   - name: "deny-egress-to-slytherin-and-nodes-and-internet"
     action: "Deny"
     to:
