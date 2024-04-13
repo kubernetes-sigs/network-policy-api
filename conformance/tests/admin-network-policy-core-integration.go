@@ -103,10 +103,11 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 				Name: "pass-example",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// change ingress rule from "deny" to "pass"
-			anp.Spec.Ingress[0].Action = v1alpha1.AdminNetworkPolicyRuleActionPass
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			mutate.Spec.Ingress[0].Action = v1alpha1.AdminNetworkPolicyRuleActionPass
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err = s.Client.Get(ctx, client.ObjectKey{
@@ -136,10 +137,11 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 				Name: "pass-example",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// change egress rule from "deny" to "pass"
-			anp.Spec.Egress[0].Action = v1alpha1.AdminNetworkPolicyRuleActionPass
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			mutate.Spec.Egress[0].Action = v1alpha1.AdminNetworkPolicyRuleActionPass
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			serverPod := &v1.Pod{}
 			err = s.Client.Get(ctx, client.ObjectKey{

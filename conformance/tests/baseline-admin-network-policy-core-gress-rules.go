@@ -193,15 +193,16 @@ var BaselineAdminNetworkPolicyGress = suite.ConformanceTest{
 				Name: "default",
 			}, banp)
 			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
+			mutate := banp.DeepCopy()
 			// swap rules at index0 and index1 for both ingress and egress
-			allowOutRule := banp.DeepCopy().Spec.Egress[0]
-			banp.Spec.Egress[0] = banp.DeepCopy().Spec.Egress[1]
-			banp.Spec.Egress[1] = allowOutRule
-			allowInRule := banp.DeepCopy().Spec.Ingress[0]
-			banp.Spec.Ingress[0] = banp.DeepCopy().Spec.Ingress[1]
-			banp.Spec.Ingress[1] = allowInRule
-			err = s.Client.Update(ctx, banp)
-			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
+			allowOutRule := mutate.Spec.Egress[0]
+			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
+			mutate.Spec.Egress[1] = allowOutRule
+			allowInRule := mutate.Spec.Ingress[0]
+			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[1]
+			mutate.Spec.Ingress[1] = allowInRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
+			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
 			// harry-potter-x is our client pod in gryffindor namespace
 			// ensure egress is DENIED to ravenclaw from gryffindor
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered

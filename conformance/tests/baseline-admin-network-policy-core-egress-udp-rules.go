@@ -107,12 +107,13 @@ var BaselineAdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Name: "default",
 			}, banp)
 			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
+			mutate := banp.DeepCopy()
 			// swap rules at index0 and index1
-			allowRule := banp.DeepCopy().Spec.Egress[0]
-			banp.Spec.Egress[0] = banp.DeepCopy().Spec.Egress[1]
-			banp.Spec.Egress[1] = allowRule
-			err = s.Client.Update(ctx, banp)
-			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
+			allowRule := mutate.Spec.Egress[0]
+			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
+			mutate.Spec.Egress[1] = allowRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
+			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is DENIED to ravenclaw to hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered

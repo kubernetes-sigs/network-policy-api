@@ -193,15 +193,16 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 				Name: "gress-rules",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index0 and index1 for both ingress and egress
-			allowOutRule := anp.DeepCopy().Spec.Egress[0]
-			anp.Spec.Egress[0] = anp.DeepCopy().Spec.Egress[1]
-			anp.Spec.Egress[1] = allowOutRule
-			allowInRule := anp.DeepCopy().Spec.Ingress[0]
-			anp.Spec.Ingress[0] = anp.DeepCopy().Spec.Ingress[1]
-			anp.Spec.Ingress[1] = allowInRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			allowOutRule := mutate.Spec.Egress[0]
+			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
+			mutate.Spec.Egress[1] = allowOutRule
+			allowInRule := mutate.Spec.Ingress[0]
+			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[1]
+			mutate.Spec.Ingress[1] = allowInRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-x is our client pod in gryffindor namespace
 			// ensure egress is DENIED to ravenclaw from gryffindor
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -337,15 +338,16 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 				Name: "gress-rules",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index0 and index2 for both ingress and egress
-			denyOutRule := anp.DeepCopy().Spec.Egress[0]
-			anp.Spec.Egress[0] = anp.DeepCopy().Spec.Egress[2]
-			anp.Spec.Egress[2] = denyOutRule
-			denyInRule := anp.DeepCopy().Spec.Ingress[0]
-			anp.Spec.Ingress[0] = anp.DeepCopy().Spec.Ingress[2]
-			anp.Spec.Ingress[2] = denyInRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			denyOutRule := mutate.Spec.Egress[0]
+			mutate.Spec.Egress[0] = mutate.Spec.Egress[2]
+			mutate.Spec.Egress[2] = denyOutRule
+			denyInRule := mutate.Spec.Ingress[0]
+			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[2]
+			mutate.Spec.Ingress[2] = denyInRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
 			// ensure egress is PASSED from gryffindor to ravenclaw
 			// egressRule at index0 will take precedence over egressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
@@ -406,15 +408,16 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 				Name: "gress-rules",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index3 and index4
-			denyToRule := anp.DeepCopy().Spec.Egress[3]
-			anp.Spec.Egress[3] = anp.DeepCopy().Spec.Egress[4]
-			anp.Spec.Egress[4] = denyToRule
-			denyInRule := anp.DeepCopy().Spec.Ingress[3]
-			anp.Spec.Ingress[3] = anp.DeepCopy().Spec.Ingress[4]
-			anp.Spec.Ingress[4] = denyInRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			denyToRule := mutate.Spec.Egress[3]
+			mutate.Spec.Egress[3] = mutate.Spec.Egress[4]
+			mutate.Spec.Egress[4] = denyToRule
+			denyInRule := mutate.Spec.Ingress[3]
+			mutate.Spec.Ingress[3] = mutate.Spec.Ingress[4]
+			mutate.Spec.Ingress[4] = denyInRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress from gryffindor is PASSED to slytherin at port 80; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",

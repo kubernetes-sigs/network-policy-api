@@ -56,7 +56,8 @@ var AdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
 				Name: "ingress-udp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			dnsPortRule := anp.DeepCopy().Spec.Ingress[5]
+			mutate := anp.DeepCopy()
+			dnsPortRule := mutate.DeepCopy().Spec.Ingress[5]
 			dnsPort := "dns"
 			// rewrite the udp port 53 rule as named port rule
 			dnsPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
@@ -64,9 +65,9 @@ var AdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
 					NamedPort: &dnsPort,
 				},
 			}
-			anp.Spec.Ingress[5] = dnsPortRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			mutate.Spec.Ingress[5] = dnsPortRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is ALLOWED from gryffindor to hufflepuff at the dns port, which is defined as UDP at port 53 in pod spec
 			// modified ingressRule at index5 should take effect

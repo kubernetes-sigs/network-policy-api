@@ -62,7 +62,8 @@ var BaselineAdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
 				Name: "default",
 			}, banp)
 			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
-			namedPortRule := banp.DeepCopy().Spec.Ingress[3]
+			mutate := banp.DeepCopy()
+			namedPortRule := mutate.Spec.Ingress[3]
 			webPort := "web"
 			// rewrite the tcp port 80 rule as named port rule
 			namedPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
@@ -70,9 +71,9 @@ var BaselineAdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
 					NamedPort: &webPort,
 				},
 			}
-			banp.Spec.Ingress[3] = namedPortRule
-			err = s.Client.Update(ctx, banp)
-			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
+			mutate.Spec.Ingress[3] = namedPortRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
+			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure ingress is ALLOWED from hufflepuff to gryffindor at at the web port, which is defined as TCP at port 80 in pod spec
 			// ingressRule at index3 should take effect

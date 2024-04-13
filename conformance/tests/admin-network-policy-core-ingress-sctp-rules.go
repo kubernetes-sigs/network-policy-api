@@ -106,12 +106,13 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 				Name: "ingress-sctp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index0 and index1
-			allowRule := anp.DeepCopy().Spec.Ingress[0]
-			anp.Spec.Ingress[0] = anp.DeepCopy().Spec.Ingress[1]
-			anp.Spec.Ingress[1] = allowRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			allowRule := mutate.Spec.Ingress[0]
+			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[1]
+			mutate.Spec.Ingress[1] = allowRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is DENIED from gryffindor to ravenclaw
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -163,12 +164,13 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 				Name: "ingress-sctp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index0 and index2
-			denyRule := anp.DeepCopy().Spec.Ingress[0]
-			anp.Spec.Ingress[0] = anp.DeepCopy().Spec.Ingress[2]
-			anp.Spec.Ingress[2] = denyRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			denyRule := mutate.Spec.Ingress[0]
+			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[2]
+			mutate.Spec.Ingress[2] = denyRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is PASSED from gryffindor to ravenclaw
 			// ingressRule at index0 will take precedence over ingressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
@@ -197,12 +199,13 @@ var AdminNetworkPolicyIngressSCTP = suite.ConformanceTest{
 				Name: "ingress-sctp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index3 and index4
-			denyRule := anp.DeepCopy().Spec.Ingress[3]
-			anp.Spec.Ingress[3] = anp.DeepCopy().Spec.Ingress[4]
-			anp.Spec.Ingress[4] = denyRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			denyRule := mutate.Spec.Ingress[3]
+			mutate.Spec.Ingress[3] = mutate.Spec.Ingress[4]
+			mutate.Spec.Ingress[4] = denyRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// draco-malfoy-0 is our client pod in slytherin namespace
 			// ensure ingress from slytherin is PASSED to ravenclaw at port 9003; ingressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-0", "sctp",

@@ -65,7 +65,8 @@ var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 				Name: "egress-tcp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			namedPortRule := anp.DeepCopy().Spec.Egress[5]
+			mutate := anp.DeepCopy()
+			namedPortRule := mutate.Spec.Egress[5]
 			webPort := "web"
 			// replace the tcp port 8080 rule as named port rule which translate to tcp port 80 instead
 			namedPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
@@ -73,9 +74,9 @@ var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 					NamedPort: &webPort,
 				},
 			}
-			anp.Spec.Egress[5] = namedPortRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			mutate.Spec.Egress[5] = namedPortRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to hufflepuff from gryffindor at the web port, which is defined as TCP at port 80 in pod spec
 			// egressRule at index5 should take effect
@@ -219,6 +220,7 @@ var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 				Name: "node-and-cidr-as-peers-example",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			var mask string
 			if net.IsIPv4String(serverPodRavenclaw.Status.PodIP) {
 				mask = "/32"
@@ -240,9 +242,9 @@ var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 					},
 				},
 			}
-			anp.Spec.Egress = append(newRule, anp.DeepCopy().Spec.Egress...)
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			mutate.Spec.Egress = append(newRule, mutate.Spec.Egress...)
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to luna-lovegood-0.IP and cedric-diggory-0.IP
 			// new egressRule at index0 should take effect
