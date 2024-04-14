@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/mattfenwick/cyclonus/examples"
 	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
+	"golang.org/x/net/context"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
 	"strings"
+	"time"
 
 	"github.com/mattfenwick/collections/pkg/json"
 	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
@@ -93,6 +95,7 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 	var kubeBANPs *v1alpha1.BaselineAdminNetworkPolicy
 	var kubePods []v1.Pod
 	var kubeNamespaces []v1.Namespace
+	var netErr, anpErr, banpErr error
 	if args.AllNamespaces || len(args.Namespaces) > 0 {
 		kubeClient, err := kube.NewKubernetesForContext(args.Context)
 		utils.DoOrDie(err)
@@ -104,27 +107,37 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 			kubeNamespaces = nsList.Items
 			namespaces = []string{v1.NamespaceAll}
 		}
-		kubePolicies, err = kube.ReadNetworkPoliciesFromKube(kubeClient, namespaces)
-		if err != nil {
+
+		//TODO: add a flag for the timeout
+		ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
+		defer cancel()
+
+		kubePolicies, kubeANPs, kubeBANPs, netErr, anpErr, banpErr = kube.ReadNetworkPoliciesFromKube(ctx, kubeClient, namespaces)
+
+		if netErr != nil {
 			logrus.Errorf("unable to read network policies from kube, ns '%s': %+v", namespaces, err)
 		}
-		kubePods, err = kube.GetPodsInNamespaces(kubeClient, namespaces)
-		if err != nil {
-			logrus.Errorf("unable to read pods from kube, ns '%s': %+v", namespaces, err)
+		if anpErr != nil {
+			fmt.Printf("Unable to fetch admin network policies: %s \n", anpErr)
+		}
+		if banpErr != nil {
+			fmt.Printf("Unable to fetch base admin network policies: %s \n", banpErr)
 		}
 	}
 	// 2. read policies from file
 	if args.PolicyPath != "" {
-		policiesFromPath, err := kube.ReadNetworkPoliciesFromPath(args.PolicyPath)
+		policiesFromPath, anpsFromPath, banpFromPath, err := kube.ReadNetworkPoliciesFromPath(args.PolicyPath)
 		utils.DoOrDie(err)
 		kubePolicies = append(kubePolicies, policiesFromPath...)
+		kubeANPs = append(kubeANPs, anpsFromPath...)
+		kubeBANPs = banpFromPath
 	}
 	// 3. read example policies
 	if args.UseExamplePolicies {
 		kubePolicies = append(kubePolicies, netpol.AllExamples...)
 
-		kubeANPs = examples.CoreGressRulesCombinedANB
-		kubeBANPs = examples.CoreGressRulesCombinedBANB
+		kubeANPs = append(kubeANPs, examples.CoreGressRulesCombinedANB...)
+		kubeBANPs = kubeBANPs
 	}
 
 	logrus.Debugf("parsed policies:\n%s", json.MustMarshalToString(kubePolicies))

@@ -1,6 +1,7 @@
 package connectivity
 
 import (
+	"context"
 	"time"
 
 	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
@@ -140,7 +141,7 @@ func (t *TestCaseState) DeletePod(ns string, pod string) error {
 }
 
 func (t *TestCaseState) ReadPolicies(namespaces []string) error {
-	policies, err := kube.GetNetworkPoliciesInNamespaces(t.Kubernetes, namespaces)
+	policies, err := kube.GetNetworkPoliciesInNamespaces(context.TODO(), t.Kubernetes, namespaces)
 	if err != nil {
 		return err
 	}
@@ -322,7 +323,7 @@ func (t *TestCaseState) VerifyClusterState() error {
 		return err
 	}
 
-	policies, err := kube.GetNetworkPoliciesInNamespaces(t.Kubernetes, t.Resources.NamespacesSlice())
+	policies, err := kube.GetNetworkPoliciesInNamespaces(context.TODO(), t.Kubernetes, t.Resources.NamespacesSlice())
 	if err != nil {
 		return err
 	}

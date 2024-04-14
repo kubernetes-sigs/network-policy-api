@@ -3,6 +3,8 @@ package kube
 import (
 	"bytes"
 	"context"
+	v1alpha12 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"sigs.k8s.io/network-policy-api/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -19,8 +21,9 @@ import (
 )
 
 type Kubernetes struct {
-	ClientSet  *kubernetes.Clientset
-	RestConfig *rest.Config
+	ClientSet      *kubernetes.Clientset
+	alphaClientSet *v1alpha1.PolicyV1alpha1Client
+	RestConfig     *rest.Config
 }
 
 func NewKubernetesForContext(context string) (*Kubernetes, error) {
@@ -35,9 +38,15 @@ func NewKubernetesForContext(context string) (*Kubernetes, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to instantiate Clientset")
 	}
+	alphacClientset, err := v1alpha1.NewForConfig(kubeConfig)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to instantiate alpha network client set")
+	}
+
 	return &Kubernetes{
-		ClientSet:  clientset,
-		RestConfig: kubeConfig,
+		ClientSet:      clientset,
+		alphaClientSet: alphacClientset,
+		RestConfig:     kubeConfig,
 	}, nil
 }
 
@@ -92,12 +101,32 @@ func (k *Kubernetes) DeleteNetworkPolicy(ns string, name string) error {
 	return errors.Wrapf(err, "unable to delete network policy %s/%s", ns, name)
 }
 
-func (k *Kubernetes) GetNetworkPoliciesInNamespace(namespace string) ([]networkingv1.NetworkPolicy, error) {
-	netpolList, err := k.ClientSet.NetworkingV1().NetworkPolicies(namespace).List(context.TODO(), metav1.ListOptions{})
+func (k *Kubernetes) GetNetworkPoliciesInNamespace(ctx context.Context, namespace string) ([]networkingv1.NetworkPolicy, error) {
+	netpolList, err := k.ClientSet.NetworkingV1().NetworkPolicies(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to get netpols in namespace %s", namespace)
 	}
 	return netpolList.Items, nil
+}
+
+func (k *Kubernetes) GetAdminNetworkPoliciesInNamespace(ctx context.Context) ([]v1alpha12.AdminNetworkPolicy, error) {
+	anps, err := k.alphaClientSet.AdminNetworkPolicies().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return anps.Items, nil
+}
+
+func (k *Kubernetes) GetBaseAdminNetworkPoliciesInNamespace(ctx context.Context) (v1alpha12.BaselineAdminNetworkPolicy, error) {
+	banp, err := k.alphaClientSet.BaselineAdminNetworkPolicies().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return v1alpha12.BaselineAdminNetworkPolicy{}, err
+	}
+	if len(banp.Items) > 0 {
+		return banp.Items[0], nil
+	}
+	return v1alpha12.BaselineAdminNetworkPolicy{}, errors.New("BANP not found")
+
 }
 
 func (k *Kubernetes) UpdateNetworkPolicy(policy *networkingv1.NetworkPolicy) (*networkingv1.NetworkPolicy, error) {
