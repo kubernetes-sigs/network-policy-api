@@ -106,12 +106,13 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 				Name: "default",
 			}, banp)
 			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
+			mutate := banp.DeepCopy()
 			// swap rules at index0 and index1
-			allowRule := banp.DeepCopy().Spec.Ingress[0]
-			banp.Spec.Ingress[0] = banp.DeepCopy().Spec.Ingress[1]
-			banp.Spec.Ingress[1] = allowRule
-			err = s.Client.Update(ctx, banp)
-			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
+			allowRule := mutate.Spec.Ingress[0]
+			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[1]
+			mutate.Spec.Ingress[1] = allowRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
+			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
 			// luna-lovegood-0 is our client pod in ravenclaw namespace
 			// ensure ingress is DENIED from ravenclaw to gryffindor
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered

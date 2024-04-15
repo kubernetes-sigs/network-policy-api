@@ -101,10 +101,11 @@ var AdminNetworkPolicyPriorityField = suite.ConformanceTest{
 				Name: "old-priority-60-new-priority-40-example",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// change priority from 60 to 40
-			anp.Spec.Priority = 40
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			mutate.Spec.Priority = 40
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err = s.Client.Get(ctx, client.ObjectKey{

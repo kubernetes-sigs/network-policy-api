@@ -33,7 +33,6 @@ import (
 func init() {
 	ConformanceTests = append(ConformanceTests,
 		AdminNetworkPolicyEgressTCP,
-		AdminNetworkPolicyEgressNamedPort,
 	)
 }
 
@@ -107,12 +106,13 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 				Name: "egress-tcp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index0 and index1
-			allowRule := anp.DeepCopy().Spec.Egress[0]
-			anp.Spec.Egress[0] = anp.DeepCopy().Spec.Egress[1]
-			anp.Spec.Egress[1] = allowRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			allowRule := mutate.Spec.Egress[0]
+			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
+			mutate.Spec.Egress[1] = allowRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is DENIED to ravenclaw from gryffindor
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -164,12 +164,13 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 				Name: "egress-tcp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index0 and index2
-			denyRule := anp.DeepCopy().Spec.Egress[0]
-			anp.Spec.Egress[0] = anp.DeepCopy().Spec.Egress[2]
-			anp.Spec.Egress[2] = denyRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			denyRule := mutate.Spec.Egress[0]
+			mutate.Spec.Egress[0] = mutate.Spec.Egress[2]
+			mutate.Spec.Egress[2] = denyRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
 			// ensure egress is PASSED from gryffindor to ravenclaw
 			// egressRule at index0 will take precedence over egressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
@@ -198,12 +199,13 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 				Name: "egress-tcp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index3 and index4
-			denyRule := anp.DeepCopy().Spec.Egress[3]
-			anp.Spec.Egress[3] = anp.DeepCopy().Spec.Egress[4]
-			anp.Spec.Egress[4] = denyRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			denyRule := mutate.Spec.Egress[3]
+			mutate.Spec.Egress[3] = mutate.Spec.Egress[4]
+			mutate.Spec.Egress[4] = denyRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress from gryffindor is PASSED to slytherin at port 80; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",

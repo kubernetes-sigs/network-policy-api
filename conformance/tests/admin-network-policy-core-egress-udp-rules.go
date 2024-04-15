@@ -107,12 +107,13 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Name: "egress-udp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index0 and index1
-			allowRule := anp.DeepCopy().Spec.Egress[0]
-			anp.Spec.Egress[0] = anp.DeepCopy().Spec.Egress[1]
-			anp.Spec.Egress[1] = allowRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			allowRule := mutate.Spec.Egress[0]
+			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
+			mutate.Spec.Egress[1] = allowRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is DENIED to ravenclaw to hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -164,12 +165,13 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Name: "egress-udp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index0 and index2
-			denyRule := anp.DeepCopy().Spec.Egress[0]
-			anp.Spec.Egress[0] = anp.DeepCopy().Spec.Egress[2]
-			anp.Spec.Egress[2] = denyRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			denyRule := mutate.Spec.Egress[0]
+			mutate.Spec.Egress[0] = mutate.Spec.Egress[2]
+			mutate.Spec.Egress[2] = denyRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is PASSED to ravenclaw from hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
@@ -198,12 +200,13 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Name: "egress-udp",
 			}, anp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
+			mutate := anp.DeepCopy()
 			// swap rules at index3 and index4
-			denyRule := anp.DeepCopy().Spec.Egress[3]
-			anp.Spec.Egress[3] = anp.DeepCopy().Spec.Egress[4]
-			anp.Spec.Egress[4] = denyRule
-			err = s.Client.Update(ctx, anp)
-			require.NoErrorf(t, err, "unable to update the admin network policy")
+			denyRule := mutate.Spec.Egress[3]
+			mutate.Spec.Egress[3] = mutate.Spec.Egress[4]
+			mutate.Spec.Egress[4] = denyRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
+			require.NoErrorf(t, err, "unable to patch the admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is PASSED from hufflepuff at port 5353; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",

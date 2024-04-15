@@ -65,7 +65,8 @@ var BaselineAdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 				Name: "default",
 			}, banp)
 			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
-			dnsPortRule := banp.DeepCopy().Spec.Egress[3]
+			mutate := banp.DeepCopy()
+			dnsPortRule := mutate.Spec.Egress[3]
 			dnsPort := "dns"
 			// rewrite the udp port 53 rule as named port rule
 			dnsPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
@@ -73,9 +74,9 @@ var BaselineAdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 					NamedPort: &dnsPort,
 				},
 			}
-			banp.Spec.Egress[3] = dnsPortRule
-			err = s.Client.Update(ctx, banp)
-			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
+			mutate.Spec.Egress[3] = dnsPortRule
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
+			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is ALLOWED to gryffindor from hufflepuff at the dns port, which is defined as UDP at port 53 in pod spec
 			// modified ingressRule at index3 should take effect
@@ -209,6 +210,7 @@ var BaselineAdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 				Name: "default",
 			}, banp)
 			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
+			mutate := banp.DeepCopy()
 			var mask string
 			if net.IsIPv4String(serverPodRavenclaw.Status.PodIP) {
 				mask = "/32"
@@ -230,9 +232,9 @@ var BaselineAdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 					},
 				},
 			}
-			banp.Spec.Egress = append(newRule, banp.DeepCopy().Spec.Egress...)
-			err = s.Client.Update(ctx, banp)
-			require.NoErrorf(t, err, "unable to update the baseline admin network policy")
+			mutate.Spec.Egress = append(newRule, mutate.Spec.Egress...)
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
+			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to luna-lovegood-0.IP and cedric-diggory-0.IP
 			// new egressRule at index0 should take effect
