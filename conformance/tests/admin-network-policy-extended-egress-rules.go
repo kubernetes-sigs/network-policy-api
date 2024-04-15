@@ -121,10 +121,10 @@ var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 		})
 		t.Run("Should support a 'pass-egress' rule policy for egress-node-peer", func(t *testing.T) {
 			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure egress is PASSED to forbidden-forrest from gryffindor at the 5353 UDP port
+			// ensure egress is PASSED to forbidden-forrest from gryffindor at the 34345 UDP port
 			// egressRule at index1 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true) // Pass rule at index2 takes effect
+				serverPod.Status.PodIP, int32(34345), s.TimeoutConfig.RequestTimeout, true) // Pass rule at index2 takes effect
 			assert.True(t, success)
 		})
 		t.Run("Should support a 'deny-egress' rule policy for egress-node-peer", func(t *testing.T) {
@@ -134,7 +134,7 @@ var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 				serverPod.Status.PodIP, int32(36364), s.TimeoutConfig.RequestTimeout, false)
 			assert.True(t, success)
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
+				serverPod.Status.PodIP, int32(34346), s.TimeoutConfig.RequestTimeout, false)
 			assert.True(t, success)
 			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
