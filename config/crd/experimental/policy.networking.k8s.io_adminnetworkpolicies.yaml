@@ -832,6 +832,7 @@ spec:
               subject:
                 description: |-
                   Subject defines the pods to which this AdminNetworkPolicy applies.
+                  Note that host-networked pods are not included in subject selection.
 
 
                   Support: Core
