@@ -104,10 +104,10 @@ This NPEP proposes adding a new type of `AdminNetworkPolicyEgressPeer` called
 
 ```golang
 
-// Domain describes one or more DNS names to be used as a peer.
+// DomainName describes one or more domain names to be used as a peer.
 //
-// Domain can be an exact match, or use the wildcard specifier '*' to match one
-// or more labels.
+// DomainName can be an exact match, or use the wildcard specifier '*' to match
+// one or more labels.
 //
 // '*', the wildcard specifier, matches one or more entire labels. It does not
 // support partial matches. '*' may only be specified as a prefix.
@@ -124,24 +124,24 @@ This NPEP proposes adding a new type of `AdminNetworkPolicyEgressPeer` called
 //      "wikipedia.org" do not.
 //
 // +kubebuilder:validation:Pattern=`^(\*\.)?([a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.)+[a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.?$`
-type Domain string
+type DomainName string
 
 type AdminNetworkPolicyEgressPeer struct {
     <snipped>
-    // Domains provides a way to specify domain names as peers.
-    //
-    // Domains is only supported for ALLOW rules. In order to control access,
-    // Domain ALLOW rules should be used with a lower priority egress deny --
-    // this allows the admin to maintain an explicit "allowlist" of reachable
-    // domains.
-    //
+    // DomainNames provides a way to specify domain names as peers.
+    // 
+    // DomainNames is only supported for ALLOW rules. In order to control
+    // access, DomainNames ALLOW rules should be used with a lower priority
+    // egress deny -- this allows the admin to maintain an explicit "allowlist"
+    // of reachable domains.
+    // 
     // Support: Extended
     //
     // <network-policy-api:experimental>
     // +optional
     // +listType=set
     // +kubebuilder:validation:MinItems=1
-    Domains []Domain `json:"domains,omitempty"`
+    DomainNames []Domain `json:"domainNames,omitempty"`
 }
 ```
 
@@ -164,7 +164,7 @@ spec:
   - name: "allow-to-my-service"
     action: "Allow"
     to:
-    - domains:
+    - domainNames:
       - "my-service.com"
       - "*.cloud-provider.io"
     ports:
@@ -194,7 +194,7 @@ spec:
   - name: "allow-to-my-service"
     action: "Allow"
     to:
-    - domains:
+    - domainNames:
       - "my-service.com"
       - "*.cloud-provider.io"
     ports:
@@ -225,7 +225,7 @@ spec:
   - name: "allow-to-my-service"
     action: "Allow"
     to:
-    - domains:
+    - domainNames:
       - "my-service.com"
       - "*.cloud-provider.io"
     ports:
