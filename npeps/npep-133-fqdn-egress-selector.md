@@ -2,7 +2,7 @@
 
 * Issue:
   [#133](https://github.com/kubernetes-sigs/network-policy-api/issues/133)
-* Status: Provisional
+* Status: Implementable
 
 ## TLDR
 

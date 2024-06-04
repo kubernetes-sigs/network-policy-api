@@ -23,26 +23,25 @@ import (
 	apisv1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
-// AdminNetworkPolicyEgressPeerApplyConfiguration represents an declarative configuration of the AdminNetworkPolicyEgressPeer type for use
+// BaselineAdminNetworkPolicyEgressPeerApplyConfiguration represents an declarative configuration of the BaselineAdminNetworkPolicyEgressPeer type for use
 // with apply.
-type AdminNetworkPolicyEgressPeerApplyConfiguration struct {
-	Namespaces  *v1.LabelSelector                `json:"namespaces,omitempty"`
-	Pods        *NamespacedPodApplyConfiguration `json:"pods,omitempty"`
-	Nodes       *v1.LabelSelector                `json:"nodes,omitempty"`
-	Networks    []apisv1alpha1.CIDR              `json:"networks,omitempty"`
-	DomainNames []apisv1alpha1.DomainName        `json:"domainNames,omitempty"`
+type BaselineAdminNetworkPolicyEgressPeerApplyConfiguration struct {
+	Namespaces *v1.LabelSelector                `json:"namespaces,omitempty"`
+	Pods       *NamespacedPodApplyConfiguration `json:"pods,omitempty"`
+	Nodes      *v1.LabelSelector                `json:"nodes,omitempty"`
+	Networks   []apisv1alpha1.CIDR              `json:"networks,omitempty"`
 }
 
-// AdminNetworkPolicyEgressPeerApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicyEgressPeer type for use with
+// BaselineAdminNetworkPolicyEgressPeerApplyConfiguration constructs an declarative configuration of the BaselineAdminNetworkPolicyEgressPeer type for use with
 // apply.
-func AdminNetworkPolicyEgressPeer() *AdminNetworkPolicyEgressPeerApplyConfiguration {
-	return &AdminNetworkPolicyEgressPeerApplyConfiguration{}
+func BaselineAdminNetworkPolicyEgressPeer() *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
+	return &BaselineAdminNetworkPolicyEgressPeerApplyConfiguration{}
 }
 
 // WithNamespaces sets the Namespaces field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespaces field is set to the value of the last call.
-func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithNamespaces(value v1.LabelSelector) *AdminNetworkPolicyEgressPeerApplyConfiguration {
+func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithNamespaces(value v1.LabelSelector) *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
 	b.Namespaces = &value
 	return b
 }
@@ -50,7 +49,7 @@ func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithNamespaces(value v1
 // WithPods sets the Pods field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Pods field is set to the value of the last call.
-func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithPods(value *NamespacedPodApplyConfiguration) *AdminNetworkPolicyEgressPeerApplyConfiguration {
+func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithPods(value *NamespacedPodApplyConfiguration) *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
 	b.Pods = value
 	return b
 }
@@ -58,7 +57,7 @@ func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithPods(value *Namespa
 // WithNodes sets the Nodes field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Nodes field is set to the value of the last call.
-func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithNodes(value v1.LabelSelector) *AdminNetworkPolicyEgressPeerApplyConfiguration {
+func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithNodes(value v1.LabelSelector) *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
 	b.Nodes = &value
 	return b
 }
@@ -66,19 +65,9 @@ func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithNodes(value v1.Labe
 // WithNetworks adds the given value to the Networks field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Networks field.
-func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithNetworks(values ...apisv1alpha1.CIDR) *AdminNetworkPolicyEgressPeerApplyConfiguration {
+func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithNetworks(values ...apisv1alpha1.CIDR) *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
 	for i := range values {
 		b.Networks = append(b.Networks, values[i])
-	}
-	return b
-}
-
-// WithDomainNames adds the given value to the DomainNames field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the DomainNames field.
-func (b *AdminNetworkPolicyEgressPeerApplyConfiguration) WithDomainNames(values ...apisv1alpha1.DomainName) *AdminNetworkPolicyEgressPeerApplyConfiguration {
-	for i := range values {
-		b.DomainNames = append(b.DomainNames, values[i])
 	}
 	return b
 }

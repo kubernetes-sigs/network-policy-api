@@ -222,7 +222,7 @@ var BaselineAdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 				{
 					Name:   "allow-egress-to-specific-podIPs",
 					Action: "Allow",
-					To: []v1alpha1.AdminNetworkPolicyEgressPeer{
+					To: []v1alpha1.BaselineAdminNetworkPolicyEgressPeer{
 						{
 							Networks: []v1alpha1.CIDR{
 								v1alpha1.CIDR(serverPodRavenclaw.Status.PodIP + mask),
