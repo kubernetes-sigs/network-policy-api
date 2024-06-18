@@ -1,0 +1,62 @@
+[
+    {
+        "Internal": {
+          "Workload": "kube-system/daemonset/fluentd-elasticsearch",
+          "PodLabels": {
+            "controller-revision-hash": "77d78b9d8f",
+            "name": "fluentd-elasticsearch",
+            "pod-template-generation": "1"
+          },
+          "NamespaceLabels": {
+            "addonmanager.kubernetes.io/mode": "Reconcile",
+            "control-plane": "true",
+            "kubernetes.azure.com/managedby": "aks",
+            "kubernetes.io/cluster-service": "true",
+            "kubernetes.io/metadata.name": "kube-system"
+          },
+          "Namespace": "kube-system",
+          "Pods": [
+            {
+              "IP": "10.224.0.246",
+              "IsHostNetworking": false,
+              "NodeLabels": null
+            },
+            {
+              "IP": "10.224.0.192",
+              "IsHostNetworking": false,
+              "NodeLabels": null
+            }
+          ]
+        },
+        "IP": ""
+    },
+    {
+        "Internal": {
+        "Workload": "default/deployment/nginx-deployment2",
+        "PodLabels": {
+            "app": "nginx",
+            "app2": "tmp",
+            "pod-template-hash": "5c496748cb"
+        },
+        "NamespaceLabels": {
+            "kubernetes.io/metadata.name": "default",
+            "labelname2": "value2"
+        },
+        "Namespace": "default",
+        "Pods": [
+            {
+            "IP": "10.224.0.53",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+            },
+            {
+            "IP": "10.224.0.55",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+            }
+        ]
+        },
+        "IP": ""
+    }
+    
+]

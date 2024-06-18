@@ -1,0 +1,259 @@
+[
+    {
+      "Internal": {
+        "Workload": "kube-system/daemonset/ama-metrics-node",
+        "PodLabels": {
+          "controller-revision-hash": "689d5b466",
+          "dsName": "ama-metrics-node",
+          "kubernetes.azure.com/managedby": "aks",
+          "pod-template-generation": "2"
+        },
+        "NamespaceLabels": {
+          "addonmanager.kubernetes.io/mode": "Reconcile",
+          "control-plane": "true",
+          "kubernetes.azure.com/managedby": "aks",
+          "kubernetes.io/cluster-service": "true",
+          "kubernetes.io/metadata.name": "kube-system"
+        },
+        "Namespace": "kube-system",
+        "Pods": [
+          {
+            "IP": "10.224.0.139",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.251",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    },
+    {
+      "Internal": {
+        "Workload": "kube-system/daemonset/azure-ip-masq-agent",
+        "PodLabels": {
+          "controller-revision-hash": "7744f77c8f",
+          "k8s-app": "azure-ip-masq-agent",
+          "kubernetes.azure.com/managedby": "aks",
+          "pod-template-generation": "2",
+          "tier": "node"
+        },
+        "NamespaceLabels": {
+          "addonmanager.kubernetes.io/mode": "Reconcile",
+          "control-plane": "true",
+          "kubernetes.azure.com/managedby": "aks",
+          "kubernetes.io/cluster-service": "true",
+          "kubernetes.io/metadata.name": "kube-system"
+        },
+        "Namespace": "kube-system",
+        "Pods": [
+          {
+            "IP": "10.224.0.199",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.10",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    },
+    {
+      "Internal": {
+        "Workload": "kube-system/daemonset/azure-npm",
+        "PodLabels": {
+          "controller-revision-hash": "5dfd889fcb",
+          "k8s-app": "azure-npm",
+          "kubernetes.azure.com/managedby": "aks",
+          "pod-template-generation": "2"
+        },
+        "NamespaceLabels": {
+          "addonmanager.kubernetes.io/mode": "Reconcile",
+          "control-plane": "true",
+          "kubernetes.azure.com/managedby": "aks",
+          "kubernetes.io/cluster-service": "true",
+          "kubernetes.io/metadata.name": "kube-system"
+        },
+        "Namespace": "kube-system",
+        "Pods": [
+          {
+            "IP": "10.224.0.10",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.199",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    },
+    {
+      "Internal": {
+        "Workload": "kube-system/daemonset/cloud-node-manager",
+        "PodLabels": {
+          "controller-revision-hash": "646949ff7d",
+          "k8s-app": "cloud-node-manager",
+          "kubernetes.azure.com/managedby": "aks",
+          "pod-template-generation": "3"
+        },
+        "NamespaceLabels": {
+          "addonmanager.kubernetes.io/mode": "Reconcile",
+          "control-plane": "true",
+          "kubernetes.azure.com/managedby": "aks",
+          "kubernetes.io/cluster-service": "true",
+          "kubernetes.io/metadata.name": "kube-system"
+        },
+        "Namespace": "kube-system",
+        "Pods": [
+          {
+            "IP": "10.224.0.10",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.199",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    },
+    {
+      "Internal": {
+        "Workload": "kube-system/daemonset/csi-azuredisk-node",
+        "PodLabels": {
+          "app": "csi-azuredisk-node",
+          "controller-revision-hash": "6f968bcb6c",
+          "kubernetes.azure.com/managedby": "aks",
+          "pod-template-generation": "6"
+        },
+        "NamespaceLabels": {
+          "addonmanager.kubernetes.io/mode": "Reconcile",
+          "control-plane": "true",
+          "kubernetes.azure.com/managedby": "aks",
+          "kubernetes.io/cluster-service": "true",
+          "kubernetes.io/metadata.name": "kube-system"
+        },
+        "Namespace": "kube-system",
+        "Pods": [
+          {
+            "IP": "10.224.0.199",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.10",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    },
+    {
+      "Internal": {
+        "Workload": "kube-system/daemonset/csi-azurefile-node",
+        "PodLabels": {
+          "app": "csi-azurefile-node",
+          "controller-revision-hash": "f6fdcd6d8",
+          "kubernetes.azure.com/managedby": "aks",
+          "pod-template-generation": "3"
+        },
+        "NamespaceLabels": {
+          "addonmanager.kubernetes.io/mode": "Reconcile",
+          "control-plane": "true",
+          "kubernetes.azure.com/managedby": "aks",
+          "kubernetes.io/cluster-service": "true",
+          "kubernetes.io/metadata.name": "kube-system"
+        },
+        "Namespace": "kube-system",
+        "Pods": [
+          {
+            "IP": "10.224.0.199",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.10",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    },
+    {
+      "Internal": {
+        "Workload": "kube-system/daemonset/fluentd-elasticsearch",
+        "PodLabels": {
+          "controller-revision-hash": "77d78b9d8f",
+          "name": "fluentd-elasticsearch",
+          "pod-template-generation": "1"
+        },
+        "NamespaceLabels": {
+          "addonmanager.kubernetes.io/mode": "Reconcile",
+          "control-plane": "true",
+          "kubernetes.azure.com/managedby": "aks",
+          "kubernetes.io/cluster-service": "true",
+          "kubernetes.io/metadata.name": "kube-system"
+        },
+        "Namespace": "kube-system",
+        "Pods": [
+          {
+            "IP": "10.224.0.137",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.204",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    },
+    {
+      "Internal": {
+        "Workload": "kube-system/daemonset/kube-proxy",
+        "PodLabels": {
+          "component": "kube-proxy",
+          "controller-revision-hash": "86dd799df9",
+          "kubernetes.azure.com/managedby": "aks",
+          "pod-template-generation": "4",
+          "tier": "node"
+        },
+        "NamespaceLabels": {
+          "addonmanager.kubernetes.io/mode": "Reconcile",
+          "control-plane": "true",
+          "kubernetes.azure.com/managedby": "aks",
+          "kubernetes.io/cluster-service": "true",
+          "kubernetes.io/metadata.name": "kube-system"
+        },
+        "Namespace": "kube-system",
+        "Pods": [
+          {
+            "IP": "10.224.0.10",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.199",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    }
+  ]
