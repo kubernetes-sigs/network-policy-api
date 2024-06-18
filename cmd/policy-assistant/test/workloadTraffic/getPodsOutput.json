@@ -1,0 +1,23 @@
+[
+    {
+      "Internal": {
+        "Workload": "default/pod/static-web",
+        "PodLabels": {
+          "role": "myrole"
+        },
+        "NamespaceLabels": {
+          "kubernetes.io/metadata.name": "default",
+          "labelname2": "value2"
+        },
+        "Namespace": "default",
+        "Pods": [
+          {
+            "IP": "10.224.0.226",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    }
+  ]
