@@ -196,6 +196,21 @@ type AdminNetworkPolicyEgressPeer struct {
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=25
 	Networks []CIDR `json:"networks,omitempty"`
+	
+    // DomainNames provides a way to specify domain names as peers.
+    // 
+    // DomainNames is only supported for ALLOW rules. In order to control
+    // access, DomainNames ALLOW rules should be used with a lower priority
+    // egress deny -- this allows the admin to maintain an explicit "allowlist"
+    // of reachable domains.
+    // 
+    // Support: Extended
+    //
+    // <network-policy-api:experimental>
+    // +optional
+    // +listType=set
+    // +kubebuilder:validation:MinItems=1
+    DomainNames []DomainName `json:"domainNames,omitempty"`
 }
 
 // CIDR is an IP address range in CIDR notation (for example, "10.0.0.0/8" or "fd00::/8").
@@ -204,3 +219,25 @@ type AdminNetworkPolicyEgressPeer struct {
 // +kubebuilder:validation:XValidation:rule="self.contains(':') != self.contains('.')",message="CIDR must be either an IPv4 or IPv6 address. IPv4 address embedded in IPv6 addresses are not supported"
 // +kubebuilder:validation:MaxLength=43
 type CIDR string
+
+// DomainName describes one or more domain names to be used as a peer.
+//
+// DomainName can be an exact match, or use the wildcard specifier '*' to match
+// one or more labels.
+//
+// '*', the wildcard specifier, matches one or more entire labels. It does not
+// support partial matches. '*' may only be specified as a prefix.
+// 
+//  Examples:
+//    - `kubernetes.io` matches only `kubernetes.io`.
+//      It does not match "www.kubernetes.io", "blog.kubernetes.io",
+//      "my-kubernetes.io", or "wikipedia.org".
+//    - `blog.kubernetes.io` matches only "blog.kubernetes.io".
+//      It does not match "www.kubernetes.io" or "kubernetes.io".
+//    - `*.kubernetes.io` matches subdomains of kubernetes.io.
+//      "www.kubernetes.io", "blog.kubernetes.io", and
+//      "latest.blog.kubernetes.io" match, however "kubernetes.io", and
+//      "wikipedia.org" do not.
+//
+// +kubebuilder:validation:Pattern=`^(\*\.)?([a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.)+[a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.?$`
+type DomainName string
