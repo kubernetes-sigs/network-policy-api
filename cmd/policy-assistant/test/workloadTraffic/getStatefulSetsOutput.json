@@ -1,0 +1,35 @@
+[
+    {
+      "Internal": {
+        "Workload": "teststs/statefulset/web",
+        "PodLabels": {
+          "app": "nginx",
+          "apps.kubernetes.io/pod-index": "2",
+          "controller-revision-hash": "web-79dc58f667",
+          "statefulset.kubernetes.io/pod-name": "web-2"
+        },
+        "NamespaceLabels": {
+          "kubernetes.io/metadata.name": "teststs"
+        },
+        "Namespace": "teststs",
+        "Pods": [
+          {
+            "IP": "10.224.0.147",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.58",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.117",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    }
+  ]

@@ -1,0 +1,30 @@
+[
+    {
+      "Source": {
+        "Internal": {
+            "Workload": "kube-system/daemonset/fluentd-elasticsearch"
+          }
+        
+      },
+      "Destination": {
+        "IP": "8.8.8.8"
+      },
+      "Protocol": "TCP",
+      "ResolvedPort": 80,
+      "ResolvedPortName": "serve-80-tcp"
+    },
+    {
+      "Source": {
+        "Internal": {
+            "Workload": "default/deployment/nginx-deployment"
+          }
+        
+      },
+      "Destination": {
+        "IP": "8.8.8.8"
+      },
+      "Protocol": "TCP",
+      "ResolvedPort": 80,
+      "ResolvedPortName": "serve-80-tcp"
+    }  
+]

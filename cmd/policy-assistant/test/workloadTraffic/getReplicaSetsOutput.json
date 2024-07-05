@@ -1,0 +1,33 @@
+[
+    {
+      "Internal": {
+        "Workload": "default/replicaset/frontend",
+        "PodLabels": {
+          "tier": "frontend"
+        },
+        "NamespaceLabels": {
+          "kubernetes.io/metadata.name": "default",
+          "labelname2": "value2"
+        },
+        "Namespace": "default",
+        "Pods": [
+          {
+            "IP": "10.224.0.40",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.113",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          },
+          {
+            "IP": "10.224.0.55",
+            "IsHostNetworking": false,
+            "NodeLabels": null
+          }
+        ]
+      },
+      "IP": ""
+    }
+  ]
