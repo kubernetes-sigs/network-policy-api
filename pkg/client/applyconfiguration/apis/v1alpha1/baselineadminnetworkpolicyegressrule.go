@@ -25,10 +25,10 @@ import (
 // BaselineAdminNetworkPolicyEgressRuleApplyConfiguration represents an declarative configuration of the BaselineAdminNetworkPolicyEgressRule type for use
 // with apply.
 type BaselineAdminNetworkPolicyEgressRuleApplyConfiguration struct {
-	Name   *string                                          `json:"name,omitempty"`
-	Action *v1alpha1.BaselineAdminNetworkPolicyRuleAction   `json:"action,omitempty"`
-	To     []AdminNetworkPolicyEgressPeerApplyConfiguration `json:"to,omitempty"`
-	Ports  *[]AdminNetworkPolicyPortApplyConfiguration      `json:"ports,omitempty"`
+	Name   *string                                                  `json:"name,omitempty"`
+	Action *v1alpha1.BaselineAdminNetworkPolicyRuleAction           `json:"action,omitempty"`
+	To     []BaselineAdminNetworkPolicyEgressPeerApplyConfiguration `json:"to,omitempty"`
+	Ports  *[]AdminNetworkPolicyPortApplyConfiguration              `json:"ports,omitempty"`
 }
 
 // BaselineAdminNetworkPolicyEgressRuleApplyConfiguration constructs an declarative configuration of the BaselineAdminNetworkPolicyEgressRule type for use with
@@ -56,7 +56,7 @@ func (b *BaselineAdminNetworkPolicyEgressRuleApplyConfiguration) WithAction(valu
 // WithTo adds the given value to the To field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the To field.
-func (b *BaselineAdminNetworkPolicyEgressRuleApplyConfiguration) WithTo(values ...*AdminNetworkPolicyEgressPeerApplyConfiguration) *BaselineAdminNetworkPolicyEgressRuleApplyConfiguration {
+func (b *BaselineAdminNetworkPolicyEgressRuleApplyConfiguration) WithTo(values ...*BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) *BaselineAdminNetworkPolicyEgressRuleApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithTo")

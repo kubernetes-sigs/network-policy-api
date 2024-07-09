@@ -49,6 +49,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apisv1alpha1.AdminNetworkPolicySubjectApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("BaselineAdminNetworkPolicy"):
 		return &apisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("BaselineAdminNetworkPolicyEgressPeer"):
+		return &apisv1alpha1.BaselineAdminNetworkPolicyEgressPeerApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("BaselineAdminNetworkPolicyEgressRule"):
 		return &apisv1alpha1.BaselineAdminNetworkPolicyEgressRuleApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("BaselineAdminNetworkPolicyIngressRule"):
