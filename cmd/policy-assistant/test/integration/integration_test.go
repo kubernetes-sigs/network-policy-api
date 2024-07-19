@@ -58,6 +58,26 @@ type flow struct {
 func TestNetPolV1Connectivity(t *testing.T) {
 	tests := []connectivityTest{
 		{
+			name:                   "deny all",
+			defaultIngressBehavior: probe.ConnectivityBlocked,
+			defaultEgressBehavior:  probe.ConnectivityAllowed,
+			args: args{
+				resources: getResources(t, []string{"x"}, []string{"a", "b"}, []int{80}, []v1.Protocol{v1.ProtocolTCP}),
+				netpols: []*networkingv1.NetworkPolicy{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "x",
+							Name:      "base",
+						},
+						Spec: networkingv1.NetworkPolicySpec{
+							PodSelector: metav1.LabelSelector{},
+							PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
+						},
+					},
+				},
+			},
+		},
+		{
 			name:                   "ingress port allowed",
 			defaultIngressBehavior: probe.ConnectivityAllowed,
 			defaultEgressBehavior:  probe.ConnectivityAllowed,
