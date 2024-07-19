@@ -109,6 +109,49 @@ func RunSimplifierTests() {
 			}
 			Expect(Simplify([]PeerMatcher{dns, somePod})).To(Equal([]PeerMatcher{dns, somePod}))
 		})
+
+		It("should simplify no matchers to one no matcher", func() {
+			no1 := &NoMatcher{}
+			no2 := &NoMatcher{}
+
+			Expect(Simplify([]PeerMatcher{no1, no2})).To(Equal([]PeerMatcher{&NoMatcher{}}))
+		})
+
+		It("ignore no matchers amongst others", func() {
+			no1 := &NoMatcher{}
+
+			Expect(Simplify([]PeerMatcher{no1, all, allOnTCP80, ip, allPodsAllPorts, allPodsTCP103})).To(Equal([]PeerMatcher{all}))
+		})
+
+		It("don't simplify (b)anp", func() {
+			anpDenyAll := &PeerMatcherAdmin{
+				PodPeerMatcher: &PodPeerMatcher{
+					Namespace: &AllNamespaceMatcher{},
+					Pod:       &AllPodMatcher{},
+					Port:      &AllPortMatcher{},
+				},
+				effectFromMatch: Effect{
+					PolicyKind: AdminNetworkPolicy,
+					Priority:   5,
+					Verdict:    Deny,
+				},
+				Name: "anp",
+			}
+			banpAllowAll := &PeerMatcherAdmin{
+				PodPeerMatcher: &PodPeerMatcher{
+					Namespace: &AllNamespaceMatcher{},
+					Pod:       &AllPodMatcher{},
+					Port:      &AllPortMatcher{},
+				},
+				effectFromMatch: Effect{
+					PolicyKind: BaselineAdminNetworkPolicy,
+					Verdict:    Allow,
+				},
+				Name: "banp",
+			}
+			Expect(Simplify([]PeerMatcher{all, allOnTCP80, ip, allPodsAllPorts, banpAllowAll, allPodsTCP103, anpDenyAll})).To(Equal([]PeerMatcher{banpAllowAll, anpDenyAll, all}))
+
+		})
 	})
 
 	Describe("Port Simplifier", func() {
