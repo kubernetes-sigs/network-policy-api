@@ -11,6 +11,8 @@ const (
 	ConnectivityInvalidPortProtocol Connectivity = "invalidportprotocol"
 	ConnectivityBlocked             Connectivity = "blocked"
 	ConnectivityAllowed             Connectivity = "allowed"
+	// ConnectivityUndefined e.g. for loopback traffic
+	ConnectivityUndefined Connectivity = "undefined"
 )
 
 var AllConnectivity = []Connectivity{
@@ -36,6 +38,8 @@ func (p Connectivity) ShortString() string {
 		return "P"
 	case ConnectivityInvalidPortProtocol:
 		return "N"
+	case ConnectivityUndefined:
+		return "#"
 	default:
 		panic(errors.Errorf("invalid Connectivity value: %+v", p))
 	}
