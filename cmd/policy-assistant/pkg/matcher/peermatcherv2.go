@@ -10,16 +10,19 @@ import (
 // This is because ANP and BANP only deal with Pod to Pod traffic, and do not deal with external IPs.
 type PeerMatcherAdmin struct {
 	*PodPeerMatcher
-	Name            string
+	PolicyName      string
+	RuleName        string
 	effectFromMatch Effect
 }
 
 // NewPeerMatcherANP creates a PeerMatcherAdmin for an ANP rule
-func NewPeerMatcherANP(peer *PodPeerMatcher, v Verdict, priority int, source string) *PeerMatcherAdmin {
+func NewPeerMatcherANP(peer *PodPeerMatcher, v Verdict, priority int, policyName, ruleName string) *PeerMatcherAdmin {
 	return &PeerMatcherAdmin{
 		PodPeerMatcher: peer,
-		Name:           source,
+		PolicyName:     policyName,
+		RuleName:       ruleName,
 		effectFromMatch: Effect{
+			RuleName:   ruleName,
 			PolicyKind: AdminNetworkPolicy,
 			Priority:   priority,
 			Verdict:    v,
@@ -28,11 +31,13 @@ func NewPeerMatcherANP(peer *PodPeerMatcher, v Verdict, priority int, source str
 }
 
 // NewPeerMatcherBANP creates a new PeerMatcherAdmin for a BANP rule
-func NewPeerMatcherBANP(peer *PodPeerMatcher, v Verdict, source string) *PeerMatcherAdmin {
+func NewPeerMatcherBANP(peer *PodPeerMatcher, v Verdict, policyName, ruleName string) *PeerMatcherAdmin {
 	return &PeerMatcherAdmin{
 		PodPeerMatcher: peer,
-		Name:           source,
+		PolicyName:     policyName,
+		RuleName:       ruleName,
 		effectFromMatch: Effect{
+			RuleName:   ruleName,
 			PolicyKind: BaselineAdminNetworkPolicy,
 			Verdict:    v,
 		},
@@ -41,6 +46,7 @@ func NewPeerMatcherBANP(peer *PodPeerMatcher, v Verdict, source string) *PeerMat
 
 // Effect models the effect of one or more v1/v2 NetPol rules on a peer
 type Effect struct {
+	RuleName string
 	PolicyKind
 	// Priority is only used for ANP (there can only be one BANP)
 	Priority int
@@ -57,9 +63,9 @@ const (
 
 func NewV1Effect(allow bool) Effect {
 	if allow {
-		return Effect{NetworkPolicyV1, 0, Allow}
+		return Effect{"", NetworkPolicyV1, 0, Allow}
 	}
-	return Effect{NetworkPolicyV1, 0, None}
+	return Effect{"", NetworkPolicyV1, 0, None}
 }
 
 type Verdict string

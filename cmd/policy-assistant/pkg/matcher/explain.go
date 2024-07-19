@@ -2,11 +2,12 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/mattfenwick/collections/pkg/json"
 	"github.com/mattfenwick/collections/pkg/slice"
 	"golang.org/x/exp/slices"
 	v1 "k8s.io/api/core/v1"
-	"strings"
 
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/olekukonko/tablewriter"
@@ -26,7 +27,7 @@ func (p *peerProtocolGroup) Matches(subject, peer *TrafficPeer, portInt int, por
 }
 
 type anpGroup struct {
-	name     string
+	ruleName string
 	priority int
 	effects  []string
 	kind     PolicyKind
@@ -129,9 +130,9 @@ func (s *SliceBuilder) peerProtocolGroupTableLines(t *peerProtocolGroup) {
 		})
 		for _, v := range anps {
 			if len(v.effects) > 1 {
-				actions = append(actions, fmt.Sprintf("   pri=%d (%s): %s (ineffective rules: %s)", v.priority, v.name, v.effects[0], strings.Join(v.effects[1:], ", ")))
+				actions = append(actions, fmt.Sprintf("   pri=%d (%s): %s (ineffective rules: %s)", v.priority, v.ruleName, v.effects[0], strings.Join(v.effects[1:], ", ")))
 			} else {
-				actions = append(actions, fmt.Sprintf("   pri=%d (%s): %s", v.priority, v.name, v.effects[0]))
+				actions = append(actions, fmt.Sprintf("   pri=%d (%s): %s", v.priority, v.ruleName, v.effects[0]))
 			}
 		}
 	}
@@ -199,10 +200,10 @@ func groupAnbAndBanp(p []PeerMatcher) []PeerMatcher {
 					policies: map[string]*anpGroup{},
 				}
 			}
-			kg := t.Name
+			kg := t.PolicyName
 			if _, ok := groups[k].policies[kg]; !ok {
 				groups[k].policies[kg] = &anpGroup{
-					name:     t.Name,
+					ruleName: t.PolicyName,
 					priority: t.effectFromMatch.Priority,
 					effects:  []string{},
 					kind:     t.effectFromMatch.PolicyKind,
