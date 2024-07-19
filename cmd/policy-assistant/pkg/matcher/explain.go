@@ -55,8 +55,10 @@ func (p *Policy) ExplainTable() string {
 	ingresses, egresses := p.SortedTargets()
 	builder.TargetsTableLines(ingresses, true)
 
-	builder.Elements = append(builder.Elements, []string{"", "", "", "", "", ""})
-	builder.TargetsTableLines(egresses, false)
+	if len(egresses) > 0 {
+		builder.Elements = append(builder.Elements, []string{"", "", "", "", "", ""})
+		builder.TargetsTableLines(egresses, false)
+	}
 
 	table.AppendBulk(builder.Elements)
 
