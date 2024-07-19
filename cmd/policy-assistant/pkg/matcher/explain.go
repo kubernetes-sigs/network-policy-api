@@ -205,7 +205,7 @@ func groupAnbAndBanp(p []PeerMatcher) []PeerMatcher {
 			kg := t.PolicyName
 			if _, ok := groups[k].policies[kg]; !ok {
 				groups[k].policies[kg] = &anpGroup{
-					ruleName: t.PolicyName,
+					ruleName: t.RuleName,
 					priority: t.effectFromMatch.Priority,
 					effects:  []string{},
 					kind:     t.effectFromMatch.PolicyKind,
