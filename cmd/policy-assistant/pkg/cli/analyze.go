@@ -5,6 +5,8 @@ import (
 	"github.com/mattfenwick/cyclonus/examples"
 	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
 	"golang.org/x/net/context"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
 	"strings"
 	"time"
@@ -40,6 +42,8 @@ var AllModes = []string{
 	ProbeMode,
 }
 
+const DefaultTimeout = 180
+
 type AnalyzeArgs struct {
 	AllNamespaces      bool
 	Namespaces         []string
@@ -58,6 +62,8 @@ type AnalyzeArgs struct {
 
 	// synthetic probe
 	ProbePath string
+
+	Timeout int
 }
 
 func SetupAnalyzeCommand() *cobra.Command {
@@ -85,6 +91,8 @@ func SetupAnalyzeCommand() *cobra.Command {
 	command.Flags().StringVar(&args.TrafficPath, "traffic-path", "", "path to json traffic file, containing of a list of traffic objects")
 	command.Flags().StringVar(&args.ProbePath, "probe-path", "", "path to json model file for synthetic probe")
 
+	command.Flags().IntVar(&args.Timeout, "timeout", DefaultTimeout, "timeout time in seconds")
+
 	return command
 }
 
@@ -92,10 +100,10 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 	// 1. read policies from kube
 	var kubePolicies []*networkingv1.NetworkPolicy
 	var kubeANPs []*v1alpha1.AdminNetworkPolicy
-	var kubeBANPs *v1alpha1.BaselineAdminNetworkPolicy
+	var kubeBANP *v1alpha1.BaselineAdminNetworkPolicy
 	var kubePods []v1.Pod
 	var kubeNamespaces []v1.Namespace
-	var netErr, anpErr, banpErr error
+	var netpolErr, anpErr, banpErr error
 	if args.AllNamespaces || len(args.Namespaces) > 0 {
 		kubeClient, err := kube.NewKubernetesForContext(args.Context)
 		utils.DoOrDie(err)
@@ -108,20 +116,21 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 			namespaces = []string{v1.NamespaceAll}
 		}
 
-		//TODO: add a flag for the timeout
-		ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
+		includeANPS, includeBANPSs := shouldIncludeANPandBANP(kubeClient.ClientSet)
+
+		ctx, cancel := context.WithTimeout(context.TODO(), time.Duration(args.Timeout)*time.Second)
 		defer cancel()
 
-		kubePolicies, kubeANPs, kubeBANPs, netErr, anpErr, banpErr = kube.ReadNetworkPoliciesFromKube(ctx, kubeClient, namespaces)
+		kubePolicies, kubeANPs, kubeBANP, netpolErr, anpErr, banpErr = kube.ReadNetworkPoliciesFromKube(ctx, kubeClient, namespaces, includeANPS, includeBANPSs)
 
-		if netErr != nil {
+		if netpolErr != nil {
 			logrus.Errorf("unable to read network policies from kube, ns '%s': %+v", namespaces, err)
 		}
 		if anpErr != nil {
-			fmt.Printf("Unable to fetch admin network policies: %s \n", anpErr)
+			logrus.Errorf("Unable to fetch admin network policies: %s \n", anpErr)
 		}
 		if banpErr != nil {
-			fmt.Printf("Unable to fetch base admin network policies: %s \n", banpErr)
+			logrus.Errorf("Unable to fetch base admin network policies: %s \n", banpErr)
 		}
 	}
 	// 2. read policies from file
@@ -130,18 +139,24 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 		utils.DoOrDie(err)
 		kubePolicies = append(kubePolicies, policiesFromPath...)
 		kubeANPs = append(kubeANPs, anpsFromPath...)
-		kubeBANPs = banpFromPath
+		if banpFromPath != nil && kubeBANP != nil {
+			logrus.Debugf("More that one banp parsed - setting banp from file")
+		}
+		kubeBANP = banpFromPath
 	}
 	// 3. read example policies
 	if args.UseExamplePolicies {
 		kubePolicies = append(kubePolicies, netpol.AllExamples...)
 
 		kubeANPs = append(kubeANPs, examples.CoreGressRulesCombinedANB...)
-		kubeBANPs = kubeBANPs
+		if kubeBANP != nil {
+			logrus.Debugf("More that onew banp parsed - setting banp from the examples")
+		}
+		kubeBANP = examples.CoreGressRulesCombinedBANB
 	}
 
 	logrus.Debugf("parsed policies:\n%s", json.MustMarshalToString(kubePolicies))
-	policies := matcher.BuildV1AndV2NetPols(args.SimplifyPolicies, kubePolicies, kubeANPs, kubeBANPs)
+	policies := matcher.BuildV1AndV2NetPols(args.SimplifyPolicies, kubePolicies, kubeANPs, kubeBANP)
 
 	for _, mode := range args.Modes {
 		switch mode {
@@ -315,4 +330,29 @@ func ProbeSyntheticConnectivity(explainedPolicies *matcher.Policy, modelPath str
 	fmt.Printf("Ingress:\n%s\n", simulatedProbe.RenderIngress())
 	fmt.Printf("Egress:\n%s\n", simulatedProbe.RenderEgress())
 	fmt.Printf("Combined:\n%s\n\n\n", simulatedProbe.RenderTable())
+}
+
+func shouldIncludeANPandBANP(client *kubernetes.Clientset) (bool, bool) {
+	var includeANP, includeBANP bool
+	_, resources, _, err := client.DiscoveryClient.GroupsAndMaybeResources()
+	if err != nil {
+		logrus.Errorf("Unable to fetch all registered resources: %s", err)
+		return includeANP, includeBANP
+	}
+	gv := schema.GroupVersion{Group: "policy.networking.k8s.io", Version: "v1alpha1"}
+
+	if groupResources, ok := resources[gv]; ok {
+		for _, res := range groupResources.APIResources {
+			switch res.Kind {
+			case "AdminNetworkPolicy":
+				includeANP = true
+			case "BaselineAdminNetworkPolicy":
+				includeBANP = true
+			default:
+				panic(fmt.Sprintf("unexpected resource kind %s", res.Kind))
+			}
+		}
+	}
+
+	return includeANP, includeBANP
 }

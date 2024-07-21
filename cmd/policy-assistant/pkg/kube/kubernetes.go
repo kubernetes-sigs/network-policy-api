@@ -20,6 +20,8 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
+var ErrNotImplemented = errors.New("Not implemented")
+
 type Kubernetes struct {
 	ClientSet      *kubernetes.Clientset
 	alphaClientSet *v1alpha1.PolicyV1alpha1Client
@@ -109,7 +111,7 @@ func (k *Kubernetes) GetNetworkPoliciesInNamespace(ctx context.Context, namespac
 	return netpolList.Items, nil
 }
 
-func (k *Kubernetes) GetAdminNetworkPoliciesInNamespace(ctx context.Context) ([]v1alpha12.AdminNetworkPolicy, error) {
+func (k *Kubernetes) GetAdminNetworkPolicies(ctx context.Context) ([]v1alpha12.AdminNetworkPolicy, error) {
 	anps, err := k.alphaClientSet.AdminNetworkPolicies().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -117,16 +119,38 @@ func (k *Kubernetes) GetAdminNetworkPoliciesInNamespace(ctx context.Context) ([]
 	return anps.Items, nil
 }
 
-func (k *Kubernetes) GetBaseAdminNetworkPoliciesInNamespace(ctx context.Context) (v1alpha12.BaselineAdminNetworkPolicy, error) {
+func (k *Kubernetes) CreateAdminNetworkPolicy(ctx context.Context, policy *v1alpha12.AdminNetworkPolicy) (*v1alpha12.AdminNetworkPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (k *Kubernetes) UpdateAdminNetworkPolicy(ctx context.Context, policy *v1alpha12.AdminNetworkPolicy) (*v1alpha12.AdminNetworkPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (k *Kubernetes) DeleteAdminNetworkPolicy(ctx context.Context, name string) error {
+	//TODO: implement
+	return ErrNotImplemented
+}
+
+func (k *Kubernetes) GetBaseAdminNetworkPolicies(ctx context.Context) ([]v1alpha12.BaselineAdminNetworkPolicy, error) {
 	banp, err := k.alphaClientSet.BaselineAdminNetworkPolicies().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return v1alpha12.BaselineAdminNetworkPolicy{}, err
+		return nil, err
 	}
-	if len(banp.Items) > 0 {
-		return banp.Items[0], nil
-	}
-	return v1alpha12.BaselineAdminNetworkPolicy{}, errors.New("BANP not found")
+	return banp.Items, nil
+}
 
+func (k *Kubernetes) CreateBaselineAdminNetworkPolicy(ctx context.Context, policy *v1alpha12.BaselineAdminNetworkPolicy) (*v1alpha12.BaselineAdminNetworkPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (k *Kubernetes) UpdateBaselineAdminNetworkPolicy(ctx context.Context, policy *v1alpha12.BaselineAdminNetworkPolicy) (*v1alpha12.BaselineAdminNetworkPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (k *Kubernetes) DeleteBaselineAdminNetworkPolicy(ctx context.Context, name string) error {
+	//TODO: implement
+	return ErrNotImplemented
 }
 
 func (k *Kubernetes) UpdateNetworkPolicy(policy *networkingv1.NetworkPolicy) (*networkingv1.NetworkPolicy, error) {

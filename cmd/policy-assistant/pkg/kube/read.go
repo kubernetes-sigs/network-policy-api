@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	v1alpha12 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"sync"
 )
 
 // ReadNetworkPoliciesFromPath walks the folder and try to parse each file in
@@ -23,8 +24,8 @@ import (
 // 5. AdminNetworkPolicy
 func ReadNetworkPoliciesFromPath(policyPath string) ([]*networkingv1.NetworkPolicy, []*v1alpha12.AdminNetworkPolicy, *v1alpha12.BaselineAdminNetworkPolicy, error) {
 	var netPolicies []*networkingv1.NetworkPolicy
-	var adminNetPolicies []*v1alpha12.AdminNetworkPolicy
-	var baseAdminNetPolicies *v1alpha12.BaselineAdminNetworkPolicy
+	var adminNetworkPolicies []*v1alpha12.AdminNetworkPolicy
+	var baselineAdminNetworkPolicy *v1alpha12.BaselineAdminNetworkPolicy
 
 	err := filepath.Walk(policyPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -69,26 +70,29 @@ func ReadNetworkPoliciesFromPath(policyPath string) ([]*networkingv1.NetworkPoli
 
 		banp, err := utils.ParseYamlStrict[v1alpha12.BaselineAdminNetworkPolicy](bytes)
 		if err == nil {
-			baseAdminNetPolicies = banp
+			if baselineAdminNetworkPolicy != nil {
+				return errors.New("baseline admin network policy already exists")
+			}
+			baselineAdminNetworkPolicy = banp
 			return nil
 		}
 		logrus.Debugf("unable to base admin network policies: %+v", err)
 
 		anpList, err := utils.ParseYamlStrict[v1alpha12.AdminNetworkPolicyList](bytes)
 		if err == nil {
-			adminNetPolicies = append(adminNetPolicies, refList(anpList.Items)...)
+			adminNetworkPolicies = append(adminNetworkPolicies, refList(anpList.Items)...)
 			return nil
 		}
 		logrus.Debugf("unable to parse list of admin network policies: %+v", err)
 
 		anp, err := utils.ParseYamlStrict[v1alpha12.AdminNetworkPolicy](bytes)
 		if err == nil {
-			adminNetPolicies = append(adminNetPolicies, anp)
+			adminNetworkPolicies = append(adminNetworkPolicies, anp)
 			return nil
 		}
 		logrus.Debugf("unable to single admin network policies: %+v", err)
 
-		if len(netPolicies) == 0 && len(adminNetPolicies) == 0 && baseAdminNetPolicies == nil {
+		if len(netPolicies) == 0 && len(adminNetworkPolicies) == 0 && baselineAdminNetworkPolicy == nil {
 			return errors.WithMessagef(err, "unable to parse any policies from yaml at %s", path)
 		}
 
@@ -105,85 +109,54 @@ func ReadNetworkPoliciesFromPath(policyPath string) ([]*networkingv1.NetworkPoli
 			}
 		}
 	}
-	return netPolicies, adminNetPolicies, baseAdminNetPolicies, nil
-}
-
-func ReadNetworkPoliciesFromKube(ctx context.Context, kubeClient IKubernetes, namespaces []string) ([]*networkingv1.NetworkPolicy, []*v1alpha12.AdminNetworkPolicy, *v1alpha12.BaselineAdminNetworkPolicy, error, error, error) {
-	var netpols []*networkingv1.NetworkPolicy
-	var anps []*v1alpha12.AdminNetworkPolicy
-	var banp *v1alpha12.BaselineAdminNetworkPolicy
-	var neterr, anperr, banperr error
-
-	var netPolsCn = make(chan apiResponse[[]networkingv1.NetworkPolicy], 1)
-	go func(ch chan apiResponse[[]networkingv1.NetworkPolicy]) {
-		ch <- readNetworkPolicies(ctx, kubeClient, namespaces)
-	}(netPolsCn)
-
-	var anpsCh = make(chan apiResponse[[]v1alpha12.AdminNetworkPolicy], 1)
-	go func(ch chan apiResponse[[]v1alpha12.AdminNetworkPolicy]) {
-		ch <- readAdminNetworkPolicies(ctx, kubeClient)
-	}(anpsCh)
-
-	var banpsCh = make(chan apiResponse[v1alpha12.BaselineAdminNetworkPolicy], 1)
-	go func(ch chan apiResponse[v1alpha12.BaselineAdminNetworkPolicy]) {
-		ch <- readBaseAdminNetworkPolicies(ctx, kubeClient)
-	}(banpsCh)
-
-	for i := 0; i <= 2; i++ {
-		select {
-		case result := <-netPolsCn:
-			r, err := result.response()
-			netpols = refList(r)
-			neterr = err
-		case result := <-anpsCh:
-			r, err := result.response()
-			anps = refList(r)
-			anperr = err
-		case result := <-banpsCh:
-			r, err := result.response()
-			if err == nil {
-				banp = &r
-			}
-			banperr = err
-		}
-	}
-
-	return netpols, anps, banp, neterr, anperr, banperr
+	return netPolicies, adminNetworkPolicies, baselineAdminNetworkPolicy, nil
 }
 
 func refList[T any](refs []T) []*T {
 	return slice.Map(builtin.Reference[T], refs)
 }
 
-type apiResponse[T []networkingv1.NetworkPolicy | []v1alpha12.AdminNetworkPolicy | v1alpha12.BaselineAdminNetworkPolicy] struct {
-	data  T
-	error error
-}
+func ReadNetworkPoliciesFromKube(ctx context.Context, kubeClient IKubernetes, namespaces []string, includeANPs, includeBANPs bool) ([]*networkingv1.NetworkPolicy, []*v1alpha12.AdminNetworkPolicy, *v1alpha12.BaselineAdminNetworkPolicy, error, error, error) {
+	var netpols []networkingv1.NetworkPolicy
+	var anps []v1alpha12.AdminNetworkPolicy
+	var banp *v1alpha12.BaselineAdminNetworkPolicy
+	var netErr, anpErr, banpErr error
 
-func (t apiResponse[T]) response() (T, error) {
-	return t.data, t.error
-}
+	var wg sync.WaitGroup
+	wg.Add(3)
 
-func readNetworkPolicies(ctx context.Context, kubeClient IKubernetes, namespaces []string) apiResponse[[]networkingv1.NetworkPolicy] {
-	result, err := GetNetworkPoliciesInNamespaces(ctx, kubeClient, namespaces)
-	if err != nil {
-		return apiResponse[[]networkingv1.NetworkPolicy]{nil, err}
-	}
-	return apiResponse[[]networkingv1.NetworkPolicy]{result, err}
-}
+	go func(w *sync.WaitGroup) {
+		defer w.Done()
+		netpols, netErr = GetNetworkPoliciesInNamespaces(ctx, kubeClient, namespaces)
+		return
+	}(&wg)
 
-func readAdminNetworkPolicies(ctx context.Context, kubeClient IKubernetes) apiResponse[[]v1alpha12.AdminNetworkPolicy] {
-	result, err := GetAdminNetworkPoliciesInNamespaces(ctx, kubeClient)
-	if err != nil {
-		return apiResponse[[]v1alpha12.AdminNetworkPolicy]{nil, err}
-	}
-	return apiResponse[[]v1alpha12.AdminNetworkPolicy]{result, err}
-}
+	go func(w *sync.WaitGroup) {
+		defer w.Done()
+		if !includeANPs {
+			return
+		}
+		anps, anpErr = GetAdminNetworkPoliciesInNamespaces(ctx, kubeClient)
+		return
+	}(&wg)
 
-func readBaseAdminNetworkPolicies(ctx context.Context, kubeClient IKubernetes) apiResponse[v1alpha12.BaselineAdminNetworkPolicy] {
-	result, err := GetBaseAdminNetworkPoliciesInNamespaces(ctx, kubeClient)
-	if err != nil {
-		return apiResponse[v1alpha12.BaselineAdminNetworkPolicy]{result, err}
-	}
-	return apiResponse[v1alpha12.BaselineAdminNetworkPolicy]{result, err}
+	go func(w *sync.WaitGroup) {
+		defer w.Done()
+		if !includeBANPs {
+			return
+		}
+		result, err := GetBaseAdminNetworkPoliciesInNamespaces(ctx, kubeClient)
+		if err != nil {
+			banpErr = err
+		}
+		if len(result) > 0 {
+			banp = &result[0]
+		}
+
+		return
+	}(&wg)
+
+	wg.Wait()
+
+	return refList(netpols), refList(anps), banp, netErr, anpErr, banpErr
 }
