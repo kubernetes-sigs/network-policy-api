@@ -33,6 +33,22 @@ func SimplifyV1(matchers []PeerMatcher) []PeerMatcher {
 		}
 	}
 
+	if len(v1Matchers) == 0 {
+		return nil
+	}
+
+	onlyNoMatchers := true
+	for _, matcher := range v1Matchers {
+		if _, ok := matcher.(*NoMatcher); !ok {
+			onlyNoMatchers = false
+			break
+		}
+	}
+
+	if onlyNoMatchers {
+		return []PeerMatcher{&NoMatcher{}}
+	}
+
 	matchesAll := false
 	var portsForAllPeersMatchers []*PortsForAllPeersMatcher
 	var ips []*IPPeerMatcher
@@ -47,6 +63,8 @@ func SimplifyV1(matchers []PeerMatcher) []PeerMatcher {
 			ips = append(ips, a)
 		case *PodPeerMatcher:
 			pods = append(pods, a)
+		case *NoMatcher:
+			// nothing to do
 		default:
 			panic(errors.Errorf("invalid matcher type %T", matcher))
 		}
