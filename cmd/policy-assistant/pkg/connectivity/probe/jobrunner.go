@@ -76,6 +76,11 @@ func (s *SimulatedJobRunner) RunJobs(jobs []*Job) []*JobResult {
 }
 
 func (s *SimulatedJobRunner) RunJob(job *Job) *JobResult {
+	if job.FromKey == job.ToKey {
+		connUndefined := ConnectivityUndefined
+		return &JobResult{Job: job, Ingress: &connUndefined, Egress: &connUndefined, Combined: ConnectivityUndefined}
+	}
+
 	allowed := s.Policies.IsTrafficAllowed(job.Traffic())
 	// TODO could also keep the whole `allowed` struct somewhere
 
