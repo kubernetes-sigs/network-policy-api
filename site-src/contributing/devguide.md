@@ -51,7 +51,7 @@ run static analysis against the code and generate Kubernetes CRDs. You can kick
 off an overall build from the top-level makefile:
 
 ```shell
-make generate
+make install
 ```
 
 ### Submitting a Pull Request
@@ -92,6 +92,12 @@ manually preview docs changes locally, you can install mkdocs and run:
 ```
 
 You might want to install [Python Vitural environment](https://docs.python.org/3/library/venv.html) to avoid conflicts.
+
+Install the required plugins.
+
+```shell
+pip install mkdocs mkdocs-material mkdocs-awesome-pages-plugin mkdocs-macros-plugin
+```
 
 Once the build is complete, there would be a new folder called `site` generated, and you can deploy the website locally at port 8000 and run:
 
