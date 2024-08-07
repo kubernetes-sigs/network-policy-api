@@ -191,21 +191,21 @@ func (d DirectionResult) Resolve() (*Effect, *Effect, *Effect) {
 	}
 
 	// 2. v1 NetPol rules
-	haveV1NetPols := false
+	v1NetPols := make([]string, 0)
 	for _, e := range d {
 		if e.PolicyKind != NetworkPolicyV1 {
 			continue
 		}
 
-		haveV1NetPols = true
+		v1NetPols = append(v1NetPols, e.RuleName)
 		if e.Verdict == Allow {
 			eCopy := e
 			return anpEffect, &eCopy, nil
 		}
 	}
 
-	if haveV1NetPols {
-		v1NoMatch := NewV1Effect(false)
+	if len(v1NetPols) > 0 {
+		v1NoMatch := NewV1Effect(false, v1NetPols)
 		return anpEffect, &v1NoMatch, nil
 	}
 
@@ -301,8 +301,14 @@ func (p *Policy) IsIngressOrEgressAllowed(traffic *Traffic, isIngress bool) Dire
 	effects := make([]Effect, 0)
 	for _, target := range matchingTargets {
 		for _, m := range target.Peers {
+			// assume m is an NPv1 rule to start
+			names := make([]string, len(target.SourceRules))
+			for i, r := range target.SourceRules {
+				names[i] = string(r)
+			}
+			e := NewV1Effect(true, names)
+
 			// check if m is a PeerMatcherAdmin
-			e := NewV1Effect(true)
 			matcherAdmin, ok := m.(*PeerMatcherAdmin)
 			if ok {
 				e = matcherAdmin.effectFromMatch
