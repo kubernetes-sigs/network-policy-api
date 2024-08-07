@@ -135,7 +135,7 @@ func RunSimplifierTests() {
 					Priority:   5,
 					Verdict:    Deny,
 				},
-				Name: "anp",
+				RuleName: "anp",
 			}
 			banpAllowAll := &PeerMatcherAdmin{
 				PodPeerMatcher: &PodPeerMatcher{
@@ -147,7 +147,7 @@ func RunSimplifierTests() {
 					PolicyKind: BaselineAdminNetworkPolicy,
 					Verdict:    Allow,
 				},
-				Name: "banp",
+				RuleName: "banp",
 			}
 			Expect(Simplify([]PeerMatcher{all, allOnTCP80, ip, allPodsAllPorts, banpAllowAll, allPodsTCP103, anpDenyAll})).To(Equal([]PeerMatcher{banpAllowAll, anpDenyAll, all}))
 
