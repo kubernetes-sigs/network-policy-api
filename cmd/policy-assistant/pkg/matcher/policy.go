@@ -262,6 +262,13 @@ func (ar *AllowedResult) IsAllowed() bool {
 	return ar.Ingress.IsAllowed() && ar.Egress.IsAllowed()
 }
 
+func (ar *AllowedResult) Verdict() string {
+	if ar.IsAllowed() {
+		return "Allowed"
+	}
+	return "Denied"
+}
+
 // IsTrafficAllowed returns:
 // - whether the traffic is allowed
 // - which rules allowed the traffic

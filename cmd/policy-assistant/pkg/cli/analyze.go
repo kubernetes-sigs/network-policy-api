@@ -3,11 +3,11 @@ package cli
 import (
 	"fmt"
 	"strings"
-
 	"time"
 
 	"github.com/mattfenwick/cyclonus/examples"
 	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
+	"github.com/olekukonko/tablewriter"
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
@@ -32,7 +32,8 @@ const (
 	ExplainMode = "explain"
 	// QueryTrafficMode = "query-traffic"
 	// QueryTargetMode  = "query-target"
-	ProbeMode = "probe"
+	ProbeMode              = "probe"
+	VerdictWalkthroughMode = "walkthrough"
 )
 
 // should we remove commented out modes or implement them later?
@@ -43,6 +44,7 @@ var AllModes = []string{
 	// QueryTrafficMode,
 	// QueryTargetMode,
 	ProbeMode,
+	VerdictWalkthroughMode,
 }
 
 const DefaultTimeout = 3 * time.Minute
@@ -169,6 +171,9 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 		case ProbeMode:
 			fmt.Println("probe (simulated connectivity):")
 			ProbeSyntheticConnectivity(policies, args.ProbePath, kubePods, kubeNamespaces)
+		case VerdictWalkthroughMode:
+			fmt.Println("verdict walkthrough:")
+			VerdictWalkthrough(policies)
 		default:
 			panic(errors.Errorf("unrecognized mode %s", mode))
 		}
@@ -289,4 +294,74 @@ func shouldIncludeANPandBANP(client *kubernetes.Clientset) (bool, bool) {
 	}
 
 	return includeANP, includeBANP
+}
+
+func VerdictWalkthrough(policies *matcher.Policy) {
+	tableString := &strings.Builder{}
+	table := tablewriter.NewWriter(tableString)
+	table.SetAutoWrapText(false)
+	table.SetRowLine(true)
+	table.SetAutoMergeCells(true)
+
+	table.SetHeader([]string{"Traffic", "Verdict", "Ingress Walkthrough", "Egress Walkthrough"})
+
+	// FIXME: use pod resources from CLI arguments or JSON
+	podA := &matcher.TrafficPeer{
+		Internal: &matcher.InternalPeer{
+			PodLabels:       map[string]string{"pod": "a"},
+			NamespaceLabels: map[string]string{"kubernetes.io/metadata.name": "demo"},
+			Namespace:       "demo",
+		},
+		IP: "10.0.0.4",
+	}
+	podB := &matcher.TrafficPeer{
+		Internal: &matcher.InternalPeer{
+			PodLabels:       map[string]string{"pod": "b"},
+			NamespaceLabels: map[string]string{"kubernetes.io/metadata.name": "demo"},
+			Namespace:       "demo",
+		},
+		IP: "10.0.0.5",
+	}
+	allTraffic := []*matcher.Traffic{
+		{
+			Source:       podA,
+			Destination:  podB,
+			ResolvedPort: 80,
+			Protocol:     v1.ProtocolTCP,
+		},
+		{
+			Source:       podA,
+			Destination:  podB,
+			ResolvedPort: 81,
+			Protocol:     v1.ProtocolTCP,
+		},
+		{
+			Source:       podB,
+			Destination:  podA,
+			ResolvedPort: 80,
+			Protocol:     v1.ProtocolTCP,
+		},
+		{
+			Source:       podB,
+			Destination:  podA,
+			ResolvedPort: 81,
+			Protocol:     v1.ProtocolTCP,
+		},
+	}
+
+	for _, traffic := range allTraffic {
+		trafficResult := policies.IsTrafficAllowed(traffic)
+		ingressFlow := trafficResult.Ingress.Flow()
+		egressFlow := trafficResult.Egress.Flow()
+		if ingressFlow == "" {
+			ingressFlow = "no policies targeting ingress"
+		}
+		if egressFlow == "" {
+			egressFlow = "no policies targeting egress"
+		}
+		table.Append([]string{traffic.PrettyString(), trafficResult.Verdict(), ingressFlow, egressFlow})
+	}
+
+	table.Render()
+	fmt.Println(tableString.String())
 }
