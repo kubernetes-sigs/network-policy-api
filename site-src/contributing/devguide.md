@@ -21,7 +21,7 @@ the community to be prioritized.
 
 ## Prerequisites
 
-Before you start developing with Network Gateway API, we'd recommend having the
+Before you start developing with Network Policy API, we'd recommend having the
 following prerequisites installed:
 
 * [Go](https://golang.org/doc/install): Main programing language for this project.
