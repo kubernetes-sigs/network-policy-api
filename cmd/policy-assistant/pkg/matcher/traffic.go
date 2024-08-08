@@ -58,6 +58,38 @@ func labelsToString(labels map[string]string) string {
 	return strings.Join(slice.Map(format, slice.Sort(maps.Keys(labels))), "\n")
 }
 
+func (t *Traffic) PrettyString() string {
+	if t == nil || t.Source == nil || t.Destination == nil {
+		return "<undefined>"
+	}
+
+	src := t.Source.Internal.Workload
+	if src == "" {
+		if t.Source.Internal == nil {
+			return "<undefined>"
+		}
+
+		src = fmt.Sprintf("%s/%s", t.Source.Internal.Namespace, labelsToStringSlim(t.Source.Internal.PodLabels))
+	}
+
+	dst := t.Destination.Internal.Workload
+	if dst == "" {
+		if t.Destination.Internal == nil {
+			return "<undefined>"
+		}
+
+		dst = fmt.Sprintf("%s/%s", t.Destination.Internal.Namespace, labelsToStringSlim(t.Destination.Internal.PodLabels))
+	}
+
+	return fmt.Sprintf("%s -> %s:%d (%s)", src, dst, t.ResolvedPort, t.Protocol)
+}
+
+func labelsToStringSlim(labels map[string]string) string {
+	format := func(k string) string { return fmt.Sprintf("%s=%s", k, labels[k]) }
+	list := strings.Join(slice.Map(format, slice.Sort(maps.Keys(labels))), ",")
+	return fmt.Sprintf("[%s]", list)
+}
+
 type TrafficPeer struct {
 	Internal *InternalPeer
 	// IP external to cluster
