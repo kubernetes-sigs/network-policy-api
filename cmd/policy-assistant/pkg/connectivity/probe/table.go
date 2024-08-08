@@ -47,6 +47,12 @@ func NewTableWithDefaultConnectivity(r *Resources, ingress, egress Connectivity)
 					Egress:  &egress,
 				}
 
+				if fr == to {
+					c := ConnectivityUndefined
+					jr.Ingress = &c
+					jr.Egress = &c
+				}
+
 				setCombined(jr)
 
 				k := fmt.Sprintf("%s/%d", proto, port)

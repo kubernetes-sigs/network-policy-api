@@ -28,7 +28,7 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoIngress)
 
 			Expect(ingress).ToNot(BeNil())
-			Expect(ingress.Peers).To(BeNil())
+			Expect(ingress.Peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 
 			Expect(egress).To(BeNil())
 		})
@@ -37,7 +37,7 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoEgress)
 
 			Expect(egress).ToNot(BeNil())
-			Expect(egress.Peers).To(BeNil())
+			Expect(egress.Peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 
 			Expect(ingress).To(BeNil())
 		})
@@ -46,10 +46,10 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoIngressAllowNoEgress)
 
 			Expect(egress).ToNot(BeNil())
-			Expect(egress.Peers).To(BeNil())
+			Expect(egress.Peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 
 			Expect(ingress).ToNot(BeNil())
-			Expect(ingress.Peers).To(BeNil())
+			Expect(ingress.Peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 		})
 	})
 
@@ -75,7 +75,7 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoIngress_EmptyIngress)
 
 			Expect(ingress).ToNot(BeNil())
-			Expect(ingress.Peers).To(BeNil())
+			Expect(ingress.Peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 
 			Expect(egress).To(BeNil())
 		})
@@ -84,7 +84,7 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoEgress_EmptyEgress)
 
 			Expect(egress).ToNot(BeNil())
-			Expect(egress.Peers).To(BeNil())
+			Expect(egress.Peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 
 			Expect(ingress).To(BeNil())
 		})
@@ -93,10 +93,10 @@ func RunBuilderTests() {
 			ingress, egress := BuildTarget(netpol.AllowNoIngressAllowNoEgress_EmptyEgressEmptyIngress)
 
 			Expect(egress).ToNot(BeNil())
-			Expect(egress.Peers).To(BeNil())
+			Expect(egress.Peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 
 			Expect(ingress).ToNot(BeNil())
-			Expect(ingress.Peers).To(BeNil())
+			Expect(ingress.Peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 		})
 	})
 
@@ -128,12 +128,12 @@ func RunBuilderTests() {
 	Describe("PeerMatcher from slice of ingress/egress rules", func() {
 		It("allows no ingress from an empty slice of ingress rules", func() {
 			peers := BuildIngressMatcher("abc", []networkingv1.NetworkPolicyIngressRule{})
-			Expect(peers).To(BeNil())
+			Expect(peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 		})
 
 		It("allows no egress from an empty slice of egress rules", func() {
 			peers := BuildEgressMatcher("abc", []networkingv1.NetworkPolicyEgressRule{})
-			Expect(peers).To(BeNil())
+			Expect(peers).To(Equal([]PeerMatcher{&NoMatcher{}}))
 		})
 
 		It("allows all ingress from an ingress containing a single empty rule", func() {
