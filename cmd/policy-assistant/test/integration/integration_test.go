@@ -82,9 +82,6 @@ func TestNetPolV1Connectivity(t *testing.T) {
 			defaultIngressBehavior: probe.ConnectivityAllowed,
 			defaultEgressBehavior:  probe.ConnectivityAllowed,
 			nonDefaultIngress: []flow{
-				{"x/a", "x/a", 80, v1.ProtocolTCP},
-				{"x/a", "x/a", 81, v1.ProtocolTCP},
-				{"x/a", "x/a", 81, v1.ProtocolUDP},
 				{"x/b", "x/a", 80, v1.ProtocolTCP},
 				{"x/b", "x/a", 81, v1.ProtocolTCP},
 				{"x/b", "x/a", 81, v1.ProtocolUDP},
@@ -295,8 +292,6 @@ func TestANPConnectivity(t *testing.T) {
 			defaultIngressBehavior: probe.ConnectivityAllowed,
 			defaultEgressBehavior:  probe.ConnectivityAllowed,
 			nonDefaultIngress: []flow{
-				{"x/a", "x/a", 80, v1.ProtocolTCP},
-				{"x/a", "x/a", 81, v1.ProtocolTCP},
 				{"x/b", "x/a", 80, v1.ProtocolTCP},
 				{"x/b", "x/a", 81, v1.ProtocolTCP},
 				{"x/c", "x/a", 80, v1.ProtocolTCP},
@@ -866,7 +861,6 @@ func TestBANPConnectivity(t *testing.T) {
 				{"y/b", "x/a", 80, v1.ProtocolTCP},
 				{"y/b", "x/b", 80, v1.ProtocolTCP},
 				{"y/b", "y/a", 80, v1.ProtocolTCP},
-				{"y/b", "y/b", 80, v1.ProtocolTCP},
 			},
 			args: args{
 				resources: getResources(t, []string{"x", "y"}, []string{"a", "b"}, []int{80}, []v1.Protocol{v1.ProtocolTCP}),
@@ -1189,7 +1183,6 @@ func TestANPWithBANP(t *testing.T) {
 			defaultIngressBehavior: probe.ConnectivityBlocked,
 			defaultEgressBehavior:  probe.ConnectivityAllowed,
 			nonDefaultIngress: []flow{
-				{"x/a", "x/a", 80, v1.ProtocolUDP},
 				{"x/b", "x/a", 80, v1.ProtocolUDP},
 			},
 			args: args{
@@ -1257,7 +1250,6 @@ func TestANPWithBANP(t *testing.T) {
 			defaultIngressBehavior: probe.ConnectivityAllowed,
 			defaultEgressBehavior:  probe.ConnectivityAllowed,
 			nonDefaultIngress: []flow{
-				{"x/a", "x/a", 80, v1.ProtocolUDP},
 				{"x/b", "x/a", 80, v1.ProtocolUDP},
 			},
 			args: args{
