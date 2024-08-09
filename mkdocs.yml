@@ -73,6 +73,8 @@ nav:
         # - Declined:
   - Blog:
     - blog/index.md
+  - Contributing:
+    - Developer Guide: contributing/devguide.md
 
 plugins:
   - blog:
