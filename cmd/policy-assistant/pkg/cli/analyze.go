@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/mattfenwick/cyclonus/examples"
 	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
+	"golang.org/x/net/context"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
 	"strings"
+	"time"
 
 	"github.com/mattfenwick/collections/pkg/json"
 	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
@@ -38,6 +40,8 @@ var AllModes = []string{
 	ProbeMode,
 }
 
+const DefaultTimeout = 180
+
 type AnalyzeArgs struct {
 	AllNamespaces      bool
 	Namespaces         []string
@@ -56,6 +60,8 @@ type AnalyzeArgs struct {
 
 	// synthetic probe
 	ProbePath string
+
+	Timeout int
 }
 
 func SetupAnalyzeCommand() *cobra.Command {
@@ -83,6 +89,8 @@ func SetupAnalyzeCommand() *cobra.Command {
 	command.Flags().StringVar(&args.TrafficPath, "traffic-path", "", "path to json traffic file, containing of a list of traffic objects")
 	command.Flags().StringVar(&args.ProbePath, "probe-path", "", "path to json model file for synthetic probe")
 
+	command.Flags().IntVar(&args.Timeout, "timeout", DefaultTimeout, "timeout time in seconds")
+
 	return command
 }
 
@@ -90,9 +98,10 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 	// 1. read policies from kube
 	var kubePolicies []*networkingv1.NetworkPolicy
 	var kubeANPs []*v1alpha1.AdminNetworkPolicy
-	var kubeBANPs *v1alpha1.BaselineAdminNetworkPolicy
+	var kubeBANP *v1alpha1.BaselineAdminNetworkPolicy
 	var kubePods []v1.Pod
 	var kubeNamespaces []v1.Namespace
+	var netpolErr, anpErr, banpErr error
 	if args.AllNamespaces || len(args.Namespaces) > 0 {
 		kubeClient, err := kube.NewKubernetesForContext(args.Context)
 		utils.DoOrDie(err)
@@ -104,31 +113,40 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 			kubeNamespaces = nsList.Items
 			namespaces = []string{v1.NamespaceAll}
 		}
-		kubePolicies, err = kube.ReadNetworkPoliciesFromKube(kubeClient, namespaces)
-		if err != nil {
+
+		ctx, cancel := context.WithTimeout(context.TODO(), time.Duration(args.Timeout)*time.Second)
+		defer cancel()
+
+		kubePolicies, kubeANPs, kubeBANP, netpolErr, anpErr, banpErr = kube.ReadNetworkPoliciesFromKube(ctx, kubeClient, namespaces)
+
+		if netpolErr != nil {
 			logrus.Errorf("unable to read network policies from kube, ns '%s': %+v", namespaces, err)
 		}
-		kubePods, err = kube.GetPodsInNamespaces(kubeClient, namespaces)
-		if err != nil {
-			logrus.Errorf("unable to read pods from kube, ns '%s': %+v", namespaces, err)
+		if anpErr != nil {
+			logrus.Errorf("Unable to fetch admin network policies: %s \n", anpErr)
+		}
+		if banpErr != nil {
+			logrus.Errorf("Unable to fetch base admin network policies: %s \n", banpErr)
 		}
 	}
 	// 2. read policies from file
 	if args.PolicyPath != "" {
-		policiesFromPath, err := kube.ReadNetworkPoliciesFromPath(args.PolicyPath)
+		policiesFromPath, anpsFromPath, banpFromPath, err := kube.ReadNetworkPoliciesFromPath(args.PolicyPath)
 		utils.DoOrDie(err)
 		kubePolicies = append(kubePolicies, policiesFromPath...)
+		kubeANPs = append(kubeANPs, anpsFromPath...)
+		kubeBANP = banpFromPath
 	}
 	// 3. read example policies
 	if args.UseExamplePolicies {
 		kubePolicies = append(kubePolicies, netpol.AllExamples...)
 
-		kubeANPs = examples.CoreGressRulesCombinedANB
-		kubeBANPs = examples.CoreGressRulesCombinedBANB
+		kubeANPs = append(kubeANPs, examples.CoreGressRulesCombinedANB...)
+		kubeBANP = kubeBANP
 	}
 
 	logrus.Debugf("parsed policies:\n%s", json.MustMarshalToString(kubePolicies))
-	policies := matcher.BuildV1AndV2NetPols(args.SimplifyPolicies, kubePolicies, kubeANPs, kubeBANPs)
+	policies := matcher.BuildV1AndV2NetPols(args.SimplifyPolicies, kubePolicies, kubeANPs, kubeBANP)
 
 	for _, mode := range args.Modes {
 		switch mode {

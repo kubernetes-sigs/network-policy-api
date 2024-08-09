@@ -1,0 +1,39 @@
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: AdminNetworkPolicyList
+Items:
+  - apiVersion: policy.networking.k8s.io/v1alpha1
+    kind: AdminNetworkPolicy
+    metadata:
+      name: egress-sctp
+    spec:
+      priority: 3
+      subject:
+        namespaces:
+          matchLabels:
+            kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
+      egress:
+        - name: "allow-to-gryffindor-everything"
+          action: "Allow"
+          to:
+            - namespaces:
+                namespaceSelector:
+                  matchLabels:
+                    kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+  - apiVersion: policy.networking.k8s.io/v1alpha1
+    kind: AdminNetworkPolicy
+    metadata:
+      name: gress-rules
+    spec:
+      priority: 15
+      subject:
+        namespaces:
+          matchLabels:
+            kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+      egress:
+        - name: "allow-to-ravenclaw-everything"
+          action: "Allow"
+          to:
+            - namespaces:
+                namespaceSelector:
+                  matchLabels:
+                    kubernetes.io/metadata.name: network-policy-conformance-ravenclaw

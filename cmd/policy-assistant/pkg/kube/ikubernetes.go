@@ -1,6 +1,7 @@
 package kube
 
 import (
+	"context"
 	"fmt"
 	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
@@ -8,6 +9,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math/rand"
+	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
 type IKubernetes interface {
@@ -18,7 +20,7 @@ type IKubernetes interface {
 	GetAllNamespaces() (*v1.NamespaceList, error)
 
 	CreateNetworkPolicy(kubePolicy *networkingv1.NetworkPolicy) (*networkingv1.NetworkPolicy, error)
-	GetNetworkPoliciesInNamespace(namespace string) ([]networkingv1.NetworkPolicy, error)
+	GetNetworkPoliciesInNamespace(ctx context.Context, namespace string) ([]networkingv1.NetworkPolicy, error)
 	UpdateNetworkPolicy(kubePolicy *networkingv1.NetworkPolicy) (*networkingv1.NetworkPolicy, error)
 	DeleteNetworkPolicy(namespace string, name string) error
 	DeleteAllNetworkPoliciesInNamespace(namespace string) error
@@ -27,6 +29,16 @@ type IKubernetes interface {
 	GetService(namespace string, name string) (*v1.Service, error)
 	DeleteService(namespace string, name string) error
 	GetServicesInNamespace(namespace string) ([]v1.Service, error)
+
+	GetAdminNetworkPolicies(ctx context.Context) ([]v1alpha1.AdminNetworkPolicy, error)
+	CreateAdminNetworkPolicy(ctx context.Context, policy *v1alpha1.AdminNetworkPolicy) (*v1alpha1.AdminNetworkPolicy, error)
+	UpdateAdminNetworkPolicy(ctx context.Context, policy *v1alpha1.AdminNetworkPolicy) (*v1alpha1.AdminNetworkPolicy, error)
+	DeleteAdminNetworkPolicy(ctx context.Context, name string) error
+
+	GetBaseAdminNetworkPolicies(ctx context.Context) (v1alpha1.BaselineAdminNetworkPolicy, error)
+	CreateBaselineAdminNetworkPolicy(ctx context.Context, policy *v1alpha1.BaselineAdminNetworkPolicy) (*v1alpha1.BaselineAdminNetworkPolicy, error)
+	UpdateBaselineAdminNetworkPolicy(ctx context.Context, policy *v1alpha1.BaselineAdminNetworkPolicy) (*v1alpha1.BaselineAdminNetworkPolicy, error)
+	DeleteBaselineAdminNetworkPolicy(ctx context.Context, name string) error
 
 	CreatePod(kubePod *v1.Pod) (*v1.Pod, error)
 	GetPod(namespace string, pod string) (*v1.Pod, error)
@@ -37,10 +49,10 @@ type IKubernetes interface {
 	ExecuteRemoteCommand(namespace string, pod string, container string, command []string) (string, string, error, error)
 }
 
-func GetNetworkPoliciesInNamespaces(kubernetes IKubernetes, namespaces []string) ([]networkingv1.NetworkPolicy, error) {
+func GetNetworkPoliciesInNamespaces(ctx context.Context, kubernetes IKubernetes, namespaces []string) ([]networkingv1.NetworkPolicy, error) {
 	var allNetpols []networkingv1.NetworkPolicy
 	for _, ns := range namespaces {
-		netpols, err := kubernetes.GetNetworkPoliciesInNamespace(ns)
+		netpols, err := kubernetes.GetNetworkPoliciesInNamespace(ctx, ns)
 		if err != nil {
 			return nil, err
 		}
@@ -83,6 +95,14 @@ func GetServicesInNamespaces(kubernetes IKubernetes, namespaces []string) ([]v1.
 	return allServices, nil
 }
 
+func GetAdminNetworkPoliciesInNamespaces(ctx context.Context, kubernetes IKubernetes) ([]v1alpha1.AdminNetworkPolicy, error) {
+	return kubernetes.GetAdminNetworkPolicies(ctx)
+}
+
+func GetBaseAdminNetworkPoliciesInNamespaces(ctx context.Context, kubernetes IKubernetes) (v1alpha1.BaselineAdminNetworkPolicy, error) {
+	return kubernetes.GetBaseAdminNetworkPolicies(ctx)
+}
+
 type MockNamespace struct {
 	NamespaceObject *v1.Namespace
 	Netpols         map[string]*networkingv1.NetworkPolicy
@@ -91,9 +111,12 @@ type MockNamespace struct {
 }
 
 type MockKubernetes struct {
-	Namespaces map[string]*MockNamespace
-	passRate   float64
-	podID      int
+	AdminNetworkPolicies func() ([]v1alpha1.AdminNetworkPolicy, error)
+	BaseNetworkPolicies  func() (v1alpha1.BaselineAdminNetworkPolicy, error)
+	NetworkPolicies      func() ([]networkingv1.NetworkPolicy, error)
+	Namespaces           map[string]*MockNamespace
+	passRate             float64
+	podID                int
 }
 
 func NewMockKubernetes(passRate float64) *MockKubernetes {
@@ -191,7 +214,17 @@ func (m *MockKubernetes) DeleteNetworkPolicy(ns string, name string) error {
 	return nil
 }
 
-func (m *MockKubernetes) GetNetworkPoliciesInNamespace(namespace string) ([]networkingv1.NetworkPolicy, error) {
+func (m *MockKubernetes) GetNetworkPoliciesInNamespace(ctx context.Context, namespace string) ([]networkingv1.NetworkPolicy, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		res, err := m.NetworkPolicies()
+		if res != nil || err != nil {
+			return res, err
+		}
+	}
+
 	nsObject, err := m.getNamespaceObject(namespace)
 	if err != nil {
 		return nil, err
@@ -362,4 +395,49 @@ func (m *MockKubernetes) ExecuteRemoteCommand(namespace string, pod string, cont
 		return "", "", errors.Errorf("mock call randomly failed"), nil
 	}
 	return "", "", nil, nil
+}
+
+func (m *MockKubernetes) GetAdminNetworkPolicies(ctx context.Context) ([]v1alpha1.AdminNetworkPolicy, error) {
+	select {
+	default:
+		return m.AdminNetworkPolicies()
+	case <-ctx.Done():
+		return []v1alpha1.AdminNetworkPolicy{}, ctx.Err()
+	}
+
+}
+
+func (k *MockKubernetes) CreateAdminNetworkPolicy(ctx context.Context, policy *v1alpha1.AdminNetworkPolicy) (*v1alpha1.AdminNetworkPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (k *MockKubernetes) UpdateAdminNetworkPolicy(ctx context.Context, policy *v1alpha1.AdminNetworkPolicy) (*v1alpha1.AdminNetworkPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (k *MockKubernetes) DeleteAdminNetworkPolicy(ctx context.Context, name string) error {
+	//TODO: implement
+	return ErrNotImplemented
+}
+
+func (m *MockKubernetes) GetBaseAdminNetworkPolicies(ctx context.Context) (v1alpha1.BaselineAdminNetworkPolicy, error) {
+	select {
+	default:
+		return m.BaseNetworkPolicies()
+	case <-ctx.Done():
+		return v1alpha1.BaselineAdminNetworkPolicy{}, ctx.Err()
+	}
+}
+
+func (k *MockKubernetes) CreateBaselineAdminNetworkPolicy(ctx context.Context, policy *v1alpha1.BaselineAdminNetworkPolicy) (*v1alpha1.BaselineAdminNetworkPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (k *MockKubernetes) UpdateBaselineAdminNetworkPolicy(ctx context.Context, policy *v1alpha1.BaselineAdminNetworkPolicy) (*v1alpha1.BaselineAdminNetworkPolicy, error) {
+	return nil, ErrNotImplemented
+}
+
+func (k *MockKubernetes) DeleteBaselineAdminNetworkPolicy(ctx context.Context, name string) error {
+	//TODO: implement
+	return ErrNotImplemented
 }

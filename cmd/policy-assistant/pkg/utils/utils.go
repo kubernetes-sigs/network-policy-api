@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-
 	"github.com/mattfenwick/collections/pkg/file"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
