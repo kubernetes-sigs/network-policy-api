@@ -45,15 +45,10 @@ fi
 
 export GOMODCACHE GO111MODULE GOFLAGS GOPATH
 
-# Even when modules are enabled, the code-generator tools always write to
-# a traditional GOPATH directory, so fake on up to point to the current
-# workspace.
-mkdir -p "$GOPATH/src/sigs.k8s.io"
-ln -sf "${SCRIPT_ROOT}" "$GOPATH/src/sigs.k8s.io/network-policy-api"
-
+readonly API_VERSION=v1alpha1
 readonly OUTPUT_PKG=sigs.k8s.io/network-policy-api/pkg/client
-readonly APIS_PKG=sigs.k8s.io/network-policy-api
-readonly API_DIR=${APIS_PKG}/apis/v1alpha1
+readonly OUTPUT_DIR=${SCRIPT_ROOT}/pkg/client
+readonly API_DIR=${SCRIPT_ROOT}/apis/${API_VERSION}
 readonly CLIENTSET_NAME=versioned
 readonly CLIENTSET_PKG_NAME=clientset
 readonly APPLYCONFIG_PKG_NAME=applyconfiguration
@@ -65,8 +60,9 @@ go run ./pkg/generator
 
 echo "Generating applyconfig at ${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}"
 go run k8s.io/code-generator/cmd/applyconfiguration-gen \
---input-dirs "${API_DIR}" \
---output-package "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
+"${API_DIR}" \
+--output-pkg "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
+--output-dir "${OUTPUT_DIR}/${APPLYCONFIG_PKG_NAME}" \
 ${COMMON_FLAGS}
 
 echo "Generating clientset at ${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}"
@@ -74,32 +70,33 @@ go run k8s.io/code-generator/cmd/client-gen \
 --clientset-name "${CLIENTSET_NAME}" \
 --input-base "" \
 --input "${API_DIR}" \
---output-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}" \
+--output-dir "${OUTPUT_DIR}/${CLIENTSET_PKG_NAME}" \
+--output-pkg "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}" \
 --apply-configuration-package "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
 ${COMMON_FLAGS}
 
 echo "Generating listers at ${OUTPUT_PKG}/listers"
 go run k8s.io/code-generator/cmd/lister-gen \
---input-dirs "${API_DIR}" \
---output-package "${OUTPUT_PKG}/listers" \
+"${API_DIR}" \
+--output-dir "${OUTPUT_DIR}/listers" \
+--output-pkg "${OUTPUT_PKG}/listers" \
 ${COMMON_FLAGS}
 
 echo "Generating informers at ${OUTPUT_PKG}/informers"
 go run k8s.io/code-generator/cmd/informer-gen \
---input-dirs "${API_DIR}" \
 --versioned-clientset-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}/${CLIENTSET_NAME}" \
---listers-package "${OUTPUT_PKG}/listers" \
---output-package "${OUTPUT_PKG}/informers" \
+--listers-package "${OUTPUT_DIR}/listers" \
+--output-dir "${OUTPUT_DIR}/informers" \
+--output-pkg "${OUTPUT_PKG}/informers" \
 ${COMMON_FLAGS}
 
-VERSION=v1alpha1
-echo "Generating ${VERSION} register at ${APIS_PKG}/apis/${VERSION}"
+echo "Generating ${API_VERSION} register at ${API_DIR}"
 go run k8s.io/code-generator/cmd/register-gen \
---input-dirs "${APIS_PKG}/apis/${VERSION}" \
---output-package "${APIS_PKG}/apis/${VERSION}" \
+"${API_DIR}" \
+--output-file "zz_generated.register.go" \
 ${COMMON_FLAGS}
 
-echo "Generating ${VERSION} deepcopy at ${APIS_PKG}/apis/${VERSION}"
+echo "Generating ${API_VERSION} deepcopy at ${API_DIR}"
 go run sigs.k8s.io/controller-tools/cmd/controller-gen \
 object:headerFile="${SCRIPT_ROOT}/hack/boilerplate.generatego.txt" \
-paths="${APIS_PKG}/apis/${VERSION}"
+paths="${API_DIR}"

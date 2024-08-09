@@ -67,7 +67,7 @@ func TestConformanceProfiles(t *testing.T) {
 		t.Fatalf("error when creating Kubernetes ClientSet: %v", err)
 	}
 
-	v1alpha1.AddToScheme(c.Scheme())
+	v1alpha1.Install(c.Scheme())
 
 	// standard conformance flags
 	supportedFeatures = suite.ParseSupportedFeatures(*flags.SupportedFeatures)
