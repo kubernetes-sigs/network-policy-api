@@ -42,7 +42,7 @@ var AllModes = []string{
 	ProbeMode,
 }
 
-const DefaultTimeout = 180
+const DefaultTimeout = 3 * time.Minute
 
 type AnalyzeArgs struct {
 	AllNamespaces      bool
@@ -63,7 +63,7 @@ type AnalyzeArgs struct {
 	// synthetic probe
 	ProbePath string
 
-	Timeout int
+	Timeout time.Duration
 }
 
 func SetupAnalyzeCommand() *cobra.Command {
@@ -90,8 +90,7 @@ func SetupAnalyzeCommand() *cobra.Command {
 	command.Flags().StringVar(&args.TargetPodPath, "target-pod-path", "", "path to json target pod file -- json array of dicts")
 	command.Flags().StringVar(&args.TrafficPath, "traffic-path", "", "path to json traffic file, containing of a list of traffic objects")
 	command.Flags().StringVar(&args.ProbePath, "probe-path", "", "path to json model file for synthetic probe")
-
-	command.Flags().IntVar(&args.Timeout, "timeout", DefaultTimeout, "timeout time in seconds")
+	command.Flags().DurationVar(&args.Timeout, "kube-client-timeout", DefaultTimeout, "kube client timeout")
 
 	return command
 }
@@ -118,7 +117,7 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 
 		includeANPS, includeBANPSs := shouldIncludeANPandBANP(kubeClient.ClientSet)
 
-		ctx, cancel := context.WithTimeout(context.TODO(), time.Duration(args.Timeout)*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), args.Timeout)
 		defer cancel()
 
 		kubePolicies, kubeANPs, kubeBANP, netpolErr, anpErr, banpErr = kube.ReadNetworkPoliciesFromKube(ctx, kubeClient, namespaces, includeANPS, includeBANPSs)
@@ -349,7 +348,7 @@ func shouldIncludeANPandBANP(client *kubernetes.Clientset) (bool, bool) {
 			case "BaselineAdminNetworkPolicy":
 				includeBANP = true
 			default:
-				panic(fmt.Sprintf("unexpected resource kind %s", res.Kind))
+				continue
 			}
 		}
 	}

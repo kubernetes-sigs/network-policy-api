@@ -12,7 +12,7 @@ import (
 func TestReadNetworkPoliciesFromKube(t *testing.T) {
 	scenarios := map[string]struct {
 		AdminNetworkPolicies         []v1alpha12.AdminNetworkPolicy
-		BaselineAdminNetworkPolicies []v1alpha12.BaselineAdminNetworkPolicy
+		BaselineAdminNetworkPolicies *v1alpha12.BaselineAdminNetworkPolicy
 		NetworkPolicies              []v1.NetworkPolicy
 
 		expectedNetErr  error
@@ -35,10 +35,8 @@ func TestReadNetworkPoliciesFromKube(t *testing.T) {
 			expectedAnpErr: context.DeadlineExceeded,
 		},
 		"return base admin network policies": {
-			BaselineAdminNetworkPolicies: []v1alpha12.BaselineAdminNetworkPolicy{
-				{
-					ObjectMeta: metav1.ObjectMeta{Name: "base-admin-network-policy"},
-				},
+			BaselineAdminNetworkPolicies: &v1alpha12.BaselineAdminNetworkPolicy{
+				ObjectMeta: metav1.ObjectMeta{Name: "base-admin-network-policy"},
 			},
 		},
 		"parse error on network policies retrieval": {
@@ -61,7 +59,7 @@ func TestReadNetworkPoliciesFromKube(t *testing.T) {
 			k := &MockKubernetes{
 				AdminNetworkPolicies:        scenario.AdminNetworkPolicies,
 				AdminNetworkPolicyError:     scenario.expectedAnpErr,
-				BaseNetworkPolicies:         scenario.BaselineAdminNetworkPolicies,
+				BaselineNetworkPolicy:       scenario.BaselineAdminNetworkPolicies,
 				BaseAdminNetworkPolicyError: scenario.expectedBanpErr,
 				Namespaces:                  map[string]*MockNamespace{},
 				NetworkPolicyError:          scenario.expectedNetErr,
@@ -99,7 +97,7 @@ func TestReadNetworkPoliciesFromKube(t *testing.T) {
 			}
 
 			if scenario.BaselineAdminNetworkPolicies != nil {
-				if banp.Name != scenario.BaselineAdminNetworkPolicies[0].Name {
+				if banp.Name != scenario.BaselineAdminNetworkPolicies.Name {
 					t.Fatalf("Unexpected BANP: %v, expected %v", banp.Name, banp.Name)
 				}
 			}

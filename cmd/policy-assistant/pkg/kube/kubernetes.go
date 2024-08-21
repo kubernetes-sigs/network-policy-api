@@ -132,12 +132,16 @@ func (k *Kubernetes) DeleteAdminNetworkPolicy(ctx context.Context, name string) 
 	return ErrNotImplemented
 }
 
-func (k *Kubernetes) GetBaseAdminNetworkPolicies(ctx context.Context) ([]v1alpha12.BaselineAdminNetworkPolicy, error) {
-	banp, err := k.alphaClientSet.BaselineAdminNetworkPolicies().List(ctx, metav1.ListOptions{})
+func (k *Kubernetes) GetBaselineAdminNetworkPolicy(ctx context.Context) (*v1alpha12.BaselineAdminNetworkPolicy, error) {
+	banps, err := k.alphaClientSet.BaselineAdminNetworkPolicies().List(ctx, metav1.ListOptions{})
+
 	if err != nil {
 		return nil, err
 	}
-	return banp.Items, nil
+	if len(banps.Items) == 1 {
+		return &banps.Items[0], nil
+	}
+	return nil, nil
 }
 
 func (k *Kubernetes) CreateBaselineAdminNetworkPolicy(ctx context.Context, policy *v1alpha12.BaselineAdminNetworkPolicy) (*v1alpha12.BaselineAdminNetworkPolicy, error) {

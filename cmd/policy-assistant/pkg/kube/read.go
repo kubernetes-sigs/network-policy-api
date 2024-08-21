@@ -136,7 +136,7 @@ func ReadNetworkPoliciesFromKube(ctx context.Context, kubeClient IKubernetes, na
 		if !includeANPs {
 			return
 		}
-		anps, anpErr = GetAdminNetworkPoliciesInNamespaces(ctx, kubeClient)
+		anps, anpErr = GetAdminNetworkPolicies(ctx, kubeClient)
 		return
 	}(&wg)
 
@@ -145,14 +145,7 @@ func ReadNetworkPoliciesFromKube(ctx context.Context, kubeClient IKubernetes, na
 		if !includeBANPs {
 			return
 		}
-		result, err := GetBaseAdminNetworkPoliciesInNamespaces(ctx, kubeClient)
-		if err != nil {
-			banpErr = err
-		}
-		if len(result) > 0 {
-			banp = &result[0]
-		}
-
+		banp, banpErr = GetBaselineAdminNetworkPolicy(ctx, kubeClient)
 		return
 	}(&wg)
 
