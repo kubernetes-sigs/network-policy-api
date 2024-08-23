@@ -19,17 +19,17 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 	apisv1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
 // BaselineAdminNetworkPolicyEgressPeerApplyConfiguration represents an declarative configuration of the BaselineAdminNetworkPolicyEgressPeer type for use
 // with apply.
 type BaselineAdminNetworkPolicyEgressPeerApplyConfiguration struct {
-	Namespaces *v1.LabelSelector                `json:"namespaces,omitempty"`
-	Pods       *NamespacedPodApplyConfiguration `json:"pods,omitempty"`
-	Nodes      *v1.LabelSelector                `json:"nodes,omitempty"`
-	Networks   []apisv1alpha1.CIDR              `json:"networks,omitempty"`
+	Namespaces *v1.LabelSelectorApplyConfiguration `json:"namespaces,omitempty"`
+	Pods       *NamespacedPodApplyConfiguration    `json:"pods,omitempty"`
+	Nodes      *v1.LabelSelectorApplyConfiguration `json:"nodes,omitempty"`
+	Networks   []apisv1alpha1.CIDR                 `json:"networks,omitempty"`
 }
 
 // BaselineAdminNetworkPolicyEgressPeerApplyConfiguration constructs an declarative configuration of the BaselineAdminNetworkPolicyEgressPeer type for use with
@@ -41,8 +41,8 @@ func BaselineAdminNetworkPolicyEgressPeer() *BaselineAdminNetworkPolicyEgressPee
 // WithNamespaces sets the Namespaces field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Namespaces field is set to the value of the last call.
-func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithNamespaces(value v1.LabelSelector) *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
-	b.Namespaces = &value
+func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithNamespaces(value *v1.LabelSelectorApplyConfiguration) *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
+	b.Namespaces = value
 	return b
 }
 
@@ -57,8 +57,8 @@ func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithPods(value 
 // WithNodes sets the Nodes field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Nodes field is set to the value of the last call.
-func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithNodes(value v1.LabelSelector) *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
-	b.Nodes = &value
+func (b *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration) WithNodes(value *v1.LabelSelectorApplyConfiguration) *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
+	b.Nodes = value
 	return b
 }
 
