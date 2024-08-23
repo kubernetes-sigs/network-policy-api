@@ -1,6 +1,9 @@
 package matcher
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
@@ -61,11 +64,18 @@ const (
 	BaselineAdminNetworkPolicy PolicyKind = "BANP"
 )
 
-func NewV1Effect(allow bool) Effect {
-	if allow {
-		return Effect{"", NetworkPolicyV1, 0, Allow}
+func NewV1Effect(allow bool, policyNames []string) Effect {
+	// remove [NPv1] prefix if present
+	cleanNames := make([]string, len(policyNames))
+	for i, name := range policyNames {
+		cleanNames[i] = strings.Replace(name, fmt.Sprintf("[%s] ", NetworkPolicyV1), "", -1)
 	}
-	return Effect{"", NetworkPolicyV1, 0, None}
+	joinedNames := strings.Join(cleanNames, ", ")
+
+	if allow {
+		return Effect{joinedNames, NetworkPolicyV1, 0, Allow}
+	}
+	return Effect{joinedNames, NetworkPolicyV1, 0, None}
 }
 
 type Verdict string

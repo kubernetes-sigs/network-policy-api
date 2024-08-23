@@ -101,7 +101,7 @@ func (s *SliceBuilder) TargetsTableLines(targets []*Target, isIngress bool) {
 			case *IPPeerMatcher:
 				s.IPPeerMatcherTableLines(t)
 			case *PodPeerMatcher:
-				s.Append(resolveSubject(t), "NPv1:\n   Allow any peers", strings.Join(PortMatcherTableLines(t.Port, NewV1Effect(true).PolicyKind), "\n"))
+				s.Append(resolveSubject(t), "NPv1:\n   Allow any peers", strings.Join(PortMatcherTableLines(t.Port, NetworkPolicyV1), "\n"))
 			case *peerProtocolGroup:
 				s.peerProtocolGroupTableLines(t)
 			default:
