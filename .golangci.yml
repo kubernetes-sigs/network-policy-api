@@ -14,13 +14,9 @@ linters:
   - revive
   - govet
   - misspell
-  - exportloopref
+  - copyloopvar
   - unused
   disable:
-  - scopelint
-  - deadcode
-  - structcheck
-  - varcheck
   - rowserrcheck
   - sqlclosecheck
   disable-all: false
@@ -39,7 +35,7 @@ linters-settings:
     min-confidence: 0.9
   govet:
     # report about shadowed variables
-    check-shadowing: true
+    shadow: true
   misspell:
     locale: US
     ignore-words:
