@@ -155,6 +155,7 @@ type AdminNetworkPolicyIngressRule struct {
 	// Support: Core
 	//
 	// +optional
+	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
 	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
 }
@@ -207,6 +208,7 @@ type AdminNetworkPolicyEgressRule struct {
 	// Support: Core
 	//
 	// +optional
+	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
 	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
 }
