@@ -190,6 +190,7 @@ spec:
                             type: object
                         type: object
                       maxItems: 100
+                      minItems: 1
                       type: array
                     to:
                       description: |-
@@ -704,6 +705,7 @@ spec:
                             type: object
                         type: object
                       maxItems: 100
+                      minItems: 1
                       type: array
                   required:
                   - action
