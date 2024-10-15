@@ -136,6 +136,7 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 	// Support: Core
 	//
 	// +optional
+	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
 	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
 }
@@ -181,6 +182,7 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 	// This field is a list of destination ports for the outgoing egress traffic.
 	// If Ports is not set then the rule does not filter traffic via port.
 	// +optional
+	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
 	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
 }
