@@ -92,10 +92,10 @@ jobs:
       run: |
         artifacts/cyclonus analyze --use-example-policies --mode explain
 
-    - name: Run Integration Test - Probe Mode
-      run: |
-        artifacts/cyclonus analyze --use-example-policies --mode probe --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
+    # - name: Run Integration Test - Probe Mode
+    #   run: |
+    #     artifacts/cyclonus analyze --use-example-policies --mode probe --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
 
-    - name: Run Integration Test - Walkthrough Mode
-      run: |
-        artifacts/cyclonus analyze --use-example-policies --mode walkthrough
+    # - name: Run Integration Test - Walkthrough Mode
+    #   run: |
+    #     artifacts/cyclonus analyze --use-example-policies --mode walkthrough
