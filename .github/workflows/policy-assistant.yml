@@ -1,0 +1,101 @@
+name: policy-assistant
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'release*'
+    tags:
+      - 'v*'
+    paths:
+      - 'cmd/policy-assistant/**'
+      - '.github/workflows/policy-assistant.yml'
+  pull_request:
+    branches:
+      - 'main'
+      - 'release*'
+    paths:
+      - 'cmd/policy-assistant/**'
+      - '.github/workflows/policy-assistant.yml'
+  workflow_dispatch:
+
+env:
+  GO_VERSION: "1.22.0"
+
+permissions: write-all
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Run Unit Tests
+      run: |
+        cd cmd/policy-assistant/
+        go test ./...
+
+  build:
+    name: Build Cyclonus
+    runs-on: ubuntu-22.04
+    needs: unit-tests
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Build Cyclonus
+      run: |
+        cd cmd/policy-assistant/
+        make cyclonus
+
+    - name: Save Cyclonus Binary
+      run: |
+        mkdir -p artifacts
+        cp cmd/policy-assistant/cmd/cyclonus/cyclonus artifacts/
+
+    - name: Upload Cyclonus Binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: cyclonus-binary
+        path: artifacts/cyclonus
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    - name: Download Cyclonus Binary
+      uses: actions/download-artifact@v4
+      with:
+        name: cyclonus-binary
+        path: artifacts
+
+    - name: Set Cyclonus Binary Permissions
+      run: chmod u+x artifacts/cyclonus
+
+    - name: Run Integration Test - Explain Mode
+      run: |
+        artifacts/cyclonus analyze --use-example-policies --mode explain
+
+    # - name: Run Integration Test - Probe Mode
+    #   run: |
+    #     artifacts/cyclonus analyze --use-example-policies --mode probe --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
+
+    # - name: Run Integration Test - Walkthrough Mode
+    #   run: |
+    #     artifacts/cyclonus analyze --use-example-policies --mode walkthrough
