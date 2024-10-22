@@ -22,13 +22,13 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// AdminNetworkPolicyStatusApplyConfiguration represents an declarative configuration of the AdminNetworkPolicyStatus type for use
+// AdminNetworkPolicyStatusApplyConfiguration represents a declarative configuration of the AdminNetworkPolicyStatus type for use
 // with apply.
 type AdminNetworkPolicyStatusApplyConfiguration struct {
 	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
-// AdminNetworkPolicyStatusApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicyStatus type for use with
+// AdminNetworkPolicyStatusApplyConfiguration constructs a declarative configuration of the AdminNetworkPolicyStatus type for use with
 // apply.
 func AdminNetworkPolicyStatus() *AdminNetworkPolicyStatusApplyConfiguration {
 	return &AdminNetworkPolicyStatusApplyConfiguration{}

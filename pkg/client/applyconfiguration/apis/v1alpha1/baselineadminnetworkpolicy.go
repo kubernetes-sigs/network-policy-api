@@ -24,7 +24,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// BaselineAdminNetworkPolicyApplyConfiguration represents an declarative configuration of the BaselineAdminNetworkPolicy type for use
+// BaselineAdminNetworkPolicyApplyConfiguration represents a declarative configuration of the BaselineAdminNetworkPolicy type for use
 // with apply.
 type BaselineAdminNetworkPolicyApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -33,7 +33,7 @@ type BaselineAdminNetworkPolicyApplyConfiguration struct {
 	Status                           *BaselineAdminNetworkPolicyStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// BaselineAdminNetworkPolicy constructs an declarative configuration of the BaselineAdminNetworkPolicy type for use with
+// BaselineAdminNetworkPolicy constructs a declarative configuration of the BaselineAdminNetworkPolicy type for use with
 // apply.
 func BaselineAdminNetworkPolicy(name string) *BaselineAdminNetworkPolicyApplyConfiguration {
 	b := &BaselineAdminNetworkPolicyApplyConfiguration{}
@@ -215,4 +215,10 @@ func (b *BaselineAdminNetworkPolicyApplyConfiguration) WithSpec(value *BaselineA
 func (b *BaselineAdminNetworkPolicyApplyConfiguration) WithStatus(value *BaselineAdminNetworkPolicyStatusApplyConfiguration) *BaselineAdminNetworkPolicyApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *BaselineAdminNetworkPolicyApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

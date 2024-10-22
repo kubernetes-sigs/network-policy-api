@@ -22,14 +22,14 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// AdminNetworkPolicyIngressPeerApplyConfiguration represents an declarative configuration of the AdminNetworkPolicyIngressPeer type for use
+// AdminNetworkPolicyIngressPeerApplyConfiguration represents a declarative configuration of the AdminNetworkPolicyIngressPeer type for use
 // with apply.
 type AdminNetworkPolicyIngressPeerApplyConfiguration struct {
 	Namespaces *v1.LabelSelectorApplyConfiguration `json:"namespaces,omitempty"`
 	Pods       *NamespacedPodApplyConfiguration    `json:"pods,omitempty"`
 }
 
-// AdminNetworkPolicyIngressPeerApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicyIngressPeer type for use with
+// AdminNetworkPolicyIngressPeerApplyConfiguration constructs a declarative configuration of the AdminNetworkPolicyIngressPeer type for use with
 // apply.
 func AdminNetworkPolicyIngressPeer() *AdminNetworkPolicyIngressPeerApplyConfiguration {
 	return &AdminNetworkPolicyIngressPeerApplyConfiguration{}

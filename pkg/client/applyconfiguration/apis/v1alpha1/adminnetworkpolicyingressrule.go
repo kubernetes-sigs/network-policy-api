@@ -22,7 +22,7 @@ import (
 	v1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
-// AdminNetworkPolicyIngressRuleApplyConfiguration represents an declarative configuration of the AdminNetworkPolicyIngressRule type for use
+// AdminNetworkPolicyIngressRuleApplyConfiguration represents a declarative configuration of the AdminNetworkPolicyIngressRule type for use
 // with apply.
 type AdminNetworkPolicyIngressRuleApplyConfiguration struct {
 	Name   *string                                           `json:"name,omitempty"`
@@ -31,7 +31,7 @@ type AdminNetworkPolicyIngressRuleApplyConfiguration struct {
 	Ports  *[]AdminNetworkPolicyPortApplyConfiguration       `json:"ports,omitempty"`
 }
 
-// AdminNetworkPolicyIngressRuleApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicyIngressRule type for use with
+// AdminNetworkPolicyIngressRuleApplyConfiguration constructs a declarative configuration of the AdminNetworkPolicyIngressRule type for use with
 // apply.
 func AdminNetworkPolicyIngressRule() *AdminNetworkPolicyIngressRuleApplyConfiguration {
 	return &AdminNetworkPolicyIngressRuleApplyConfiguration{}
