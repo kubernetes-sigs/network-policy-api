@@ -23,7 +23,7 @@ import (
 	apisv1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
-// BaselineAdminNetworkPolicyEgressPeerApplyConfiguration represents an declarative configuration of the BaselineAdminNetworkPolicyEgressPeer type for use
+// BaselineAdminNetworkPolicyEgressPeerApplyConfiguration represents a declarative configuration of the BaselineAdminNetworkPolicyEgressPeer type for use
 // with apply.
 type BaselineAdminNetworkPolicyEgressPeerApplyConfiguration struct {
 	Namespaces *v1.LabelSelectorApplyConfiguration `json:"namespaces,omitempty"`
@@ -32,7 +32,7 @@ type BaselineAdminNetworkPolicyEgressPeerApplyConfiguration struct {
 	Networks   []apisv1alpha1.CIDR                 `json:"networks,omitempty"`
 }
 
-// BaselineAdminNetworkPolicyEgressPeerApplyConfiguration constructs an declarative configuration of the BaselineAdminNetworkPolicyEgressPeer type for use with
+// BaselineAdminNetworkPolicyEgressPeerApplyConfiguration constructs a declarative configuration of the BaselineAdminNetworkPolicyEgressPeer type for use with
 // apply.
 func BaselineAdminNetworkPolicyEgressPeer() *BaselineAdminNetworkPolicyEgressPeerApplyConfiguration {
 	return &BaselineAdminNetworkPolicyEgressPeerApplyConfiguration{}
