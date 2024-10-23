@@ -23,7 +23,7 @@ import (
 	apisv1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
-// AdminNetworkPolicyEgressPeerApplyConfiguration represents an declarative configuration of the AdminNetworkPolicyEgressPeer type for use
+// AdminNetworkPolicyEgressPeerApplyConfiguration represents a declarative configuration of the AdminNetworkPolicyEgressPeer type for use
 // with apply.
 type AdminNetworkPolicyEgressPeerApplyConfiguration struct {
 	Namespaces  *v1.LabelSelectorApplyConfiguration `json:"namespaces,omitempty"`
@@ -33,7 +33,7 @@ type AdminNetworkPolicyEgressPeerApplyConfiguration struct {
 	DomainNames []apisv1alpha1.DomainName           `json:"domainNames,omitempty"`
 }
 
-// AdminNetworkPolicyEgressPeerApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicyEgressPeer type for use with
+// AdminNetworkPolicyEgressPeerApplyConfiguration constructs a declarative configuration of the AdminNetworkPolicyEgressPeer type for use with
 // apply.
 func AdminNetworkPolicyEgressPeer() *AdminNetworkPolicyEgressPeerApplyConfiguration {
 	return &AdminNetworkPolicyEgressPeerApplyConfiguration{}

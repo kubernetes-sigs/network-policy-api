@@ -19,8 +19,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
@@ -39,30 +39,10 @@ type BaselineAdminNetworkPolicyLister interface {
 
 // baselineAdminNetworkPolicyLister implements the BaselineAdminNetworkPolicyLister interface.
 type baselineAdminNetworkPolicyLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.BaselineAdminNetworkPolicy]
 }
 
 // NewBaselineAdminNetworkPolicyLister returns a new BaselineAdminNetworkPolicyLister.
 func NewBaselineAdminNetworkPolicyLister(indexer cache.Indexer) BaselineAdminNetworkPolicyLister {
-	return &baselineAdminNetworkPolicyLister{indexer: indexer}
-}
-
-// List lists all BaselineAdminNetworkPolicies in the indexer.
-func (s *baselineAdminNetworkPolicyLister) List(selector labels.Selector) (ret []*v1alpha1.BaselineAdminNetworkPolicy, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.BaselineAdminNetworkPolicy))
-	})
-	return ret, err
-}
-
-// Get retrieves the BaselineAdminNetworkPolicy from the index for a given name.
-func (s *baselineAdminNetworkPolicyLister) Get(name string) (*v1alpha1.BaselineAdminNetworkPolicy, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("baselineadminnetworkpolicy"), name)
-	}
-	return obj.(*v1alpha1.BaselineAdminNetworkPolicy), nil
+	return &baselineAdminNetworkPolicyLister{listers.New[*v1alpha1.BaselineAdminNetworkPolicy](indexer, v1alpha1.Resource("baselineadminnetworkpolicy"))}
 }
