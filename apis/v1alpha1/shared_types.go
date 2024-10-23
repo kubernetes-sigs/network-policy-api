@@ -120,10 +120,15 @@ type PortRange struct {
 	End int32 `json:"end"`
 }
 
-// AdminNetworkPolicyIngressPeer defines an in-cluster peer to allow traffic from.
-// Exactly one of the selector pointers must be set for a given peer. If a
-// consumer observes none of its fields are set, they must assume an unknown
-// option has been specified and fail closed.
+// AdminNetworkPolicyIngressPeer defines a peer to allow traffic to.
+// Exactly one of the fields must be set for a given peer. If a consumer
+// observes none of its fields are set, they must assume an unknown option has
+// been specified and fail closed.
+//
+// For "Allow" rules, "fail closed" means treat the rule as matching no
+// traffic. For "Deny" and "Pass" rules, "fail closed" means: treat the rule
+// as a "Deny all" rule.
+//
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
 type AdminNetworkPolicyIngressPeer struct {
