@@ -1,7 +1,7 @@
 # NPEP-122: Tenancy API
 
 * Issue: [#122](https://github.com/kubernetes-sigs/network-policy-api/issues/122)
-* Status: Provisional
+* Status: Implementable
 
 ## TLDR
 
@@ -76,6 +76,10 @@ To make the use case more obvious we can add some details to it like the followi
     Tenancy may be modeled as 1:1, where 1 tenant is mapped to a single Namespace, or 1:n, where a single tenant 
     may own more than 1 Namespace.
 
+    A use case from the real user falling under this story:
+    As a cluster admin, I want to set an overridable policy to allow same namespace and deny everything else.
+    Namespaces that should be affected by this policy are selected by the presence of the "foo" label.
+
 #### Story 4.2: Create and Isolate multiple tenants in a cluster, strict isolation
 
 Strict tenancy is the "Coke vs Pepsi" sort of thing where you want each tenant to feel like it has its own cluster, 
@@ -87,12 +91,28 @@ and be totally independent of the other tenants. We can write it down like this
     from other tenants. Tenancy may be modeled as 1:1, where 1 tenant is mapped to a single Namespace, or 1:n, where a single tenant 
     may own more than 1 Namespace.
 
+    As a cluster admin, I want to be able to make expections to the strict isolation (e.g. using ANP).
+
+    - Perhaps Coke and Pepsi are considering a merger and we want to allow coke-admin-team to talk to pepsi-admin-team.
+    - Perhaps there is a sensitive database that only some tenant teams are allowed access to and I want to use ANP to 
+    gate-keep the database. OTOH, the database may be in the "database team's" tenancy for bookkeeping reasons.
+
 #### Story 4.3: Allow internal connections for tenants
+
+    BANP
+    As a cluster admin, I want to setup an overridable deny-all policy to protect namespaces by default.
+    At the same time I want to build tenants in my cluster and allow connections inside one tenant by default.
     
-    As a cluster admin, I want to build tenants in my cluster and always allow connections inside one tenant.
-    At the same time I want to setup an overridable deny-all policy to protect namespaces by default.
-    This policy should make sure internal connectivity for a tenant is always allowed, in case there are
-    lower-priority deny rules.
+    ANP
+    As a cluster admin, I want to setup a deny-all policy to only allow connections that are explicitly specified.
+    Besides allowing required cluster services (like kube-api, dns, etc.) with ANP, I want to build tenants 
+    and allow connections inside one tenant.
+
+Both user stories have zero-trust policy in mind, where every allowed connection should be explicitly specified,
+and everything else is denied. It may be set up as "by default"/overridable/BANP or strict/ANP.
+Allow connection inside one tenant in this context means skip deny rules for same tenant, and delegate same-tenant 
+policies to the namespaces NetworkPolicy. We assume that there is no reason for cluster admin to forcefully allow connections
+inside one tenant instead of delegating to NetworkPolicy.
 
 #### Story 4.4: Tenants interaction with (B)ANP
 
@@ -105,7 +125,6 @@ and be totally independent of the other tenants. We can write it down like this
 
 #### What I couldn't figure out user stories for
 
-- Skip action
 - Ports *[]AdminNetworkPolicyPort
 
 ### Existing API
@@ -158,7 +177,386 @@ Fourth, the ANP subject allows using pod selectors, while tenancy use cases only
 
 ## API
 
-TBD
+### Tenant definition
+
+For the purposes of this NPEP we define a Tenant as a set of namespaces.
+`tenancyLabels` is a set of label keys, based on which all Namespaces affected by Tenancy are be split into Tenants.
+A Tenant is identified by values of `tenancyLabels`, which are shared by all namespaces in a given Tenant.
+
+There are 2 ways to select which namespaces should be affected by Tenancy rules:
+
+1. Use a distinct new `namespaceSelector` field to define which namespaces should be affected by Tenancy, 
+while the `tenancyLabels` field can be used to define how the selected namespaces are split into Tenants.
+
+    **Cons**: selected namespace may not have some of the `tenancyLabels`, which will likely result in introducing "None" value
+    for `tenancyLabels`.
+
+```yaml
+spec:
+  namespaceSelector:
+    matchExpression:
+       - key: system-namespace
+         operator: DoesNotExist
+       - key: user
+         operator: Exists
+  tenancyLabels:
+    - user
+```
+
+2. Overload `tenancyLabels` and implicitly apply tenancy rules only to namespaces where `tenancyLabels` are present.
+
+    **Cons**: doesn't allow the use of "kubernetes.io/metadata.name" label that may be helpful to express allow-same-namespace
+tenancy.
+
+```yaml
+spec:
+  tenancyLabels:
+    - user
+```
+
+### Peers and actions
+
+Based on the existing User Stories, Tenancy only needs action to "pass same tenant" and "deny not same tenant".
+Using both actions at the same time doesn't make a lot of sense, since "pass same tenant" action only makes sense if
+there is a (B)ANP that will deny tenancy connections. Otherwise, "deny not same tenant" is sufficient.
+
+Tenancy rules don't need to specify separate rules for ingress and egress, because
+- for `SameTenant` if ingress is denied, then egress to the same tenant may be allowed when leaving the source pod, but will
+  be denied by ingress rule when coming to the destination pod. The same applies to egress.
+- for `NotSameTenant` if ingress is denied, then egress from `Tenant1` to `Tenant2` will be allowed by `Tenant1`, but
+  considered ingress from another tenant by `Tenant2`, and denied. The same applies to egress.
+
+It means that deny in at least one direction automatically denies the other direction.
+Therefore, the only extra parameter Tenancy needs is priority/precedence, and Tenancy rules may look something like:
+
+```yaml
+spec:
+  action: PassSameTenant/DenyNotSameTenant
+```
+
+### Priorities
+
+Based on User Story 4.4, we need to have Tenancy in the same priority range as ANP and BANP. There are multiple ways to do so:
+
+1. Reuse ANP and BANP to define priority, replace other spec fields with tenancy spec.
+
+```yaml
+kind: AdminNetworkPolicy
+spec:
+  priority: 10
+  # this field turns on tenancy, and turns off other fields
+  tenancyLabels: ["user"]
+  action: PassSameTenant
+```
+
+**CONS** 
+- "switch" that enables and disables fields is not the best API design
+- gives more flexibility than intended (multiple tenancy definitions)
+- conflicts with singleton BANP, meaning that if Tenancy is defined on BANP level, general-purpose BANP selecting different
+pods can't be created.
+
+2. Add implicit tenancy priority to ANP/BANP with extra fields.
+
+```yaml
+kind: AdminNetworkPolicy
+spec:
+  # normal ANP part
+  subject: 
+    namespaces: {}
+  ingress: 
+    <...>
+  egress:
+    <...>
+  priority: 10
+  # tenancy rule with higher precedence than ingress/egress rules
+  tenancyLabels: ["user"]
+  action: PassSameTenant
+```
+
+**CONS**
+- Each (B)ANP [in/e]gress section allows [100 Rules](https://github.com/kubernetes-sigs/network-policy-api/blob/005413863450e4f97f561d7698b62d268140e2ab/apis/v1alpha1/adminnetworkpolicy_types.go#L92),
+each Rule allows [100 Peers](https://github.com/kubernetes-sigs/network-policy-api/blob/005413863450e4f97f561d7698b62d268140e2ab/apis/v1alpha1/adminnetworkpolicy_types.go#L146),
+which may be used by some implementations to "flatten" all priorities into one range, by reserving 10K priorities for each (B)ANP. 
+If we add one extra priority for Tenancy, such implementations may not have extra space between reserved ranges.
+- gives more flexibility than intended (multiple tenancy definitions)
+
+3. Create 2 objects with ANP and BANP priorities (let's say TenancyNetworkPolicy and BaselineTenancyNetworkPolicy)
+
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  priority: 10
+  tenancyLabels: ["user"]
+  action: PassSameTenant
+---
+kind: BaselineTenancyNetworkPolicy
+spec:
+  priority: 10
+  tenancyLabels: ["user"]
+  action: PassSameTenant
+```
+
+While multiple ANPs with the same priority are allowed, we probably can allow multiple Tenancies or Tenancy and ANP
+with the same priority, but if we decide to only allow ANP per priority, Tenancy needs to be accounted for in the same range.
+
+**CONS**: 
+- BANP doesn't have a priority, to use this method we would need to define a priority for BANP.
+- new CRD
+
+3.1 Create 2 objects (let's say TenancyNetworkPolicy and BaselineTenancyNetworkPolicy),
+use priority field for TenancyNetworkPolicy in the ANP priority range, define implicit priority for BaselineTenancyNetworkPolicy
+relative to BANP.
+
+4. Create 1 new object with implicit priorities.
+
+`precedence` field + reserved highest-priority rule before (B)ANP
+Similar to the previous one, but a bit more flexible:
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels: ["user"]
+  precedence: ANP/BANP
+  action: PassSameTenant
+```
+**CONS** 
+- Priorities are implicit and need to be added as extra layers between ANP/NP/BANP.
+- Doesn't follow current naming scheme, where ANP and BANP are separate objects.
+**PROS** 
+- No changes to the existing ANP/BANP objects
+- Limited to the use cases we designed it for (smaller chance to shoot yourself in a foot)
+- Users that don't care about tenancy can just ignore this CRD
+- We can throw it away if we want to change API again
+
+4.1 Create 2 new objects with implicit priorities.
+
+Same as option 4, but with separate objects for ANP and BANP.
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+    tenancyLabels: ["user"]
+    action: PassSameTenant
+---
+kind: BaselineTenancyNetworkPolicy
+spec:
+    tenancyLabels: ["user"]
+    action: PassSameTenant
+```
+
+Shares most PROS and CONS with 4, except for
+**CONS**
+- Required 2 new CRDs with just 2? fields
+**PROS**
+- Follows existing naming scheme where ANP and BANP are separate objects
+
+
+#### Example
+
+Using option 4 from the previous section on priorities specification, we can outline further details here to get yaml
+examples for every use case.
+
+For
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels: ["user"]
+  precedence: ANP/BANP
+  action: PassSameTenant/DenyNotSameTenant
+```
+
+To implement user story 4.3, Tenancy rules should have higher priority than ANP/BANP.
+Considering the following priority precedence: ANP Tenancy->ANP->NP->BANP Tenancy->BANP, we can express all mentioned user stories.
+
+<details>
+<summary>Full yaml examples (with the initial fields, will be updates as we agree on the final CRD format)</summary>
+
+* 4.1 "overridable isolation"
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels:
+    - "user"
+  precedence: BANP
+  action: DenyNotSameTenant
+```
+OR (second option may be more useful if there is a deny BANP in the cluster)
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels:
+    - "user"
+  precedence: BANP
+  action: PassSameTenant
+---
+kind: BaselineAdminNetworkPolicy
+spec:
+  subject:
+    namespaces: {}
+  ingress:
+    - action: Deny
+      from:
+        - namespaces: {}
+  egress:
+    - action: Deny
+      to:
+        - namespaces: {}
+```
+BANP can also be replaced with deny-all BANP
+```yaml
+kind: BaselineAdminNetworkPolicy
+spec:
+  subject:
+    namespaces: {}
+  ingress:
+    - action: Deny
+      from:
+        - namespaces: {}
+  egress:
+    - action: Deny
+      to:
+        - namespaces: {}
+```
+
+* 4.2 strict isolation
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels:
+    - "user"
+  precedence: ANP
+  action: DenyNotSameTenant
+```
+OR (second option may be more useful if there is a deny ANP in the cluster)
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels:
+    - "user"
+  precedence: ANP
+  action: PassSameTenant
+---
+kind: AdminNetworkPolicy
+spec:
+  priority: 1
+  subject:
+    namespaces:
+      matchExpression:
+        - key: user
+          operator: Exists
+  ingress:
+    - action: Deny
+      from:
+        - namespaces: {}
+  egress:
+    - action: Deny
+      to:
+        - namespaces: {}
+```
+
+* 4.3 Allow internal connections for tenants
+BANP-level
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels:
+    - "user"
+  precedence: BANP
+  action: PassSameTenant
+---
+kind: BaselineAdminNetworkPolicy
+spec:
+  subject:
+    namespaces:
+      matchExpression:
+        - key: user
+          operator: Exists
+  ingress:
+    - action: Deny
+      from:
+        - namespaces: {}
+  egress:
+    - action: Deny
+      to:
+        - namespaces: {}
+```
+
+ANP-level
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels:
+    - "user"
+  precedence: ANP
+  action: PassSameTenant
+---
+kind: AdminNetworkPolicy
+spec:
+  priority: 1
+  subject:
+    namespaces:
+      matchExpression:
+        - key: user
+          operator: Exists
+  ingress:
+    - action: Deny
+      from:
+        - namespaces: {}
+  egress:
+    - action: Deny
+      to:
+        - namespaces: {}
+```
+
+* 4.4 Tenants interaction with (B)ANP
+* 4.4.1 allow from monitoring + deny from not same tenant
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels:
+    - "user"
+  precedence: ANP
+  action: PassSameTenant
+---
+kind: AdminNetworkPolicy
+spec:
+  priority: 1
+  subject:
+    namespaces:
+      matchExpression:
+        - key: user
+          operator: Exists
+  ingress:
+    - action: Allow
+      from:
+        - namespaces:
+            namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: monitoring-ns
+    - action: Deny
+      from:
+        - namespaces: {}
+```
+* 4.4.2 allow from same tenant + BANP deny all
+```yaml
+kind: TenancyNetworkPolicy
+spec:
+  tenancyLabels:
+    - "user"
+  precedence: BANP
+  action: PassSameTenant
+---
+kind: BaselineAdminNetworkPolicy
+spec:
+  subject:
+    namespaces:
+      matchExpression:
+        - key: user
+          operator: Exists
+  ingress:
+    - action: Deny
+      from:
+        - namespaces: {}
+```
+</details>
 
 ## Conformance Details
 
