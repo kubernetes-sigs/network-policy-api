@@ -47,21 +47,35 @@ type AdminNetworkPolicy struct {
 
 // AdminNetworkPolicyStatus defines the observed state of AdminNetworkPolicy.
 type AdminNetworkPolicyStatus struct {
-	Conditions []metav1.Condition `json:"conditions"`
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions" patchStrategy:"merge" patchMergeKey:"type"`
 }
 
 // AdminNetworkPolicySpec defines the desired state of AdminNetworkPolicy.
 type AdminNetworkPolicySpec struct {
-	// Priority is a value from 0 to 1000. Rules with lower priority values have
-	// higher precedence, and are checked before rules with higher priority values.
+	// Priority is a value from 0 to 1000. Policies with lower priority values have
+	// higher precedence, and are checked before policies with higher priority values.
 	// All AdminNetworkPolicy rules have higher precedence than NetworkPolicy or
 	// BaselineAdminNetworkPolicy rules
-	// The behavior is undefined if two ANP objects have same priority.
+	// Every AdminNetworkPolicy should have a unique priority value; if two (or more)
+	// policies with the same priority could both match a connection, then the
+	// implementation can apply any of the matching policies to the connection, and
+	// there is no way for the user to reliably determine which one it will choose.
+	//
+	// Support: Core
+	//
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1000
 	Priority int32 `json:"priority"`
 
 	// Subject defines the pods to which this AdminNetworkPolicy applies.
+	// Note that host-networked pods are not included in subject selection.
+	//
+	// Support: Core
+	//
 	Subject AdminNetworkPolicySubject `json:"subject"`
 
 	// Ingress is the list of Ingress rules to be applied to the selected pods.
@@ -71,6 +85,9 @@ type AdminNetworkPolicySpec struct {
 	// is written. Thus, a rule that appears at the top of the ingress rules
 	// would take the highest precedence.
 	// ANPs with no ingress rules do not affect ingress traffic.
+	//
+	// Support: Core
+	//
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	Ingress []AdminNetworkPolicyIngressRule `json:"ingress,omitempty"`
@@ -82,6 +99,9 @@ type AdminNetworkPolicySpec struct {
 	// is written. Thus, a rule that appears at the top of the egress rules
 	// would take the highest precedence.
 	// ANPs with no egress rules do not affect egress traffic.
+	//
+	// Support: Core
+	//
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	Egress []AdminNetworkPolicyEgressRule `json:"egress,omitempty"`
@@ -95,6 +115,9 @@ type AdminNetworkPolicyIngressRule struct {
 	// in length. This field should be used by the implementation to help
 	// improve observability, readability and error-reporting for any applied
 	// AdminNetworkPolicies.
+	//
+	// Support: Core
+	//
 	// +optional
 	// +kubebuilder:validation:MaxLength=100
 	Name string `json:"name,omitempty"`
@@ -107,21 +130,30 @@ type AdminNetworkPolicyIngressRule struct {
 	// then pass execution to any NetworkPolicies that select the pod.
 	// If the pod is not selected by any NetworkPolicies then execution
 	// is passed to any BaselineAdminNetworkPolicies that select the pod.
+	//
+	// Support: Core
+	//
 	Action AdminNetworkPolicyRuleAction `json:"action"`
 
 	// From is the list of sources whose traffic this rule applies to.
-	// If any AdminNetworkPolicyPeer matches the source of incoming
+	// If any AdminNetworkPolicyIngressPeer matches the source of incoming
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
+	//
+	// Support: Core
+	//
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
-	From []AdminNetworkPolicyPeer `json:"from"`
+	From []AdminNetworkPolicyIngressPeer `json:"from"`
 
 	// Ports allows for matching traffic based on port and protocols.
 	// This field is a list of ports which should be matched on
 	// the pods selected for this policy i.e the subject of the policy.
 	// So it matches on the destination port for the ingress traffic.
 	// If Ports is not set then the rule does not filter traffic via port.
+	//
+	// Support: Core
+	//
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
@@ -130,11 +162,16 @@ type AdminNetworkPolicyIngressRule struct {
 // AdminNetworkPolicyEgressRule describes an action to take on a particular
 // set of traffic originating from pods selected by a AdminNetworkPolicy's
 // Subject field.
+// <network-policy-api:experimental:validation>
+// +kubebuilder:validation:XValidation:rule="!(self.to.exists(peer, has(peer.networks) || has(peer.nodes)) && has(self.ports) && self.ports.exists(port, has(port.namedPort)))",message="networks/nodes peer cannot be set with namedPorts since there are no namedPorts for networks/nodes"
 type AdminNetworkPolicyEgressRule struct {
 	// Name is an identifier for this rule, that may be no more than 100 characters
 	// in length. This field should be used by the implementation to help
 	// improve observability, readability and error-reporting for any applied
 	// AdminNetworkPolicies.
+	//
+	// Support: Core
+	//
 	// +optional
 	// +kubebuilder:validation:MaxLength=100
 	Name string `json:"name,omitempty"`
@@ -147,26 +184,39 @@ type AdminNetworkPolicyEgressRule struct {
 	// then pass execution to any NetworkPolicies that select the pod.
 	// If the pod is not selected by any NetworkPolicies then execution
 	// is passed to any BaselineAdminNetworkPolicies that select the pod.
+	//
+	// Support: Core
+	//
 	Action AdminNetworkPolicyRuleAction `json:"action"`
 
 	// To is the List of destinations whose traffic this rule applies to.
-	// If any AdminNetworkPolicyPeer matches the destination of outgoing
+	// If any AdminNetworkPolicyEgressPeer matches the destination of outgoing
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
+	//
+	// Support: Core
+	//
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
-	To []AdminNetworkPolicyPeer `json:"to"`
+	To []AdminNetworkPolicyEgressPeer `json:"to"`
 
 	// Ports allows for matching traffic based on port and protocols.
-	// This field is a list of destination ports for the outging egress traffic.
+	// This field is a list of destination ports for the outgoing egress traffic.
 	// If Ports is not set then the rule does not filter traffic via port.
+	//
+	// Support: Core
+	//
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
 	Ports *[]AdminNetworkPolicyPort `json:"ports,omitempty"`
 }
 
 // AdminNetworkPolicyRuleAction string describes the AdminNetworkPolicy action type.
+//
+// Support: Core
+//
 // +enum
+// +kubebuilder:validation:Enum={"Allow", "Deny", "Pass"}
 type AdminNetworkPolicyRuleAction string
 
 const (
