@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mattfenwick/cyclonus/pkg/worker"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/worker"
 )
 
 func main() {

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 func Run() {
@@ -27,7 +27,7 @@ type Args struct {
 func SetupRootCommand() *cobra.Command {
 	args := &Args{}
 	command := &cobra.Command{
-		Use:   "cyclonus-worker",
+		Use:   "pola-worker",
 		Short: "thin wrapper around 'agnhost connect' for issuing batches of connectivity requests",
 		Run: func(cmd *cobra.Command, as []string) {
 			RunWorkerCommand(args)

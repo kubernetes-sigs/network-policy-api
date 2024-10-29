@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
-	"github.com/mattfenwick/cyclonus/pkg/generator"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	networkingv1 "k8s.io/api/networking/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/probe"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
 )
 
 const (

@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/slice"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"golang.org/x/exp/maps"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 // IsNameMatch follows the kube pattern of "empty string means matches All"

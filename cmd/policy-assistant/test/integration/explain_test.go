@@ -3,10 +3,10 @@ package connectivity
 import (
 	"testing"
 
-	"github.com/mattfenwick/cyclonus/examples"
-	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/network-policy-api/policy-assistant/examples"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube/netpol"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
 )
 
 func TestExplain(t *testing.T) {

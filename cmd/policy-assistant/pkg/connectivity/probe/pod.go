@@ -5,16 +5,17 @@ import (
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/slice"
-	"github.com/mattfenwick/cyclonus/pkg/generator"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
 const (
-	agnhostImage        = "e2e-test-images/agnhost:2.43"
-	cyclonusWorkerImage = "mfenwick100/cyclonus-worker:latest"
+	agnhostImage = "e2e-test-images/agnhost:2.43"
+	// FIXME use a real image repository
+	polaWorkerImage = "docker.io/pola-worker:latest"
 )
 
 func NewPod(ns string, name string, labels map[string]string, ip string, containers []*Container) *Pod {
@@ -193,7 +194,7 @@ func (c *Container) KubeServicePort() v1.ServicePort {
 
 func (c *Container) Image() string {
 	if c.BatchJobs {
-		return cyclonusWorkerImage
+		return polaWorkerImage
 	}
 	return c.ImageRegistry + "/" + agnhostImage
 }

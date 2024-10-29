@@ -1,10 +1,10 @@
 package probe
 
 import (
-	"github.com/mattfenwick/cyclonus/pkg/generator"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
 )
 
 type JobBuilder struct {

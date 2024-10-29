@@ -2,11 +2,12 @@ package probe
 
 import (
 	"fmt"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
-	v1 "k8s.io/api/core/v1"
 	"net"
 	"strconv"
 	"strings"
+
+	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
 )
 
 type Jobs struct {

@@ -68,9 +68,6 @@ For a presentation and discussion on Policy Assistant and the admin policy APIs,
 
 ### Analyze
 
-> [!NOTE]
-> The CLI binary is still called "cyclonus". This will soon be renamed per [#254](https://github.com/kubernetes-sigs/network-policy-api/issues/254).
-
 #### "explain" mode
 
 Visualize all your policies in a table.
@@ -190,13 +187,10 @@ verdict walkthrough:
 
 ### Make from Source
 
-> [!NOTE]
-> The CLI binary is still called "cyclonus". This will soon be renamed per [#254](https://github.com/kubernetes-sigs/network-policy-api/issues/254).
-
 1. Clone the repo.
 2. `cd cmd/policy-assistant`
-3. `make cyclonus`
-4. The `cyclonus` binary will be produced at *cmd/cyclonus/cyclonus*.
+3. `make pola`
+4. The `pola` binary will be produced at *cmd/pola/pola*.
 
 ### Testing
 

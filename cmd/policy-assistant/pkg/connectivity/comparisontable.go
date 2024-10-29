@@ -1,9 +1,9 @@
 package connectivity
 
 import (
-	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/probe"
 )
 
 type Item struct {

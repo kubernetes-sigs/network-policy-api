@@ -1,9 +1,9 @@
 package connectivity
 
 import (
-	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/probe"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
 
 	networkingv1 "k8s.io/api/networking/v1"
 )

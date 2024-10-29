@@ -18,7 +18,7 @@ jobs:
         go-version: 1.18
 
     - name: Build
-      run: go build -v ./cmd/cyclonus/main.go
+      run: go build -v ./cmd/pola/main.go
 
     - name: Format
       run: go fmt ./cmd/... ./pkg/...

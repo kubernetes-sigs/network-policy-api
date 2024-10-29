@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/json"
-	"github.com/mattfenwick/cyclonus/pkg/connectivity"
-	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
-	"github.com/mattfenwick/cyclonus/pkg/generator"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/probe"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 var (

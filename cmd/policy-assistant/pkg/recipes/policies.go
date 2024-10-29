@@ -1,8 +1,8 @@
 package recipes
 
 import (
-	. "github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
 	v1 "k8s.io/api/core/v1"
+	. "sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/probe"
 )
 
 var container = []*Container{{Port: 80, Protocol: v1.ProtocolTCP}}

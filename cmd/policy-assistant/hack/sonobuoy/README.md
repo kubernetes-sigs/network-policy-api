@@ -3,16 +3,17 @@
 ## Create plugin
 
 ```bash
+# FIXME use a real image repository
 sonobuoy gen plugin \
-  --name=cyclonus \
-  --image=mfenwick100/sonobuoy-cyclonus:latest \
-  --cmd ./run-sonobuoy-plugin.sh \ > cyclonus-plugin.yaml
+  --name=pola \
+  --image=docker.io/sonobuoy-pola:latest \
+  --cmd ./run-sonobuoy-plugin.sh \ > pola-plugin.yaml
 ```
 
 ## Run plugin
 
 ```bash
-sonobuoy run --plugin cyclonus-plugin.yaml --wait
+sonobuoy run --plugin pola-plugin.yaml --wait
 ```
 
 ## Look at results

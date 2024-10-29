@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mattfenwick/cyclonus/pkg/recipes"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/recipes"
 )
 
 func main() {

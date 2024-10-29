@@ -2,13 +2,14 @@ package matcher
 
 import (
 	"fmt"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
+	"strings"
+
 	"github.com/pkg/errors"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
-	"strings"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
 // string of the form "[policyKind] namespace/name"

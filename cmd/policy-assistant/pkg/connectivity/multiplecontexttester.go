@@ -4,12 +4,12 @@ package connectivity
 TODO
 import (
 	"fmt"
-	connectivitykube "github.com/mattfenwick/cyclonus/pkg/connectivity/kube"
-	"github.com/mattfenwick/cyclonus/pkg/connectivity/synthetic"
-	"github.com/mattfenwick/cyclonus/pkg/explainer"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
+	connectivitykube sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/synthetic"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/explainer"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"

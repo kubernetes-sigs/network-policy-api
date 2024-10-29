@@ -1,9 +1,9 @@
-name: Kind Ovn Cyclonus
+name: Kind Ovn pola
 on:
   workflow_dispatch:
     inputs:
-      cyclonus_args:
-        description: "args to pass on to Cyclonus"
+      pola_args:
+        description: "args to pass on to pola"
         required: false
         default: "generate --include conflict --job-timeout-seconds 2 --exclude=named-port,multi-peer,upstream-e2e,example --ignore-loopback=true"
 #  schedule:
@@ -13,7 +13,7 @@ on:
 
 jobs:
   test-kind-ovn-kubernetes:
-    name: Run Cyclonus on KinD/Ovn
+    name: Run pola on KinD/Ovn
     timeout-minutes: 250
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +22,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.18
-      - name: Run Cyclonus
+      - name: Run pola
         working-directory: hack/kind
-        run: CNI=ovn-kubernetes RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.cyclonus_args }}" ./run-cyclonus.sh
+        run: CNI=ovn-kubernetes RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.pola_args }}" ./run-pola.sh

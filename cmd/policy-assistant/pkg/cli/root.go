@@ -3,10 +3,10 @@ package cli
 import (
 	"os"
 
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 func RunRootCommand() {
@@ -24,7 +24,7 @@ type RootFlags struct {
 func SetupRootCommand() *cobra.Command {
 	flags := &RootFlags{}
 	command := &cobra.Command{
-		Use:   "cyclonus",
+		Use:   "pola",
 		Short: "explain, probe, and query network policies",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return utils.SetUpLogger(flags.Verbosity)

@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/slice"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 type Traffic struct {

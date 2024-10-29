@@ -1,8 +1,6 @@
 package matcher
 
 import (
-	"github.com/mattfenwick/cyclonus/examples"
-	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.org/x/exp/maps"
@@ -10,6 +8,8 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/network-policy-api/policy-assistant/examples"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube/netpol"
 )
 
 var (

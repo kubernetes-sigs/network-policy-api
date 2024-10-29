@@ -3,10 +3,10 @@ package connectivity
 import (
 	"testing"
 
-	"github.com/mattfenwick/cyclonus/pkg/cli"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/cli"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
 )
 
 func TestProbe(t *testing.T) {

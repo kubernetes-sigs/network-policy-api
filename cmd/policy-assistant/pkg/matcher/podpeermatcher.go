@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mattfenwick/cyclonus/pkg/kube"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
 // PodPeerMatcher matches a Peer in Pod to Pod traffic against an ANP, BANP, or v1 NetPol rule.

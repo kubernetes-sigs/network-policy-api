@@ -1,6 +1,6 @@
 sonobuoy-config:
   driver: Job
-  plugin-name: cyclonus
+  plugin-name: pola
   result-format: junit
 spec:
   command:
@@ -9,11 +9,10 @@ spec:
   - "--include=conflict"
   - "--exclude=egress,direction"
   - "--junit-results-file=/tmp/results/junit.xml"
-  image: mfenwick100/sonobuoy-cyclonus:latest
+  image: docker.io/sonobuoy-pola:latest # FIXME use a real image repository
   imagePullPolicy: Always
   name: plugin
   resources: {}
   volumeMounts:
   - mountPath: /tmp/results
     name: results
-

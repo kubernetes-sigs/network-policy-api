@@ -9,13 +9,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
 
-	"github.com/mattfenwick/cyclonus/pkg/generator"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 	"sigs.k8s.io/yaml"
 )
 

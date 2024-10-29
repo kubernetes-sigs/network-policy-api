@@ -1,10 +1,10 @@
-project_name: cyclonus
+project_name: policy-assistant
 release:
   github:
-    owner: mattfenwick
-    name: Cyclonus
+    owner: huntergregory
+    name: pola
 builds:
-  - id: cyclonus
+  - id: pola
     goos:
       - linux
       - windows
@@ -13,14 +13,14 @@ builds:
       - amd64
     env:
       - CGO_ENABLED=0
-    main: cmd/cyclonus/main.go
+    main: cmd/pola/main.go
     ldflags: -s -w
-      -X github.com/mattfenwick/cyclonus/pkg/cli.version={{.Version}}
-      -X github.com/mattfenwick/cyclonus/pkg/cli.gitSHA={{.Commit}}
-      -X github.com/mattfenwick/cyclonus/pkg/cli.buildTime={{.Date}}
+      -X sigs.k8s.io/network-policy-api/policy-assistant/pkg/cli.version={{.Version}}
+      -X sigs.k8s.io/network-policy-api/policy-assistant/pkg/cli.gitSHA={{.Commit}}
+      -X sigs.k8s.io/network-policy-api/policy-assistant/pkg/cli.buildTime={{.Date}}
       -extldflags "-static"
     flags: -tags netgo -installsuffix netgo
-    binary: "cyclonus"
+    binary: "pola"
     hooks: {}
 dockers:
   -
@@ -28,12 +28,12 @@ dockers:
     goarch: amd64
     goarm: ''
     ids:
-      - cyclonus
+      - pola
     image_templates:
-      - "mfenwick100/cyclonus:latest"
-      - "mfenwick100/cyclonus:{{ .Tag }}"
+      - "docker.io/pola:latest" # FIXME use a real image repository
+      - "docker.io/pola:{{ .Tag }}" # FIXME use a real image repository
     skip_push: false
-    dockerfile: cmd/cyclonus/Dockerfile
+    dockerfile: cmd/pola/Dockerfile
 #    build_flag_templates:
 #      - "--label=org.opencontainers.image.created={{.Date}}"
 #      - "--label=org.opencontainers.image.title={{.ProjectName}}"
@@ -42,9 +42,9 @@ dockers:
 #      - "--pull"
 #      - "--platform=linux/arm64"
 archives:
-  - id: cyclonus
+  - id: pola
     builds:
-      - cyclonus
+      - pola
     format: tar.gz
     format_overrides:
       - goos: windows
@@ -56,5 +56,5 @@ archives:
       - README*
       - CHANGELOG*
 checksum:
-  name_template: "cyclonus_{{ .RawVersion }}_checksums.txt"
+  name_template: "pola_{{ .RawVersion }}_checksums.txt"
   algorithm: sha256
