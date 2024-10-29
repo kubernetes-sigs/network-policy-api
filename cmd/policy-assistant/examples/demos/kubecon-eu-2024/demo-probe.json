@@ -1,0 +1,33 @@
+{
+  "Probes": [
+    {
+      "Protocol": "TCP",
+      "Port": 80
+    },
+    {
+      "Protocol": "TCP",
+      "Port": 81
+    }
+  ],
+  "Resources": {
+    "Namespaces": {
+      "demo": {"ns": "demo"}
+    },
+    "Pods": [
+      {
+        "Namespace": "demo",
+        "Name": "a",
+        "Labels": {"pod": "a"},
+        "IP": "192.168.1.8",
+        "Containers": [{"Name": "cont-1", "Port": 80, "PortName": "serve-80-tcp","Protocol": "tcp"}, {"Name": "cont-2", "Port": 81, "PortName": "serve-81-tcp","Protocol": "tcp"}]
+      },
+      {
+        "Namespace": "demo",
+        "Name": "b",
+        "Labels": {"pod": "b"},
+        "IP": "192.168.1.9",
+        "Containers": [{"Name": "cont-1", "Port": 80, "PortName": "serve-80-tcp","Protocol": "tcp"}, {"Name": "cont-2", "Port": 81, "PortName": "serve-81-tcp","Protocol": "tcp"}]
+      }
+    ]
+  }
+}
