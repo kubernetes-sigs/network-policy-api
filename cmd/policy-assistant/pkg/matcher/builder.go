@@ -1,6 +1,8 @@
 package matcher
 
 import (
+	"fmt"
+
 	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -343,9 +345,11 @@ func BuildPeerMatcherAdmin(peers []v1alpha1.AdminNetworkPolicyPeer, ports *[]v1a
 			nonNilCount++
 		}
 		if ns.SameLabels != nil {
+			fmt.Println("WARN: SameLabels is deprecated and will be removed after v0.1.1 (alpha) of sigs.k8s.io/network-policy-api. Tenancy will replace this concept.")
 			nonNilCount++
 		}
 		if ns.NotSameLabels != nil {
+			fmt.Println("WARN: NotSameLabels is deprecated and will be removed after v0.1.1 (alpha) of sigs.k8s.io/network-policy-api. Tenancy will replace this concept.")
 			nonNilCount++
 		}
 		if nonNilCount != 1 {
