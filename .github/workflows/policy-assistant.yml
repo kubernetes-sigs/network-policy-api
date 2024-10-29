@@ -90,12 +90,12 @@ jobs:
 
     - name: Run Integration Test - Explain Mode
       run: |
-        artifacts/cyclonus analyze --use-example-policies --mode explain
+        artifacts/cyclonus analyze --mode explain --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
 
-    # - name: Run Integration Test - Probe Mode
-    #   run: |
-    #     artifacts/cyclonus analyze --use-example-policies --mode probe --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
+    - name: Run Integration Test - Probe Mode
+      run: |
+        artifacts/cyclonus analyze --mode probe --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/ --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
 
-    # - name: Run Integration Test - Walkthrough Mode
-    #   run: |
-    #     artifacts/cyclonus analyze --use-example-policies --mode walkthrough
+    - name: Run Integration Test - Walkthrough Mode
+      run: |
+        artifacts/cyclonus analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
