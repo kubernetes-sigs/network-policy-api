@@ -25,7 +25,7 @@ func SetupRootCommand() *cobra.Command {
 	flags := &RootFlags{}
 	command := &cobra.Command{
 		Use:   "pola",
-		Short: "explain, probe, and query network policies",
+		Short: "policy assistant for developing and troubleshooting any kubernetes network policy (NPv1, ANP, or BANP)",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return utils.SetUpLogger(flags.Verbosity)
 		},
