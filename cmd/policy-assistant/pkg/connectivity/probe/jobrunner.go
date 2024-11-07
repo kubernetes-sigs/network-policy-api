@@ -4,11 +4,11 @@ import (
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/json"
-	"github.com/mattfenwick/cyclonus/pkg/generator"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
-	"github.com/mattfenwick/cyclonus/pkg/worker"
 	"github.com/sirupsen/logrus"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/worker"
 )
 
 type Runner struct {

@@ -8,11 +8,11 @@ on:
 
 jobs:
   test-kind-calico:
-    name: Run Cyclonus on KinD
+    name: Run policy-assistant on KinD
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run Cyclonus
+      - name: Run policy-assistant
         working-directory: hack/kind
-        run: CNI=${{ github.event.inputs.cni }} RUN_FROM_SOURCE=false ./run-cyclonus.sh
+        run: CNI=${{ github.event.inputs.cni }} RUN_FROM_SOURCE=false ./run-policy-assistant.sh

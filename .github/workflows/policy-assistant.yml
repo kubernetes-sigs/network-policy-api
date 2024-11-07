@@ -25,15 +25,15 @@ env:
 permissions: write-all
 
 jobs:
-  unit-tests:
-    name: Unit Tests
+  go-tests:
+    name: Go Tests
     runs-on: ubuntu-22.04
     steps:
     - name: Check out code
       uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ env.GO_VERSION }}
 
@@ -42,34 +42,52 @@ jobs:
         cd cmd/policy-assistant/
         go test ./...
 
+    - name: Run Go Vet
+      run: |
+        cd cmd/policy-assistant/
+        go vet ./...
+
+    - name: Run Go Fmt
+      shell: bash
+      run: |
+        cd cmd/policy-assistant/
+        exitCode=0
+        go fmt ./... | grep "\.go" || exitCode=$?
+        if [[ $exitCode == 0 ]]; then
+          echo "please run 'make fmt' in the cmd/policy-assistant/ directory"
+          exit 1
+        else
+          echo "go files are properly formatted"
+        fi
+
   build:
-    name: Build Cyclonus
+    name: Build Policy Assistant
     runs-on: ubuntu-22.04
-    needs: unit-tests
+    needs: go-tests
     steps:
     - name: Check out code
       uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ env.GO_VERSION }}
 
-    - name: Build Cyclonus
+    - name: Build policy-assistant Binary
       run: |
         cd cmd/policy-assistant/
-        make cyclonus
+        make policy-assistant
 
-    - name: Save Cyclonus Binary
+    - name: Save policy-assistant Binary
       run: |
         mkdir -p artifacts
-        cp cmd/policy-assistant/cmd/cyclonus/cyclonus artifacts/
+        cp cmd/policy-assistant/cmd/policy-assistant/policy-assistant artifacts/
 
-    - name: Upload Cyclonus Binary
+    - name: Upload policy-assistant Binary
       uses: actions/upload-artifact@v4
       with:
-        name: cyclonus-binary
-        path: artifacts/cyclonus
+        name: policy-assistant-binary
+        path: artifacts/policy-assistant
 
   integration-tests:
     name: Integration Tests
@@ -79,23 +97,23 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v4
 
-    - name: Download Cyclonus Binary
+    - name: Download policy-assistant Binary
       uses: actions/download-artifact@v4
       with:
-        name: cyclonus-binary
+        name: policy-assistant-binary
         path: artifacts
 
-    - name: Set Cyclonus Binary Permissions
-      run: chmod u+x artifacts/cyclonus
+    - name: Set policy-assistant Binary Permissions
+      run: chmod u+x artifacts/policy-assistant
 
     - name: Run Integration Test - Explain Mode
       run: |
-        artifacts/cyclonus analyze --mode explain --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+        artifacts/policy-assistant analyze --mode explain --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
 
     - name: Run Integration Test - Probe Mode
       run: |
-        artifacts/cyclonus analyze --mode probe --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/ --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
+        artifacts/policy-assistant analyze --mode probe --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/ --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
 
     - name: Run Integration Test - Walkthrough Mode
       run: |
-        artifacts/cyclonus analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+        artifacts/policy-assistant analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/

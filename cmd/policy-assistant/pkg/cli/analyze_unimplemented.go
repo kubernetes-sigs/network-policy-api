@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/mattfenwick/collections/pkg/json"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 // case ParseMode:

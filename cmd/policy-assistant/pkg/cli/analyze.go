@@ -5,26 +5,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mattfenwick/cyclonus/examples"
-	"github.com/mattfenwick/cyclonus/pkg/kube/netpol"
 	"github.com/olekukonko/tablewriter"
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/examples"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube/netpol"
 
 	"github.com/mattfenwick/collections/pkg/json"
-	"github.com/mattfenwick/cyclonus/pkg/connectivity/probe"
-	"github.com/mattfenwick/cyclonus/pkg/generator"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/probe"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
 
-	"github.com/mattfenwick/cyclonus/pkg/kube"
-	"github.com/mattfenwick/cyclonus/pkg/matcher"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/matcher"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 const (

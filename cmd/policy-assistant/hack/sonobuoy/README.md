@@ -3,16 +3,17 @@
 ## Create plugin
 
 ```bash
+# FIXME use a real image repository
 sonobuoy gen plugin \
-  --name=cyclonus \
-  --image=mfenwick100/sonobuoy-cyclonus:latest \
-  --cmd ./run-sonobuoy-plugin.sh \ > cyclonus-plugin.yaml
+  --name=policy-assistant \
+  --image=docker.io/sonobuoy-policy-assistant:latest \
+  --cmd ./run-sonobuoy-plugin.sh \ > policy-assistant-plugin.yaml
 ```
 
 ## Run plugin
 
 ```bash
-sonobuoy run --plugin cyclonus-plugin.yaml --wait
+sonobuoy run --plugin policy-assistant-plugin.yaml --wait
 ```
 
 ## Look at results

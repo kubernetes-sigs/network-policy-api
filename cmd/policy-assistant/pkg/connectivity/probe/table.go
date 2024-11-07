@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/slice"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 type Item struct {

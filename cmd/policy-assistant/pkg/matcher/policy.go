@@ -245,7 +245,7 @@ func (ar *AllowedResult) Table() string {
 	table.SetRowLine(true)
 	table.SetAutoMergeCells(true)
 	table.SetHeader([]string{"Type", "Action", "Target"})
-	// NOTE: broken. This function only used by 1) "cyclonus analyze explain --mode=query-target" and 2) a trace-level log in "cyclonus generate"
+	// NOTE: broken. This function only used by 1) "policy-assistant analyze explain --mode=query-target" and 2) a trace-level log in "policy-assistant generate"
 	// Broken since we're changing the DirectionResult struct to use Effects instead of Allowing/DenyingTargets
 	// addTargetsToTable(table, "Ingress", "Allow", ar.Ingress.AllowingTargets)
 	// addTargetsToTable(table, "Ingress", "Deny", ar.Ingress.DenyingTargets)

@@ -2,8 +2,9 @@ package generator
 
 import (
 	"fmt"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
 func (t *TestCaseGenerator) TargetTestCases() []*TestCase {

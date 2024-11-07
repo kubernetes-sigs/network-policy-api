@@ -9,9 +9,9 @@ import (
 	"golang.org/x/exp/slices"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
 // peerProtocolGroup groups all anps and banps in single struct

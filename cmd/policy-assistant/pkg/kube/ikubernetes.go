@@ -3,13 +3,14 @@ package kube
 import (
 	"context"
 	"fmt"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
+	"math/rand"
+
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"math/rand"
 	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 type IKubernetes interface {

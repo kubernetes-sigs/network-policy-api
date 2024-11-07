@@ -1,3 +1,3 @@
-FROM docker.io/mfenwick100/cyclonus:latest
+FROM docker.io/docker.io/policy-assistant:latest # FIXME use a real image repository
 
 COPY run-sonobuoy-plugin.sh /

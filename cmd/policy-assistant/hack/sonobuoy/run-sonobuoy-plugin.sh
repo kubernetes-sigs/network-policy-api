@@ -3,11 +3,11 @@
 set -xv
 set -euo pipefail
 
-CYCLONUS_ARGS=$@
+POLA_ARGS=$@
 RESULTS_DIR="${RESULTS_DIR:-/tmp/results}"
 
 
-./cyclonus $CYCLONUS_ARGS > "${RESULTS_DIR}"/results.txt
+./policy-assistant $POLA_ARGS > "${RESULTS_DIR}"/results.txt
 
 
 cd "${RESULTS_DIR}"

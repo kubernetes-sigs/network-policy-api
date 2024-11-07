@@ -2,17 +2,18 @@ package kube
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"sync"
+
 	"github.com/mattfenwick/collections/pkg/builtin"
 	"github.com/mattfenwick/collections/pkg/file"
 	"github.com/mattfenwick/collections/pkg/slice"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	networkingv1 "k8s.io/api/networking/v1"
-	"os"
-	"path/filepath"
 	v1alpha12 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
-	"sync"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 // ReadNetworkPoliciesFromPath walks the folder and try to parse each file in

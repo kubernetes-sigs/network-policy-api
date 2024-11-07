@@ -3,9 +3,9 @@ package worker
 import (
 	"encoding/json"
 
-	"github.com/mattfenwick/cyclonus/pkg/kube"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
 type Client struct {

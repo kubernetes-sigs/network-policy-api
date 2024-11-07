@@ -27,7 +27,7 @@ func SetupVersionCommand() *cobra.Command {
 }
 
 func RunVersionCommand() {
-	fmt.Printf("Cyclonus version: \n%s\n", json.MustMarshalToString(map[string]string{
+	fmt.Printf("policy-assistant version: \n%s\n", json.MustMarshalToString(map[string]string{
 		"Version":   version,
 		"GitSHA":    gitSHA,
 		"BuildTime": buildTime,

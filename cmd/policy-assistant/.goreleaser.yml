@@ -1,10 +1,10 @@
-project_name: cyclonus
+project_name: policy-assistant
 release:
   github:
-    owner: mattfenwick
-    name: Cyclonus
+    owner: huntergregory
+    name: policy-assistant
 builds:
-  - id: cyclonus
+  - id: policy-assistant
     goos:
       - linux
       - windows
@@ -13,38 +13,39 @@ builds:
       - amd64
     env:
       - CGO_ENABLED=0
-    main: cmd/cyclonus/main.go
+    main: cmd/policy-assistant/main.go
     ldflags: -s -w
-      -X github.com/mattfenwick/cyclonus/pkg/cli.version={{.Version}}
-      -X github.com/mattfenwick/cyclonus/pkg/cli.gitSHA={{.Commit}}
-      -X github.com/mattfenwick/cyclonus/pkg/cli.buildTime={{.Date}}
+      -X sigs.k8s.io/network-policy-api/policy-assistant/pkg/cli.version={{.Version}}
+      -X sigs.k8s.io/network-policy-api/policy-assistant/pkg/cli.gitSHA={{.Commit}}
+      -X sigs.k8s.io/network-policy-api/policy-assistant/pkg/cli.buildTime={{.Date}}
       -extldflags "-static"
     flags: -tags netgo -installsuffix netgo
-    binary: "cyclonus"
+    binary: "policy-assistant"
     hooks: {}
-dockers:
-  -
-    goos: linux
-    goarch: amd64
-    goarm: ''
-    ids:
-      - cyclonus
-    image_templates:
-      - "mfenwick100/cyclonus:latest"
-      - "mfenwick100/cyclonus:{{ .Tag }}"
-    skip_push: false
-    dockerfile: cmd/cyclonus/Dockerfile
-#    build_flag_templates:
-#      - "--label=org.opencontainers.image.created={{.Date}}"
-#      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#      - "--label=org.opencontainers.image.version={{.Version}}"
-#      - "--pull"
-#      - "--platform=linux/arm64"
+# commenting out since we don't have GHCR Images yet (see #263)
+# dockers:
+#   -
+#     goos: linux
+#     goarch: amd64
+#     goarm: ''
+#     ids:
+#       - policy-assistant
+#     image_templates:
+#       - "docker.io/policy-assistant:latest" # FIXME use a real image repository
+#       - "docker.io/policy-assistant:{{ .Tag }}" # FIXME use a real image repository
+#     skip_push: false
+#     dockerfile: cmd/policy-assistant/Dockerfile
+# #    build_flag_templates:
+# #      - "--label=org.opencontainers.image.created={{.Date}}"
+# #      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+# #      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+# #      - "--label=org.opencontainers.image.version={{.Version}}"
+# #      - "--pull"
+# #      - "--platform=linux/arm64"
 archives:
-  - id: cyclonus
+  - id: policy-assistant
     builds:
-      - cyclonus
+      - policy-assistant
     format: tar.gz
     format_overrides:
       - goos: windows
@@ -52,9 +53,9 @@ archives:
     wrap_in_directory: true
     name_template: '{{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     files:
-      - LICENCE*
+      - LICENSE*
       - README*
       - CHANGELOG*
 checksum:
-  name_template: "cyclonus_{{ .RawVersion }}_checksums.txt"
+  name_template: "pola_{{ .RawVersion }}_checksums.txt"
   algorithm: sha256

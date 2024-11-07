@@ -7,7 +7,7 @@ import (
 )
 
 func RunPrinterTests() {
-	Describe("JUnit cyclonus output", func() {
+	Describe("JUnit policy-assistant output", func() {
 		It("should convert results to junit", func() {
 			testCases := []struct {
 				desc    string
@@ -19,7 +19,7 @@ func RunPrinterTests() {
 					results: nil,
 					junit: junit.JUnitTestSuite{
 						Failures:  0,
-						Name:      "cyclonus",
+						Name:      "policy-assistant",
 						TestCases: nil,
 					},
 				}, {
@@ -32,7 +32,7 @@ func RunPrinterTests() {
 					},
 					junit: junit.JUnitTestSuite{
 						Failures: 2,
-						Name:     "cyclonus",
+						Name:     "policy-assistant",
 						TestCases: []junit.JUnitTestCase{
 							{Name: "test1", Failure: nil},
 							{Name: "test2 with spaces", Failure: &junit.JUnitFailure{}},

@@ -3,10 +3,10 @@ package cli
 import (
 	"os"
 
-	"github.com/mattfenwick/cyclonus/pkg/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 func RunRootCommand() {
@@ -24,8 +24,8 @@ type RootFlags struct {
 func SetupRootCommand() *cobra.Command {
 	flags := &RootFlags{}
 	command := &cobra.Command{
-		Use:   "cyclonus",
-		Short: "explain, probe, and query network policies",
+		Use:   "policy-assistant",
+		Short: "policy assistant for developing and troubleshooting any kubernetes network policy (NPv1, ANP, or BANP)",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return utils.SetUpLogger(flags.Verbosity)
 		},

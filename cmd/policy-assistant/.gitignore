@@ -3,3 +3,6 @@ ignore/
 .idea/
 
 dist/
+
+# policy-assistant binary
+cmd/policy-assistant/policy-assistant

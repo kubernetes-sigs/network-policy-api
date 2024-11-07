@@ -38,24 +38,24 @@ kind export kubeconfig --name "$CLUSTER_NAME"
 kubectl get nodes
 kubectl get pods -A
 
-# run cyclonus
+# run policy-assistant
 if [ "$RUN_FROM_SOURCE" == true ]; then
   # don't quote this -- we want word splitting here!
-  go run ../../cmd/cyclonus/main.go $FROM_SOURCE_ARGS
+  go run ../../cmd/policy-assistant/main.go $FROM_SOURCE_ARGS
 else
-  docker pull mfenwick100/cyclonus:latest
-  kind load docker-image mfenwick100/cyclonus:latest --name "$CLUSTER_NAME"
+  docker pull docker.io/policy-assistant:latest # FIXME use a real image
+  kind load docker-image docker.io/policy-assistant:latest # FIXME use a real image --name "$CLUSTER_NAME"
 
-  JOB_NAME=job.batch/cyclonus
+  JOB_NAME=job.batch/policy-assistant
   JOB_NS=netpol
 
-  # set up cyclonus
+  # set up policy-assistant
   kubectl create ns "$JOB_NS"
-  kubectl create clusterrolebinding cyclonus --clusterrole=cluster-admin --serviceaccount="$JOB_NS":cyclonus
-  kubectl create sa cyclonus -n "$JOB_NS"
+  kubectl create clusterrolebinding policy-assistant --clusterrole=cluster-admin --serviceaccount="$JOB_NS":policy-assistant
+  kubectl create sa policy-assistant -n "$JOB_NS"
 
   pushd "$CNI"
-    kubectl create -f cyclonus-job.yaml -n "$JOB_NS"
+    kubectl create -f policy-assistant-job.yaml -n "$JOB_NS"
   popd
 
   # wait for job to start running
@@ -63,7 +63,7 @@ else
   sleep 30
   kubectl get all -A
 
-  kubectl wait --for=condition=ready pod -l job-name=cyclonus -n $JOB_NS --timeout=5m
+  kubectl wait --for=condition=ready pod -l job-name=policy-assistant -n $JOB_NS --timeout=5m
 
   kubectl logs -f -n $JOB_NS $JOB_NAME
 fi

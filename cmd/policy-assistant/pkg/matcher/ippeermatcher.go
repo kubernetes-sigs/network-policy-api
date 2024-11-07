@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/mattfenwick/collections/pkg/slice"
-	"github.com/mattfenwick/cyclonus/pkg/kube"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
 // IPPeerMatcher matches traffic to CIDR blocks.

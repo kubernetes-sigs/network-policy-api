@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/mattfenwick/cyclonus/pkg/utils"
-	"github.com/pkg/errors"
 	"net"
+
+	"github.com/pkg/errors"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/utils"
 )
 
 func main() {

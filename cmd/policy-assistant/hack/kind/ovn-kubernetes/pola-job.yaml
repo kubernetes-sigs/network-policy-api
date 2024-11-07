@@ -1,19 +1,19 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: cyclonus
+  name: policy-assistant
 spec:
   template:
     spec:
       restartPolicy: Never
       containers:
         - command:
-            - ./cyclonus
+            - ./policy-assistant
             - generate
             - --ignore-loopback=true
             - --exclude=named-port,multi-peer,upstream-e2e,example
             - --job-timeout-seconds=2
-          name: cyclonus
+          name: policy-assistant
           imagePullPolicy: IfNotPresent
-          image: mfenwick100/cyclonus:latest
-      serviceAccount: cyclonus
+          image: docker.io/policy-assistant:latest # FIXME use a real image repository
+      serviceAccount: policy-assistant

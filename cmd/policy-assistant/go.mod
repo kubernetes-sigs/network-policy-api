@@ -1,4 +1,4 @@
-module github.com/mattfenwick/cyclonus
+module sigs.k8s.io/network-policy-api/policy-assistant
 
 go 1.21
 

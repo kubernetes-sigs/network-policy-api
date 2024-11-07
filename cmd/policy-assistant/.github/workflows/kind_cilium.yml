@@ -1,9 +1,9 @@
-name: Kind Cilium Cyclonus
+name: Kind Cilium policy-assistant
 on:
   workflow_dispatch:
     inputs:
-      cyclonus_args:
-        description: "args to pass on to Cyclonus"
+      pola_args:
+        description: "args to pass on to policy-assistant"
         required: false
         default: "generate --include conflict --job-timeout-seconds 2 --server-protocol=tcp,udp --ignore-loopback=true"
 #  schedule:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   test-kind-cilium:
-    name: Run Cyclonus on KinD/Cilium
+    name: Run policy-assistant on KinD/Cilium
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -20,6 +20,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.18
-      - name: Run Cyclonus
+      - name: Run policy-assistant
         working-directory: hack/kind
-        run: CNI=cilium RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.cyclonus_args }}" ./run-cyclonus.sh
+        run: CNI=cilium RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.pola_args }}" ./run-policy-assistant.sh
