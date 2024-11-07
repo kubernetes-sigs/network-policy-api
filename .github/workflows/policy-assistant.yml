@@ -73,21 +73,21 @@ jobs:
       with:
         go-version: ${{ env.GO_VERSION }}
 
-    - name: Build pola Binary
+    - name: Build policy-assistant Binary
       run: |
         cd cmd/policy-assistant/
-        make pola
+        make policy-assistant
 
-    - name: Save pola Binary
+    - name: Save policy-assistant Binary
       run: |
         mkdir -p artifacts
-        cp cmd/policy-assistant/cmd/pola/pola artifacts/
+        cp cmd/policy-assistant/cmd/policy-assistant/policy-assistant artifacts/
 
-    - name: Upload pola Binary
+    - name: Upload policy-assistant Binary
       uses: actions/upload-artifact@v4
       with:
-        name: pola-binary
-        path: artifacts/pola
+        name: policy-assistant-binary
+        path: artifacts/policy-assistant
 
   integration-tests:
     name: Integration Tests
@@ -97,23 +97,23 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v4
 
-    - name: Download pola Binary
+    - name: Download policy-assistant Binary
       uses: actions/download-artifact@v4
       with:
-        name: pola-binary
+        name: policy-assistant-binary
         path: artifacts
 
-    - name: Set pola Binary Permissions
-      run: chmod u+x artifacts/pola
+    - name: Set policy-assistant Binary Permissions
+      run: chmod u+x artifacts/policy-assistant
 
     - name: Run Integration Test - Explain Mode
       run: |
-        artifacts/pola analyze --mode explain --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+        artifacts/policy-assistant analyze --mode explain --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
 
     - name: Run Integration Test - Probe Mode
       run: |
-        artifacts/pola analyze --mode probe --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/ --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
+        artifacts/policy-assistant analyze --mode probe --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/ --probe-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/demo-probe.json
 
     - name: Run Integration Test - Walkthrough Mode
       run: |
-        artifacts/pola analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+        artifacts/policy-assistant analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/

@@ -38,24 +38,24 @@ kind export kubeconfig --name "$CLUSTER_NAME"
 kubectl get nodes
 kubectl get pods -A
 
-# run pola
+# run policy-assistant
 if [ "$RUN_FROM_SOURCE" == true ]; then
   # don't quote this -- we want word splitting here!
-  go run ../../cmd/pola/main.go $FROM_SOURCE_ARGS
+  go run ../../cmd/policy-assistant/main.go $FROM_SOURCE_ARGS
 else
-  docker pull docker.io/pola:latest # FIXME use a real image
-  kind load docker-image docker.io/pola:latest # FIXME use a real image --name "$CLUSTER_NAME"
+  docker pull docker.io/policy-assistant:latest # FIXME use a real image
+  kind load docker-image docker.io/policy-assistant:latest # FIXME use a real image --name "$CLUSTER_NAME"
 
-  JOB_NAME=job.batch/pola
+  JOB_NAME=job.batch/policy-assistant
   JOB_NS=netpol
 
-  # set up pola
+  # set up policy-assistant
   kubectl create ns "$JOB_NS"
-  kubectl create clusterrolebinding pola --clusterrole=cluster-admin --serviceaccount="$JOB_NS":pola
-  kubectl create sa pola -n "$JOB_NS"
+  kubectl create clusterrolebinding policy-assistant --clusterrole=cluster-admin --serviceaccount="$JOB_NS":policy-assistant
+  kubectl create sa policy-assistant -n "$JOB_NS"
 
   pushd "$CNI"
-    kubectl create -f pola-job.yaml -n "$JOB_NS"
+    kubectl create -f policy-assistant-job.yaml -n "$JOB_NS"
   popd
 
   # wait for job to start running
@@ -63,7 +63,7 @@ else
   sleep 30
   kubectl get all -A
 
-  kubectl wait --for=condition=ready pod -l job-name=pola -n $JOB_NS --timeout=5m
+  kubectl wait --for=condition=ready pod -l job-name=policy-assistant -n $JOB_NS --timeout=5m
 
   kubectl logs -f -n $JOB_NS $JOB_NAME
 fi

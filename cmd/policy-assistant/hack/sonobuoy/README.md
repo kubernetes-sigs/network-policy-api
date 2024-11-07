@@ -5,15 +5,15 @@
 ```bash
 # FIXME use a real image repository
 sonobuoy gen plugin \
-  --name=pola \
-  --image=docker.io/sonobuoy-pola:latest \
-  --cmd ./run-sonobuoy-plugin.sh \ > pola-plugin.yaml
+  --name=policy-assistant \
+  --image=docker.io/sonobuoy-policy-assistant:latest \
+  --cmd ./run-sonobuoy-plugin.sh \ > policy-assistant-plugin.yaml
 ```
 
 ## Run plugin
 
 ```bash
-sonobuoy run --plugin pola-plugin.yaml --wait
+sonobuoy run --plugin policy-assistant-plugin.yaml --wait
 ```
 
 ## Look at results

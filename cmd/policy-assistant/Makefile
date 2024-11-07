@@ -2,7 +2,7 @@
 
 # constants
 # FIXME: update POLA_IMAGE to the actual image name
-POLA_IMAGE			= pola
+POLA_IMAGE			= policy-assistant
 
 # variables
 # FIXME: update IMAGE_REGISTRY to the actual image registry
@@ -18,11 +18,11 @@ fmt:
 vet:
 	go vet ./cmd/... ./pkg/...
 
-.PHONY: pola
-pola: pola-binary
+.PHONY: policy-assistant
+policy-assistant: policy-assistant-binary
 
-pola-binary:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./cmd/pola/pola ./cmd/pola
+policy-assistant-binary:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./cmd/policy-assistant/policy-assistant ./cmd/policy-assistant
 
-pola-image: pola-binary
-	docker build -t $(IMAGE_REGISTRY)/$(POLA_IMAGE):$(POLA_TAG) ./cmd/pola
+policy-assistant-image: policy-assistant-binary
+	docker build -t $(IMAGE_REGISTRY)/$(POLA_IMAGE):$(POLA_TAG) ./cmd/policy-assistant

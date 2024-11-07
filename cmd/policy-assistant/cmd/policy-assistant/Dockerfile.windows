@@ -1,0 +1,8 @@
+FROM golang:windowsservercore-ltsc2022 AS builder
+WORKDIR /go/src/sigs.k8s.io/network-policy-api/policy-assistant/
+COPY . .
+RUN $Env:CGO_ENABLED=0; go build -v -o /policy-assistant.exe ./cmd/policy-assistant/
+
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
+COPY --from=builder /policy-assistant.exe policy-assistant.exe
+CMD [ "policy-assistant.exe" ]

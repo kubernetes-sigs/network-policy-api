@@ -27,7 +27,7 @@ type Args struct {
 func SetupRootCommand() *cobra.Command {
 	args := &Args{}
 	command := &cobra.Command{
-		Use:   "pola-worker",
+		Use:   "policy-assistant-worker",
 		Short: "thin wrapper around 'agnhost connect' for issuing batches of connectivity requests",
 		Run: func(cmd *cobra.Command, as []string) {
 			RunWorkerCommand(args)

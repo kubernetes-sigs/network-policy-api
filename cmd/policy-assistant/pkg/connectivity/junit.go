@@ -54,7 +54,7 @@ func ResultsToJUnit(results []*JUnitTestResult) junit.JUnitTestSuite {
 		testCases = append(testCases, testCase)
 	}
 	return junit.JUnitTestSuite{
-		Name:      "pola",
+		Name:      "policy-assistant",
 		Failures:  failed,
 		TestCases: testCases,
 	}

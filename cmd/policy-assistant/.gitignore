@@ -4,5 +4,5 @@ ignore/
 
 dist/
 
-# pola binary
-cmd/pola/pola
+# policy-assistant binary
+cmd/policy-assistant/policy-assistant

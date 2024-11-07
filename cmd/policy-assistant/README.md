@@ -18,7 +18,7 @@ Policy Assistant is a static analysis tool which ***simulates the action of netw
 For instance, Policy Assistant can simulate and walk through which policies impact cluster traffic:
 
 ```shell
-$ pola analyze --namespace demo --mode walkthrough
+$ policy-assistant analyze --namespace demo --mode walkthrough
 verdict walkthrough:
 +---------------------------------------+---------+-------------------------------------------------------------+------------------------------+
 |                TRAFFIC                | VERDICT |                     INGRESS WALKTHROUGH                     |      EGRESS WALKTHROUGH      |
@@ -35,13 +35,13 @@ verdict walkthrough:
 
 ### Quick Install
 
-Download the latest `pola` release either from GitHub ([web page](https://github.com/kubernetes-sigs/network-policy-api/releases/v0.0.1-pola)) or via these bash commands:
+Download the latest `policy-assistant` release either from GitHub ([web page](https://github.com/kubernetes-sigs/network-policy-api/releases/v0.0.1-policy-assistant)) or via these bash commands:
 
 ```bash
-curl -O https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.0.1-pola/pola_linux_amd64.tar.gz
+curl -O https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.0.1-policy-assistant/pola_linux_amd64.tar.gz
 # optionally verify check sum
 tar -xvf pola_linux_amd64.tar.gz
-./pola --help
+./policy-assistant --help
 ```
 
 Alternatively, [install from source](#make-from-source).
@@ -73,7 +73,7 @@ For a presentation and discussion on Policy Assistant and the admin policy APIs,
 Visualize all your policies in a table.
 
 ```shell
-$ pola analyze --mode explain --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+$ policy-assistant analyze --mode explain --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
 explained policies:
 +---------+---------------------------------------+---------------------------+------------+----------------------------+--------------------------+
 |  TYPE   |                SUBJECT                |       SOURCE RULES        |    PEER    |           ACTION           |      PORT/PROTOCOL       |
@@ -108,7 +108,7 @@ explained policies:
 Visualize how traffic would be allowed/denied.
 
 ```shell
-$ pola analyze --mode probe --probe-path examples/demos/kubecon-eu-2024/demo-probe.json --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+$ policy-assistant analyze --mode probe --probe-path examples/demos/kubecon-eu-2024/demo-probe.json --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
 probe (simulated connectivity):
 INFO[2024-08-07T17:26:28-07:00] probe on port 80, protocol TCP               
 Ingress:
@@ -168,7 +168,7 @@ Combined:
 Visualize how traffic would be allowed/denied and which policies are causing the verdict.
 
 ```shell
-$ pola analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+$ policy-assistant analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
 verdict walkthrough:
 +---------------------------------------+---------+-------------------------------------------------------------+------------------------------+
 |                TRAFFIC                | VERDICT |                     INGRESS WALKTHROUGH                     |      EGRESS WALKTHROUGH      |
@@ -189,8 +189,8 @@ verdict walkthrough:
 
 1. Clone the repo.
 2. `cd cmd/policy-assistant`
-3. `make pola`
-4. The `pola` binary will be produced at *cmd/pola/pola*.
+3. `make policy-assistant`
+4. The `policy-assistant` binary will be produced at *cmd/policy-assistant/policy-assistant*.
 
 ### Testing
 

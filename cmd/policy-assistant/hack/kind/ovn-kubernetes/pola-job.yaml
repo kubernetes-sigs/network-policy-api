@@ -1,19 +1,19 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: pola
+  name: policy-assistant
 spec:
   template:
     spec:
       restartPolicy: Never
       containers:
         - command:
-            - ./pola
+            - ./policy-assistant
             - generate
             - --ignore-loopback=true
             - --exclude=named-port,multi-peer,upstream-e2e,example
             - --job-timeout-seconds=2
-          name: pola
+          name: policy-assistant
           imagePullPolicy: IfNotPresent
-          image: docker.io/pola:latest # FIXME use a real image repository
-      serviceAccount: pola
+          image: docker.io/policy-assistant:latest # FIXME use a real image repository
+      serviceAccount: policy-assistant

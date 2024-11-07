@@ -7,7 +7,7 @@ POLA_ARGS=$@
 RESULTS_DIR="${RESULTS_DIR:-/tmp/results}"
 
 
-./pola $POLA_ARGS > "${RESULTS_DIR}"/results.txt
+./policy-assistant $POLA_ARGS > "${RESULTS_DIR}"/results.txt
 
 
 cd "${RESULTS_DIR}"

@@ -1,6 +1,6 @@
 sonobuoy-config:
   driver: Job
-  plugin-name: pola
+  plugin-name: policy-assistant
   result-format: junit
 spec:
   command:
@@ -9,7 +9,7 @@ spec:
   - "--include=conflict"
   - "--exclude=egress,direction"
   - "--junit-results-file=/tmp/results/junit.xml"
-  image: docker.io/sonobuoy-pola:latest # FIXME use a real image repository
+  image: docker.io/sonobuoy-policy-assistant:latest # FIXME use a real image repository
   imagePullPolicy: Always
   name: plugin
   resources: {}
