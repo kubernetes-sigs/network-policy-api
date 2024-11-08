@@ -222,13 +222,15 @@ type AdminNetworkPolicyEgressRule struct {
 type AdminNetworkPolicyRuleAction string
 
 // AdminNetworkPolicyEgressPeer defines a peer to allow traffic to.
-// Exactly one of the fields must be set for a given peer. If a consumer
-// observes none of its fields are set, they must assume an unknown option has
-// been specified and fail closed.
 //
-// For "Allow" rules, "fail closed" means treat the rule as matching no
-// traffic. For "Deny" and "Pass" rules, "fail closed" means: treat the rule
-// as a "Deny all" rule.
+// Exactly one of the fields must be set for a given peer and this is enforced
+// by the validation rules on the CRD. If an implementation sees no fields are
+// set then it can infer that the deployed CRD is of an incompatible version
+// with an unknown field.  In that case it should fail closed.
+//
+// For "Allow" rules, "fail closed" means: "treat the rule as matching no
+// traffic". For "Deny" and "Pass" rules, "fail closed" means: "treat the rule
+// as a 'Deny all' rule".
 //
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
