@@ -1,0 +1,13 @@
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: BaselineAdminNetworkPolicy
+metadata:
+  name: default
+spec:
+  subject:
+    namespaces: {}
+  ingress:
+  - name: "baseline-deny"
+    action: "Deny"
+    from:
+    - namespaces:
+        namespaceSelector: {}

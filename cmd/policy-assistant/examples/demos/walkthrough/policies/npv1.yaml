@@ -1,0 +1,12 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  namespace: demo
+  name: deny-anything-to-pod-a
+spec:
+  policyTypes:
+    - Ingress
+  podSelector:
+    matchLabels:
+      pod: a
+  ingress: []
