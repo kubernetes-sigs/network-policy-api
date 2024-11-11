@@ -58,29 +58,32 @@ func labelsToString(labels map[string]string) string {
 	return strings.Join(slice.Map(format, slice.Sort(maps.Keys(labels))), "\n")
 }
 
+// Helper function to generate the string for source or destination
+func (t *Traffic) formatPeer(peer *TrafficPeer) string {
+	if peer.Internal == nil {
+		return fmt.Sprintf("%s", peer.IP)
+	}
+
+	// If there is a workload, return it
+	if peer.Internal.Workload != "" {
+		return peer.Internal.Workload
+	}
+
+	// Otherwise, return namespace and labels
+	return fmt.Sprintf("%s/%s", peer.Internal.Namespace, labelsToStringSlim(peer.Internal.PodLabels))
+}
+
+// PrettyString refactor to reduce nested if/else blocks
 func (t *Traffic) PrettyString() string {
 	if t == nil || t.Source == nil || t.Destination == nil {
 		return "<undefined>"
 	}
 
-	src := t.Source.Internal.Workload
-	if src == "" {
-		if t.Source.Internal == nil {
-			return "<undefined>"
-		}
+	// Format source and destination peers
+	src := t.formatPeer(t.Source)
+	dst := t.formatPeer(t.Destination)
 
-		src = fmt.Sprintf("%s/%s", t.Source.Internal.Namespace, labelsToStringSlim(t.Source.Internal.PodLabels))
-	}
-
-	dst := t.Destination.Internal.Workload
-	if dst == "" {
-		if t.Destination.Internal == nil {
-			return "<undefined>"
-		}
-
-		dst = fmt.Sprintf("%s/%s", t.Destination.Internal.Namespace, labelsToStringSlim(t.Destination.Internal.PodLabels))
-	}
-
+	// If both source and destination are internal, we need to check the workload conditions
 	return fmt.Sprintf("%s -> %s:%d (%s)", src, dst, t.ResolvedPort, t.Protocol)
 }
 
@@ -105,6 +108,50 @@ func (p *TrafficPeer) Namespace() string {
 
 func (p *TrafficPeer) IsExternal() bool {
 	return p.Internal == nil
+}
+
+func CreateTrafficPeer(ip string, internal *InternalPeer) *TrafficPeer {
+	return &TrafficPeer{
+		IP:       ip,
+		Internal: internal,
+	}
+}
+
+// Helper function to create Traffic objects
+func CreateTraffic(source, destination *TrafficPeer, resolvedPort int, protocol string) *Traffic {
+	return &Traffic{
+		Source:       source,
+		Destination:  destination,
+		ResolvedPort: resolvedPort,
+		Protocol:     v1.Protocol(protocol),
+	}
+}
+
+// Helper function to get internal TrafficPeer info from workload string
+func GetInternalPeerInfo(workload string) *TrafficPeer {
+	if workload == "" {
+		return nil
+	}
+	workloadInfo := WorkloadStringToTrafficPeer(workload)
+	if workloadInfo.Internal.Pods == nil {
+		return &TrafficPeer{
+			Internal: &InternalPeer{
+				PodLabels:       workloadInfo.Internal.PodLabels,
+				NamespaceLabels: workloadInfo.Internal.NamespaceLabels,
+				Namespace:       workloadInfo.Internal.Namespace,
+				Workload:        workloadInfo.Internal.Workload,
+			},
+		}
+	}
+	return &TrafficPeer{
+		Internal: &InternalPeer{
+			PodLabels:       workloadInfo.Internal.PodLabels,
+			NamespaceLabels: workloadInfo.Internal.NamespaceLabels,
+			Namespace:       workloadInfo.Internal.Namespace,
+			Workload:        workloadInfo.Internal.Workload,
+		},
+		IP: workloadInfo.Internal.Pods[0].IP,
+	}
 }
 
 func (p *TrafficPeer) Translate() TrafficPeer {
@@ -177,6 +224,24 @@ func (p *TrafficPeer) Translate() TrafficPeer {
 		Internal: &internalPeer,
 	}
 	return TranslatedPeer
+}
+
+func WorkloadStringToTrafficPeer(workloadString string) TrafficPeer {
+	//Translates a Workload string to a TrafficPeer.
+	//var deploymentPeers []TrafficPeer
+
+	tmpInternalPeer := InternalPeer{
+		Workload: workloadString,
+	}
+	tmpPeer := TrafficPeer{
+		Internal: &tmpInternalPeer,
+	}
+	tmpPeerTranslated := tmpPeer.Translate()
+	//if tmpPeerTranslated.Internal.Workload != "" {
+	//	deploymentPeers = append(deploymentPeers, tmpPeerTranslated)
+	//}
+
+	return tmpPeerTranslated
 }
 
 func DeploymentsToTrafficPeers() []TrafficPeer {
