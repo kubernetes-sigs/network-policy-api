@@ -3,11 +3,11 @@
 set -xv
 set -euo pipefail
 
-POLA_ARGS=$@
+POLICY_ASSISTANT_ARGS=$@
 RESULTS_DIR="${RESULTS_DIR:-/tmp/results}"
 
 
-./policy-assistant $POLA_ARGS > "${RESULTS_DIR}"/results.txt
+./policy-assistant $POLICY_ASSISTANT_ARGS > "${RESULTS_DIR}"/results.txt
 
 
 cd "${RESULTS_DIR}"

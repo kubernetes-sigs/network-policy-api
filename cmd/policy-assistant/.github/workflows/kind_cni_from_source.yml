@@ -5,7 +5,7 @@ on:
       cni:
         description: "name of CNI to use"
         required: true
-      pola_args:
+      policy_assistant_args:
         description: "args to pass on to policy-assistant"
         required: false
         default: "generate include --conflict --job-timeout-seconds 2"
@@ -24,4 +24,4 @@ jobs:
 
       - name: Run policy-assistant
         working-directory: hack/kind
-        run: CNI=${{ github.event.inputs.cni }} RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.pola_args }}" ./run-policy-assistant.sh
+        run: CNI=${{ github.event.inputs.cni }} RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.policy_assistant_args }}" ./run-policy-assistant.sh

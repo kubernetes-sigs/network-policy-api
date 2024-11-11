@@ -2,7 +2,7 @@ name: Kind Calico policy-assistant
 on:
   workflow_dispatch:
     inputs:
-      pola_args:
+      policy_assistant_args:
         description: "args to pass on to policy-assistant"
         required: false
         default: "generate --include conflict --job-timeout-seconds 2"
@@ -22,4 +22,4 @@ jobs:
           go-version: 1.18
       - name: Run policy-assistant
         working-directory: hack/kind
-        run: CNI=calico RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.pola_args }}" ./run-policy-assistant.sh
+        run: CNI=calico RUN_FROM_SOURCE=true FROM_SOURCE_ARGS="${{ github.event.inputs.policy_assistant_args }}" ./run-policy-assistant.sh
