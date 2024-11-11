@@ -5,6 +5,8 @@
 
 ## Overview
 
+### Walkthrough
+
 ```bash
 # single source/destination read from cluster. policies read from YAML files
 policy-assistant analyze --mode walkthrough \
@@ -34,6 +36,38 @@ Example output:
 +-------------------------------------------------+---------+-----------------------------------------------------------------------------+------------------------------+
 ```
 
+### Explain
+
+We can also summarize our policies in a table:
+
+```bash
+$ policy-assistant analyze --mode walkthrough --policy-path policies/
+explained policies:
++---------+------------+------------------------------------+-----------------------+---------------------------------+--------------------------+
+|  TYPE   |  SUBJECT   |            SOURCE RULES            |         PEER          |             ACTION              |      PORT/PROTOCOL       |
++---------+------------+------------------------------------+-----------------------+---------------------------------+--------------------------+
+| Ingress | Namespace: | [NPv1] demo/deny-anything-to-pod-a | no peers              | NPv1:                           | none                     |
+|         |    demo    |                                    |                       |    Allow any peers              |                          |
+|         | Pod:       |                                    |                       |                                 |                          |
+|         |    pod = a |                                    |                       |                                 |                          |
++         +------------+------------------------------------+-----------------------+---------------------------------+--------------------------+
+|         | Namespace: | [ANP] default/anp1                 | Namespace:            | BANP:                           | all ports, all protocols |
+|         |    all     | [ANP] default/anp2                 |    all                |    Deny                         |                          |
+|         |            | [BANP] default/default             | Pod:                  |                                 |                          |
+|         |            |                                    |    all                |                                 |                          |
++         +            +                                    +-----------------------+---------------------------------+                          +
+|         |            |                                    | Namespace:            | ANP:                            |                          |
+|         |            |                                    |    development = true |    pri=2 (development-ns): Pass |                          |
+|         |            |                                    | Pod:                  |                                 |                          |
+|         |            |                                    |    all                |                                 |                          |
++         +            +                                    +-----------------------+---------------------------------+--------------------------+
+|         |            |                                    | Namespace:            | ANP:                            | port 80 on protocol TCP  |
+|         |            |                                    |    all                |    pri=1 (allow-80): Allow      |                          |
+|         |            |                                    | Pod:                  |                                 |                          |
+|         |            |                                    |    all                |                                 |                          |
++---------+------------+------------------------------------+-----------------------+---------------------------------+--------------------------+
+```
+
 ## Demo
 
 To try for yourself:
@@ -42,7 +76,7 @@ To try for yourself:
 1. Leverage the JSON/YAML files in this folder.
 1. Not required: create a Kubernetes cluster and apply any desired YAML files.
 
-## Usage
+## Walkthrough Usage
 
 ### Specifying Policies
 
