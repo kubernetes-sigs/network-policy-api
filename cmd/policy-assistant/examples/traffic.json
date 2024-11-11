@@ -71,5 +71,83 @@
     "Protocol": "TCP",
     "ResolvedPort": 80,
     "ResolvedPortName": "serve-80-tcp"
+  },{
+    "Source": {
+      "Internal": {
+        "Workload": "kube-system/daemonset/azure-npm",
+        "Namespace": "kube-system"
+      }
+    },
+    "Destination": {
+      "Internal": {
+        "Workload": "default/deployment/aks-helloworld-one",
+        "Namespace": "default"
+      }
+    },
+    "Protocol": "TCP",
+    "ResolvedPort": 80,
+    "ResolvedPortName": "serve-80-tcp"
+  },{
+    "Source": {
+      "Internal": {
+        "Workload": "kube-system/daemonset/azure-npm",
+        "Namespace": "kube-system"
+      }
+    },
+    "Destination": {
+      "Internal": {
+        "PodLabels": {"pod": "b"},
+        "NamespaceLabels": {"ns": "y"},
+        "Namespace": "y"
+      },
+      "IP": "192.168.1.100"
+    },
+    "Protocol": "TCP",
+    "ResolvedPort": 80,
+    "ResolvedPortName": "serve-80-tcp"
+  },{
+    "Source": {
+      "Internal": {
+        "PodLabels": {"app": "c"},
+        "NamespaceLabels": {"ns": "y"},
+        "Namespace": "y"
+      },
+      "IP": "192.168.1.99"
+    },
+    "Destination": {
+      "Internal": {
+        "Workload": "default/deployment/nginx-deployment2",
+        "Namespace": "default"
+      }
+    },
+    "Protocol": "TCP",
+    "ResolvedPort": 80,
+    "ResolvedPortName": "serve-80-tcp"
+  },{
+    "Source": {
+      "IP": "192.168.1.99"
+    },
+    "Destination": {
+      "Internal": {
+        "Workload": "default/deployment/nginx-deployment2",
+        "Namespace": "default"
+      }
+    },
+    "Protocol": "TCP",
+    "ResolvedPort": 80,
+    "ResolvedPortName": "serve-80-tcp"
+  },{
+    "Source": {
+      "Internal": {
+        "Workload": "default/deployment/nginx-deployment2",
+        "Namespace": "default"
+      }    
+    },
+    "Destination": {
+       "IP": "192.168.1.99"
+    },
+    "Protocol": "TCP",
+    "ResolvedPort": 80,
+    "ResolvedPortName": "serve-80-tcp"
   }
 ]

@@ -69,6 +69,14 @@ type AnalyzeArgs struct {
 	ProbePath string
 
 	Timeout time.Duration
+
+	SourceWorkloadTraffic string
+
+	DestinationWorkloadTraffic string
+
+	Port int
+
+	Protocol string
 }
 
 func SetupAnalyzeCommand() *cobra.Command {
@@ -96,6 +104,10 @@ func SetupAnalyzeCommand() *cobra.Command {
 	command.Flags().StringVar(&args.TrafficPath, "traffic-path", "", "path to json traffic file, containing of a list of traffic objects")
 	command.Flags().StringVar(&args.ProbePath, "probe-path", "", "path to json model file for synthetic probe")
 	command.Flags().DurationVar(&args.Timeout, "kube-client-timeout", DefaultTimeout, "kube client timeout")
+	command.Flags().StringVar(&args.SourceWorkloadTraffic, "src-workload", "", "Source workload traffic in this form namespace/workloadType/workloadName")
+	command.Flags().StringVar(&args.DestinationWorkloadTraffic, "dst-workload", "", "Destination workload traffic Name in this form namespace/workloadType/workloadName")
+	command.Flags().IntVar(&args.Port, "port", 0, "port used for testing network policies")
+	command.Flags().StringVar(&args.Protocol, "protocol", "", "protocol used for testing network policies")
 
 	return command
 }
@@ -173,7 +185,7 @@ func RunAnalyzeCommand(args *AnalyzeArgs) {
 			ProbeSyntheticConnectivity(policies, args.ProbePath, kubePods, kubeNamespaces)
 		case VerdictWalkthroughMode:
 			fmt.Println("verdict walkthrough:")
-			VerdictWalkthrough(policies)
+			VerdictWalkthrough(policies, args.SourceWorkloadTraffic, args.DestinationWorkloadTraffic, args.Port, args.Protocol, args.TrafficPath)
 		default:
 			panic(errors.Errorf("unrecognized mode %s", mode))
 		}
@@ -296,7 +308,106 @@ func shouldIncludeANPandBANP(client *kubernetes.Clientset) (bool, bool) {
 	return includeANP, includeBANP
 }
 
-func VerdictWalkthrough(policies *matcher.Policy) {
+func VerdictWalkthrough(policies *matcher.Policy, sourceWorkloadTraffic string, destinationWorkloadTraffic string, port int, protocol string, trafficPath string) {
+	var sourceWorkloadInfo matcher.TrafficPeer
+	var destinationWorkloadInfo matcher.TrafficPeer
+	var allTraffic []*matcher.Traffic
+
+	if trafficPath != "" && (sourceWorkloadTraffic != "" || destinationWorkloadTraffic != "" || port != 0 || protocol != "") {
+		logrus.Fatalf("%+v", errors.Errorf("If using traffic path, you can't input traffic via CLI and viceversa"))
+	} else if trafficPath == "" && (sourceWorkloadTraffic == "" || destinationWorkloadTraffic == "" || port == 0 || protocol == "") {
+		logrus.Fatalf("%+v", errors.Errorf("For this mode, you must either set --traffic-path or set all of --src-workload (<namespace>/<workloadType>/workloadName), --dst-workload (<namespace>/<workloadType>/workloadName), --port (integer from 0 to 65535) and --protocol (TCP, UDP and SCTP) parameters"))
+	}
+
+	if trafficPath != "" {
+		allTraffics, err := json.ParseFile[[]*matcher.Traffic](trafficPath)
+		utils.DoOrDie(err)
+		for _, traffic := range *allTraffics {
+			var podA, podB *matcher.TrafficPeer
+
+			// Determine source and destination peer information
+			sourceInternal := traffic.Source.Internal
+			destinationInternal := traffic.Destination.Internal
+
+			podA = matcher.CreateTrafficPeer(traffic.Source.IP, nil)
+			podB = matcher.CreateTrafficPeer(traffic.Destination.IP, nil)
+
+			// Update podA and podB if internal information is available
+			if sourceInternal != nil {
+				podA = matcher.CreateTrafficPeer(traffic.Source.IP, &matcher.InternalPeer{
+					PodLabels:       sourceInternal.PodLabels,
+					NamespaceLabels: sourceInternal.NamespaceLabels,
+					Namespace:       sourceInternal.Namespace,
+					Workload:        sourceInternal.Workload,
+				})
+			}
+
+			if destinationInternal != nil {
+				podB = matcher.CreateTrafficPeer(traffic.Destination.IP, &matcher.InternalPeer{
+					PodLabels:       destinationInternal.PodLabels,
+					NamespaceLabels: destinationInternal.NamespaceLabels,
+					Namespace:       destinationInternal.Namespace,
+					Workload:        destinationInternal.Workload,
+				})
+			}
+
+			// Special case handling for workload-specific traffic (internal vs. external)
+			if sourceInternal != nil {
+				if sourceInternal.Workload != "" {
+					podA = matcher.GetInternalPeerInfo(sourceInternal.Workload)
+				}
+			}
+
+			if destinationInternal != nil {
+				if destinationInternal.Workload != "" {
+					podB = matcher.GetInternalPeerInfo(destinationInternal.Workload)
+				}
+			}
+
+			// Append the resolved traffic to the allTraffic slice
+			allTraffic = append(allTraffic, matcher.CreateTraffic(podA, podB, traffic.ResolvedPort, string(traffic.Protocol)))
+		}
+	} else {
+
+		if protocol != "TCP" && protocol != "UDP" && protocol != "SCTP" {
+			logrus.Fatalf("Bad Protocol Value: protocols supported are TCP, UDP and SCTP")
+		}
+
+		sourceWorkloadInfo = matcher.WorkloadStringToTrafficPeer(sourceWorkloadTraffic)
+		destinationWorkloadInfo = matcher.WorkloadStringToTrafficPeer(destinationWorkloadTraffic)
+
+		if sourceWorkloadInfo.Internal.Pods == nil || destinationWorkloadInfo.Internal.Pods == nil {
+			return
+		}
+
+		podA := &matcher.TrafficPeer{
+			Internal: &matcher.InternalPeer{
+				PodLabels:       sourceWorkloadInfo.Internal.PodLabels,
+				NamespaceLabels: sourceWorkloadInfo.Internal.NamespaceLabels,
+				Namespace:       sourceWorkloadInfo.Internal.Namespace,
+				Workload:        sourceWorkloadInfo.Internal.Workload,
+			},
+			IP: sourceWorkloadInfo.Internal.Pods[0].IP,
+		}
+		podB := &matcher.TrafficPeer{
+			Internal: &matcher.InternalPeer{
+				PodLabels:       destinationWorkloadInfo.Internal.PodLabels,
+				NamespaceLabels: destinationWorkloadInfo.Internal.NamespaceLabels,
+				Namespace:       destinationWorkloadInfo.Internal.Namespace,
+				Workload:        destinationWorkloadInfo.Internal.Workload,
+			},
+			IP: destinationWorkloadInfo.Internal.Pods[0].IP,
+		}
+		allTraffic = []*matcher.Traffic{
+			{
+				Source:       podA,
+				Destination:  podB,
+				ResolvedPort: port,
+				Protocol:     v1.Protocol(protocol),
+			},
+		}
+	}
+
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
 	table.SetAutoWrapText(false)
@@ -304,51 +415,6 @@ func VerdictWalkthrough(policies *matcher.Policy) {
 	table.SetAutoMergeCells(true)
 
 	table.SetHeader([]string{"Traffic", "Verdict", "Ingress Walkthrough", "Egress Walkthrough"})
-
-	// FIXME: use pod resources from CLI arguments or JSON
-	podA := &matcher.TrafficPeer{
-		Internal: &matcher.InternalPeer{
-			PodLabels:       map[string]string{"pod": "a"},
-			NamespaceLabels: map[string]string{"kubernetes.io/metadata.name": "demo"},
-			Namespace:       "demo",
-		},
-		IP: "10.0.0.4",
-	}
-	podB := &matcher.TrafficPeer{
-		Internal: &matcher.InternalPeer{
-			PodLabels:       map[string]string{"pod": "b"},
-			NamespaceLabels: map[string]string{"kubernetes.io/metadata.name": "demo"},
-			Namespace:       "demo",
-		},
-		IP: "10.0.0.5",
-	}
-	allTraffic := []*matcher.Traffic{
-		{
-			Source:       podA,
-			Destination:  podB,
-			ResolvedPort: 80,
-			Protocol:     v1.ProtocolTCP,
-		},
-		{
-			Source:       podA,
-			Destination:  podB,
-			ResolvedPort: 81,
-			Protocol:     v1.ProtocolTCP,
-		},
-		{
-			Source:       podB,
-			Destination:  podA,
-			ResolvedPort: 80,
-			Protocol:     v1.ProtocolTCP,
-		},
-		{
-			Source:       podB,
-			Destination:  podA,
-			ResolvedPort: 81,
-			Protocol:     v1.ProtocolTCP,
-		},
-	}
-
 	for _, traffic := range allTraffic {
 		trafficResult := policies.IsTrafficAllowed(traffic)
 		ingressFlow := trafficResult.Ingress.Flow()
