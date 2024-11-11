@@ -116,4 +116,4 @@ jobs:
 
     - name: Run Integration Test - Walkthrough Mode
       run: |
-        artifacts/policy-assistant analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+        artifacts/policy-assistant analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/ --traffic-path cmd/policy-assistant/examples/traffic-example.json
