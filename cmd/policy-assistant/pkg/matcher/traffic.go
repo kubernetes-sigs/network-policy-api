@@ -156,13 +156,6 @@ func GetInternalPeerInfo(workload string) *TrafficPeer {
 
 func (p *TrafficPeer) Translate() TrafficPeer {
 	//Translates kubernetes workload types to TrafficPeers.
-	var podsNetworking []*PodNetworking
-	var podLabels map[string]string
-	var namespaceLabels map[string]string
-	var workloadOwner string
-	var workloadKind string
-	var internalPeer InternalPeer
-	workloadOwnerExists := false
 	workloadMetadata := strings.Split(strings.ToLower(p.Internal.Workload), "/")
 	if len(workloadMetadata) != 3 || (workloadMetadata[0] == "" || workloadMetadata[1] == "" || workloadMetadata[2] == "") || (workloadMetadata[1] != "daemonset" && workloadMetadata[1] != "statefulset" && workloadMetadata[1] != "replicaset" && workloadMetadata[1] != "deployment" && workloadMetadata[1] != "pod") {
 		logrus.Fatalf("Bad Workload structure: Types supported are pod, replicaset, deployment, daemonset, statefulset, and 3 fields are required with this structure, <namespace>/<workloadType>/<workloadName>")
@@ -175,7 +168,14 @@ func (p *TrafficPeer) Translate() TrafficPeer {
 	if err != nil {
 		logrus.Fatalf("unable to read pods from kube, ns '%s': %+v", workloadMetadata[0], err)
 	}
+
+	var podsNetworking []*PodNetworking
+	var podLabels map[string]string
+	var namespaceLabels map[string]string
+	workloadOwnerExists := false
 	for _, pod := range kubePods {
+		var workloadOwner string
+		var workloadKind string
 		if workloadMetadata[1] == "deployment" && pod.OwnerReferences != nil && pod.OwnerReferences[0].Kind == "ReplicaSet" {
 			kubeReplicaSets, err := kubeClient.GetReplicaSet(workloadMetadata[0], pod.OwnerReferences[0].Name)
 			if err != nil {
@@ -205,6 +205,7 @@ func (p *TrafficPeer) Translate() TrafficPeer {
 		}
 	}
 
+	var internalPeer InternalPeer
 	if !workloadOwnerExists {
 		logrus.Infof(workloadMetadata[0] + "/" + workloadMetadata[1] + "/" + workloadMetadata[2] + " workload not found on the cluster")
 		internalPeer = InternalPeer{
@@ -219,6 +220,8 @@ func (p *TrafficPeer) Translate() TrafficPeer {
 			Pods:            podsNetworking,
 		}
 	}
+
+	logrus.Debugf("Workload: %s, PodLabels: %v, NamespaceLabels: %v, Namespace: %s", internalPeer.Workload, internalPeer.PodLabels, internalPeer.NamespaceLabels, internalPeer.Namespace)
 
 	TranslatedPeer := TrafficPeer{
 		Internal: &internalPeer,
