@@ -104,8 +104,8 @@ func SetupAnalyzeCommand() *cobra.Command {
 	command.Flags().StringVar(&args.TrafficPath, "traffic-path", "", "path to json traffic file, containing of a list of traffic objects")
 	command.Flags().StringVar(&args.ProbePath, "probe-path", "", "path to json model file for synthetic probe")
 	command.Flags().DurationVar(&args.Timeout, "kube-client-timeout", DefaultTimeout, "kube client timeout")
-	command.Flags().StringVar(&args.SourceWorkloadTraffic, "source-workload-traffic", "", "Source workload traffic in this form namespace/workloadType/workloadName")
-	command.Flags().StringVar(&args.DestinationWorkloadTraffic, "destination-workload-traffic", "", "Destination workload traffic Name in this form namespace/workloadType/workloadName")
+	command.Flags().StringVar(&args.SourceWorkloadTraffic, "src-workload", "", "Source workload traffic in this form namespace/workloadType/workloadName")
+	command.Flags().StringVar(&args.DestinationWorkloadTraffic, "dst-workload", "", "Destination workload traffic Name in this form namespace/workloadType/workloadName")
 	command.Flags().IntVar(&args.Port, "port", 0, "port used for testing network policies")
 	command.Flags().StringVar(&args.Protocol, "protocol", "", "protocol used for testing network policies")
 
@@ -316,7 +316,7 @@ func VerdictWalkthrough(policies *matcher.Policy, sourceWorkloadTraffic string, 
 	if trafficPath != "" && (sourceWorkloadTraffic != "" || destinationWorkloadTraffic != "" || port != 0 || protocol != "") {
 		logrus.Fatalf("%+v", errors.Errorf("If using traffic path, you can't input traffic via CLI and viceversa"))
 	} else if trafficPath == "" && (sourceWorkloadTraffic == "" || destinationWorkloadTraffic == "" || port == 0 || protocol == "") {
-		logrus.Fatalf("%+v", errors.Errorf("For this mode, you must either set --traffic-path or set all of --source-workload-traffic (<namespace>/<workloadType>/workloadName), --destination-workload-traffic (<namespace>/<workloadType>/workloadName), --port (integer from 0 to 65535) and --protocol (TCP, UDP and SCTP) parameters"))
+		logrus.Fatalf("%+v", errors.Errorf("For this mode, you must either set --traffic-path or set all of --src-workload (<namespace>/<workloadType>/workloadName), --dst-workload (<namespace>/<workloadType>/workloadName), --port (integer from 0 to 65535) and --protocol (TCP, UDP and SCTP) parameters"))
 	}
 
 	if trafficPath != "" {

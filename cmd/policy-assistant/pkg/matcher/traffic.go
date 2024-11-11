@@ -206,7 +206,7 @@ func (p *TrafficPeer) Translate() TrafficPeer {
 	}
 
 	if !workloadOwnerExists {
-		logrus.Infof("workload not found on the cluster")
+		logrus.Infof(workloadMetadata[0] + "/" + workloadMetadata[1] + "/" + workloadMetadata[2] + " workload not found on the cluster")
 		internalPeer = InternalPeer{
 			Workload: "",
 		}
