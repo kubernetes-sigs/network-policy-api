@@ -57,5 +57,5 @@ archives:
       - README*
       - CHANGELOG*
 checksum:
-  name_template: "pola_{{ .RawVersion }}_checksums.txt"
+  name_template: "policy_assistant_{{ .RawVersion }}_checksums.txt"
   algorithm: sha256

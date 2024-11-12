@@ -18,19 +18,17 @@ Policy Assistant is a static analysis tool which ***simulates the action of netw
 For instance, Policy Assistant can simulate and walk through which policies impact cluster traffic:
 
 ```shell
-$ policy-assistant analyze --namespace demo --mode walkthrough
+$ policy-assistant analyze --mode walkthrough --policy-path policies/ --traffic-path traffic.json
 verdict walkthrough:
-+---------------------------------------+---------+-------------------------------------------------------------+------------------------------+
-|                TRAFFIC                | VERDICT |                     INGRESS WALKTHROUGH                     |      EGRESS WALKTHROUGH      |
-+---------------------------------------+---------+-------------------------------------------------------------+------------------------------+
-| demo/[pod=a] -> demo/[pod=b]:80 (TCP) | Allowed | [ANP] Allow (allow-80)                                      | no policies targeting egress |
-+---------------------------------------+---------+-------------------------------------------------------------+                              +
-| demo/[pod=a] -> demo/[pod=b]:81 (TCP) | Denied  | [ANP] Pass (pass-81) -> [BANP] Deny (baseline-deny)         |                              |
-+---------------------------------------+---------+-------------------------------------------------------------+                              +
-| demo/[pod=b] -> demo/[pod=a]:80 (TCP) | Allowed | [ANP] Allow (allow-80)                                      |                              |
-+---------------------------------------+---------+-------------------------------------------------------------+                              +
-| demo/[pod=b] -> demo/[pod=a]:81 (TCP) | Denied  | [ANP] Pass (pass-81) -> [NPv1] Dropped (demo/deny-to-pod-a) |                              |
-+---------------------------------------+---------+-------------------------------------------------------------+------------------------------+
++-------------------------------------------------+---------+-----------------------------------------------------------------------------+------------------------------+
+|                     TRAFFIC                     | VERDICT |                             INGRESS WALKTHROUGH                             |      EGRESS WALKTHROUGH      |
++-------------------------------------------------+---------+-----------------------------------------------------------------------------+------------------------------+
+| demo/deployment/a -> demo/pod/b:80 (TCP)        | Allowed | [ANP] Allow (allow-80)                                                      | no policies targeting egress |
++-------------------------------------------------+---------+-----------------------------------------------------------------------------+                              +
+| demo/deployment/a -> demo/pod/b:81 (TCP)        | Denied  | [ANP] No-Op -> [BANP] Deny (baseline-deny)                                  |                              |
++-------------------------------------------------+         +-----------------------------------------------------------------------------+                              +
+| demo2/[app=nginx] -> demo/deployment/a:81 (TCP) |         | [ANP] Pass (development-ns) -> [NPv1] Dropped (demo/deny-anything-to-pod-a) |                              |
++-------------------------------------------------+---------+-----------------------------------------------------------------------------+------------------------------+
 ```
 
 ### Quick Install
@@ -38,10 +36,10 @@ verdict walkthrough:
 Download the latest `policy-assistant` release either from GitHub ([web page](https://github.com/kubernetes-sigs/network-policy-api/releases/v0.0.1-policy-assistant)) or via these bash commands:
 
 ```bash
-curl -O https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.0.1-policy-assistant/pola_linux_amd64.tar.gz
+curl -O https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.0.1-policy-assistant/policy-assistant_linux_amd64.tar.gz
 # optionally verify check sum
-tar -xvf pola_linux_amd64.tar.gz
-./policy-assistant --help
+tar -xvf policy-assistant_linux_amd64.tar.gz
+./policy-assistant analyze --help
 ```
 
 Alternatively, [install from source](#make-from-source).
@@ -167,20 +165,20 @@ Combined:
 
 Visualize how traffic would be allowed/denied and which policies are causing the verdict.
 
+For more information, see the [walkthrough demo](./examples/demos/walkthrough/README.md).
+
 ```shell
-$ policy-assistant analyze --mode walkthrough --policy-path cmd/policy-assistant/examples/demos/kubecon-eu-2024/policies/
+$ policy-assistant analyze --mode walkthrough --policy-path policies/ --traffic-path traffic.json
 verdict walkthrough:
-+---------------------------------------+---------+-------------------------------------------------------------+------------------------------+
-|                TRAFFIC                | VERDICT |                     INGRESS WALKTHROUGH                     |      EGRESS WALKTHROUGH      |
-+---------------------------------------+---------+-------------------------------------------------------------+------------------------------+
-| demo/[pod=a] -> demo/[pod=b]:80 (TCP) | Allowed | [ANP] Allow (allow-80)                                      | no policies targeting egress |
-+---------------------------------------+---------+-------------------------------------------------------------+                              +
-| demo/[pod=a] -> demo/[pod=b]:81 (TCP) | Denied  | [ANP] Pass (pass-81) -> [BANP] Deny (baseline-deny)         |                              |
-+---------------------------------------+---------+-------------------------------------------------------------+                              +
-| demo/[pod=b] -> demo/[pod=a]:80 (TCP) | Allowed | [ANP] Allow (allow-80)                                      |                              |
-+---------------------------------------+---------+-------------------------------------------------------------+                              +
-| demo/[pod=b] -> demo/[pod=a]:81 (TCP) | Denied  | [ANP] Pass (pass-81) -> [NPv1] Dropped (demo/deny-to-pod-a) |                              |
-+---------------------------------------+---------+-------------------------------------------------------------+------------------------------+
++-------------------------------------------------+---------+-----------------------------------------------------------------------------+------------------------------+
+|                     TRAFFIC                     | VERDICT |                             INGRESS WALKTHROUGH                             |      EGRESS WALKTHROUGH      |
++-------------------------------------------------+---------+-----------------------------------------------------------------------------+------------------------------+
+| demo/deployment/a -> demo/pod/b:80 (TCP)        | Allowed | [ANP] Allow (allow-80)                                                      | no policies targeting egress |
++-------------------------------------------------+---------+-----------------------------------------------------------------------------+                              +
+| demo/deployment/a -> demo/pod/b:81 (TCP)        | Denied  | [ANP] No-Op -> [BANP] Deny (baseline-deny)                                  |                              |
++-------------------------------------------------+         +-----------------------------------------------------------------------------+                              +
+| demo2/[app=nginx] -> demo/deployment/a:81 (TCP) |         | [ANP] Pass (development-ns) -> [NPv1] Dropped (demo/deny-anything-to-pod-a) |                              |
++-------------------------------------------------+---------+-----------------------------------------------------------------------------+------------------------------+
 ```
 
 ## Development
