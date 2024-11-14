@@ -1,0 +1,49 @@
+[
+    {
+        "Source": {
+          "Internal": {
+            "Workload": "demo/deployment/a"
+          }
+        },
+        "Destination": {
+          "Internal": {
+            "Workload": "demo/pod/b"
+          }
+        },
+        "Protocol": "TCP",
+        "ResolvedPort": 80,
+        "ResolvedPortName": "serve-80-tcp"
+    },
+    {
+        "Source": {
+          "Internal": {
+            "Workload": "demo/deployment/a"
+          }
+        },
+        "Destination": {
+          "Internal": {
+            "Workload": "demo/pod/b"
+          }
+        },
+        "Protocol": "TCP",
+        "ResolvedPort": 81,
+        "ResolvedPortName": "serve-81-tcp"
+    },
+    {
+        "Source": {
+          "Internal": {
+            "PodLabels": {"app": "nginx"},
+            "NamespaceLabels": {"development": "true"},
+            "Namespace": "demo2"
+          }
+        },
+        "Destination": {
+          "Internal": {
+            "Workload": "demo/deployment/a"
+          }
+        },
+        "Protocol": "TCP",
+        "ResolvedPort": 81,
+        "ResolvedPortName": "serve-81-tcp"
+    }
+]
