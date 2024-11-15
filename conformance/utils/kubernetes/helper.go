@@ -74,14 +74,35 @@ func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Confi
 		protocolArg,
 		ipPortArg), " ")
 
-	stdout, stderr, err := RunCommandFromPod(client, kubeConfig, clientNamespace, clientPod, connectCommand)
-	// TODO(tssurya): See if we need to add a wait&retry mechanism to test connectivity
-	// See https://github.com/kubernetes-sigs/network-policy-api/issues/108 for details.
-	if err != nil && stderr == "" {
-		// If err != nil and stderr == "", then it means this probe failed because of the command instead of connectivity.
-		t.Logf("FAILED to execute command %s on pod %s/%s: %v", connectCommand, clientNamespace, clientPod, err.Error())
+	var stdout, stderr string
+	var err error
+	// reuse the RequestTimeout parameter as context timeout
+	waitErr := wait.PollUntilContextTimeout(context.Background(), timeout, 3*timeout, true, func(ctx context.Context) (bool, error) {
+		stdout, stderr, err = RunCommandFromPod(client, kubeConfig, clientNamespace, clientPod, connectCommand)
+		// See https://github.com/kubernetes-sigs/network-policy-api/issues/108 for details.
+		if err != nil && stderr == "" {
+			// If err != nil and stderr == "", then it means this probe failed because of the command instead of connectivity.
+			t.Logf("FAILED to execute command %s on pod %s/%s: %v", connectCommand, clientNamespace, clientPod, err.Error())
+			return false, err
+		}
+
+		if shouldConnect && len(stderr) == 0 {
+			return true, nil
+		} else if !shouldConnect && strings.Contains(stderr, "TIMEOUT") {
+			return true, nil
+		}
+
+		// retry in the following situations
+		// 1. Expected connection to succeed but failed
+		// 2. Expected connection to fail but succeed
+		return false, nil
+	})
+	if waitErr != nil {
+		t.Logf("Connection test failed after retrying with timeout %v, FAILED Command was %s", timeout, connectCommand)
 		return false
 	}
+
+	// check result after retry
 	if shouldConnect && len(stderr) > 0 {
 		t.Logf("FAILED Command was %s", connectCommand)
 		t.Logf("Expected connection to succeed from %s/%s to %s, but instead it miserably failed. stderr: %v",
@@ -101,6 +122,7 @@ func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Confi
 			return false
 		}
 	}
+
 	return true
 }
 
