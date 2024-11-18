@@ -8,11 +8,11 @@ implementations, the versions they cover, and documentation to help users get st
 
 ## AdminNetworkPolicy and BaseLineAdminNetworkPolicy
 
-Updated: 10-29-2024
+Updated: 11-14-2024
 
 - [Kube-network-policies](https://github.com/kubernetes-sigs/kube-network-policies)
 - [OVN-Kubernetes CNI](https://github.com/ovn-org/ovn-kubernetes/) (Has implemented standard fields of the API + Nodes/Networks in Experimental)
 - [Antrea CNI](https://github.com/antrea-io/antrea/) (Has implemented standard fields of the API)
 - [KubeOVN CNI](https://github.com/kubeovn/kube-ovn) (Has implemented standard fields of the API)
-- [Calico CNI](https://github.com/projectcalico/calico/issues/7578) (work in progress)
+- [Calico CNI](https://github.com/projectcalico/calico/issues/7578) (Has implemented standard fields of the API for Admin Network Policy + Networks peer in experimental, Baseline Admin network policy support in progress)
 - [Cilium CNI](https://github.com/cilium/cilium/issues/23380) (tracking issue)
