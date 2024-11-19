@@ -22,14 +22,14 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// NamespacedPodApplyConfiguration represents an declarative configuration of the NamespacedPod type for use
+// NamespacedPodApplyConfiguration represents a declarative configuration of the NamespacedPod type for use
 // with apply.
 type NamespacedPodApplyConfiguration struct {
 	NamespaceSelector *v1.LabelSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
 	PodSelector       *v1.LabelSelectorApplyConfiguration `json:"podSelector,omitempty"`
 }
 
-// NamespacedPodApplyConfiguration constructs an declarative configuration of the NamespacedPod type for use with
+// NamespacedPodApplyConfiguration constructs a declarative configuration of the NamespacedPod type for use with
 // apply.
 func NamespacedPod() *NamespacedPodApplyConfiguration {
 	return &NamespacedPodApplyConfiguration{}

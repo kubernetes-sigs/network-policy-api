@@ -43,20 +43,22 @@ var adminnetworkpoliciesKind = v1alpha1.SchemeGroupVersion.WithKind("AdminNetwor
 
 // Get takes name of the adminNetworkPolicy, and returns the corresponding adminNetworkPolicy object, and an error if there is any.
 func (c *FakeAdminNetworkPolicies) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AdminNetworkPolicy, err error) {
+	emptyResult := &v1alpha1.AdminNetworkPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(adminnetworkpoliciesResource, name), &v1alpha1.AdminNetworkPolicy{})
+		Invokes(testing.NewRootGetActionWithOptions(adminnetworkpoliciesResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AdminNetworkPolicy), err
 }
 
 // List takes label and field selectors, and returns the list of AdminNetworkPolicies that match those selectors.
 func (c *FakeAdminNetworkPolicies) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AdminNetworkPolicyList, err error) {
+	emptyResult := &v1alpha1.AdminNetworkPolicyList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(adminnetworkpoliciesResource, adminnetworkpoliciesKind, opts), &v1alpha1.AdminNetworkPolicyList{})
+		Invokes(testing.NewRootListActionWithOptions(adminnetworkpoliciesResource, adminnetworkpoliciesKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -75,36 +77,39 @@ func (c *FakeAdminNetworkPolicies) List(ctx context.Context, opts v1.ListOptions
 // Watch returns a watch.Interface that watches the requested adminNetworkPolicies.
 func (c *FakeAdminNetworkPolicies) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(adminnetworkpoliciesResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(adminnetworkpoliciesResource, opts))
 }
 
 // Create takes the representation of a adminNetworkPolicy and creates it.  Returns the server's representation of the adminNetworkPolicy, and an error, if there is any.
 func (c *FakeAdminNetworkPolicies) Create(ctx context.Context, adminNetworkPolicy *v1alpha1.AdminNetworkPolicy, opts v1.CreateOptions) (result *v1alpha1.AdminNetworkPolicy, err error) {
+	emptyResult := &v1alpha1.AdminNetworkPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(adminnetworkpoliciesResource, adminNetworkPolicy), &v1alpha1.AdminNetworkPolicy{})
+		Invokes(testing.NewRootCreateActionWithOptions(adminnetworkpoliciesResource, adminNetworkPolicy, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AdminNetworkPolicy), err
 }
 
 // Update takes the representation of a adminNetworkPolicy and updates it. Returns the server's representation of the adminNetworkPolicy, and an error, if there is any.
 func (c *FakeAdminNetworkPolicies) Update(ctx context.Context, adminNetworkPolicy *v1alpha1.AdminNetworkPolicy, opts v1.UpdateOptions) (result *v1alpha1.AdminNetworkPolicy, err error) {
+	emptyResult := &v1alpha1.AdminNetworkPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(adminnetworkpoliciesResource, adminNetworkPolicy), &v1alpha1.AdminNetworkPolicy{})
+		Invokes(testing.NewRootUpdateActionWithOptions(adminnetworkpoliciesResource, adminNetworkPolicy, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AdminNetworkPolicy), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeAdminNetworkPolicies) UpdateStatus(ctx context.Context, adminNetworkPolicy *v1alpha1.AdminNetworkPolicy, opts v1.UpdateOptions) (*v1alpha1.AdminNetworkPolicy, error) {
+func (c *FakeAdminNetworkPolicies) UpdateStatus(ctx context.Context, adminNetworkPolicy *v1alpha1.AdminNetworkPolicy, opts v1.UpdateOptions) (result *v1alpha1.AdminNetworkPolicy, err error) {
+	emptyResult := &v1alpha1.AdminNetworkPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(adminnetworkpoliciesResource, "status", adminNetworkPolicy), &v1alpha1.AdminNetworkPolicy{})
+		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(adminnetworkpoliciesResource, "status", adminNetworkPolicy, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AdminNetworkPolicy), err
 }
@@ -118,7 +123,7 @@ func (c *FakeAdminNetworkPolicies) Delete(ctx context.Context, name string, opts
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeAdminNetworkPolicies) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(adminnetworkpoliciesResource, listOpts)
+	action := testing.NewRootDeleteCollectionActionWithOptions(adminnetworkpoliciesResource, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.AdminNetworkPolicyList{})
 	return err
@@ -126,10 +131,11 @@ func (c *FakeAdminNetworkPolicies) DeleteCollection(ctx context.Context, opts v1
 
 // Patch applies the patch and returns the patched adminNetworkPolicy.
 func (c *FakeAdminNetworkPolicies) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AdminNetworkPolicy, err error) {
+	emptyResult := &v1alpha1.AdminNetworkPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(adminnetworkpoliciesResource, name, pt, data, subresources...), &v1alpha1.AdminNetworkPolicy{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(adminnetworkpoliciesResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AdminNetworkPolicy), err
 }
@@ -147,10 +153,11 @@ func (c *FakeAdminNetworkPolicies) Apply(ctx context.Context, adminNetworkPolicy
 	if name == nil {
 		return nil, fmt.Errorf("adminNetworkPolicy.Name must be provided to Apply")
 	}
+	emptyResult := &v1alpha1.AdminNetworkPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(adminnetworkpoliciesResource, *name, types.ApplyPatchType, data), &v1alpha1.AdminNetworkPolicy{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(adminnetworkpoliciesResource, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AdminNetworkPolicy), err
 }
@@ -169,10 +176,11 @@ func (c *FakeAdminNetworkPolicies) ApplyStatus(ctx context.Context, adminNetwork
 	if name == nil {
 		return nil, fmt.Errorf("adminNetworkPolicy.Name must be provided to Apply")
 	}
+	emptyResult := &v1alpha1.AdminNetworkPolicy{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(adminnetworkpoliciesResource, *name, types.ApplyPatchType, data, "status"), &v1alpha1.AdminNetworkPolicy{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(adminnetworkpoliciesResource, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AdminNetworkPolicy), err
 }

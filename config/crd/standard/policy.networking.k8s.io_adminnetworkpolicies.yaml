@@ -62,7 +62,6 @@ spec:
                   would take the highest precedence.
                   ANPs with no egress rules do not affect egress traffic.
 
-
                   Support: Core
                 items:
                   description: |-
@@ -82,7 +81,6 @@ spec:
                         If the pod is not selected by any NetworkPolicies then execution
                         is passed to any BaselineAdminNetworkPolicies that select the pod.
 
-
                         Support: Core
                       enum:
                       - Allow
@@ -96,7 +94,6 @@ spec:
                         improve observability, readability and error-reporting for any applied
                         AdminNetworkPolicies.
 
-
                         Support: Core
                       maxLength: 100
                       type: string
@@ -105,7 +102,6 @@ spec:
                         Ports allows for matching traffic based on port and protocols.
                         This field is a list of destination ports for the outgoing egress traffic.
                         If Ports is not set then the rule does not filter traffic via port.
-
 
                         Support: Core
                       items:
@@ -119,13 +115,11 @@ spec:
                             description: |-
                               Port selects a port on a pod(s) based on number.
 
-
                               Support: Core
                             properties:
                               port:
                                 description: |-
                                   Number defines a network port value.
-
 
                                   Support: Core
                                 format: int32
@@ -137,7 +131,6 @@ spec:
                                 description: |-
                                   Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
                                   match. If not specified, this field defaults to TCP.
-
 
                                   Support: Core
                                 type: string
@@ -150,14 +143,12 @@ spec:
                               PortRange selects a port range on a pod(s) based on provided start and end
                               values.
 
-
                               Support: Core
                             properties:
                               end:
                                 description: |-
                                   End defines a network port that is the end of a port range, the End value
                                   must be greater than Start.
-
 
                                   Support: Core
                                 format: int32
@@ -170,14 +161,12 @@ spec:
                                   Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
                                   match. If not specified, this field defaults to TCP.
 
-
                                   Support: Core
                                 type: string
                               start:
                                 description: |-
                                   Start defines a network port that is the start of a port range, the Start
                                   value must be less than End.
-
 
                                   Support: Core
                                 format: int32
@@ -199,7 +188,6 @@ spec:
                         traffic then the specified action is applied.
                         This field must be defined and contain at least one item.
 
-
                         Support: Core
                       items:
                         description: |-
@@ -214,7 +202,6 @@ spec:
                             description: |-
                               Namespaces defines a way to select all pods within a set of Namespaces.
                               Note that host-networked pods are not included in this type of peer.
-
 
                               Support: Core
                             properties:
@@ -266,7 +253,6 @@ spec:
                               Pods defines a way to select a set of pods in
                               a set of namespaces. Note that host-networked pods
                               are not included in this type of peer.
-
 
                               Support: Core
                             properties:
@@ -392,7 +378,6 @@ spec:
                   would take the highest precedence.
                   ANPs with no ingress rules do not affect ingress traffic.
 
-
                   Support: Core
                 items:
                   description: |-
@@ -411,7 +396,6 @@ spec:
                         If the pod is not selected by any NetworkPolicies then execution
                         is passed to any BaselineAdminNetworkPolicies that select the pod.
 
-
                         Support: Core
                       enum:
                       - Allow
@@ -424,7 +408,6 @@ spec:
                         If any AdminNetworkPolicyIngressPeer matches the source of incoming
                         traffic then the specified action is applied.
                         This field must be defined and contain at least one item.
-
 
                         Support: Core
                       items:
@@ -440,7 +423,6 @@ spec:
                             description: |-
                               Namespaces defines a way to select all pods within a set of Namespaces.
                               Note that host-networked pods are not included in this type of peer.
-
 
                               Support: Core
                             properties:
@@ -492,7 +474,6 @@ spec:
                               Pods defines a way to select a set of pods in
                               a set of namespaces. Note that host-networked pods
                               are not included in this type of peer.
-
 
                               Support: Core
                             properties:
@@ -609,7 +590,6 @@ spec:
                         improve observability, readability and error-reporting for any applied
                         AdminNetworkPolicies.
 
-
                         Support: Core
                       maxLength: 100
                       type: string
@@ -620,7 +600,6 @@ spec:
                         the pods selected for this policy i.e the subject of the policy.
                         So it matches on the destination port for the ingress traffic.
                         If Ports is not set then the rule does not filter traffic via port.
-
 
                         Support: Core
                       items:
@@ -634,13 +613,11 @@ spec:
                             description: |-
                               Port selects a port on a pod(s) based on number.
 
-
                               Support: Core
                             properties:
                               port:
                                 description: |-
                                   Number defines a network port value.
-
 
                                   Support: Core
                                 format: int32
@@ -652,7 +629,6 @@ spec:
                                 description: |-
                                   Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
                                   match. If not specified, this field defaults to TCP.
-
 
                                   Support: Core
                                 type: string
@@ -665,14 +641,12 @@ spec:
                               PortRange selects a port range on a pod(s) based on provided start and end
                               values.
 
-
                               Support: Core
                             properties:
                               end:
                                 description: |-
                                   End defines a network port that is the end of a port range, the End value
                                   must be greater than Start.
-
 
                                   Support: Core
                                 format: int32
@@ -685,14 +659,12 @@ spec:
                                   Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
                                   match. If not specified, this field defaults to TCP.
 
-
                                   Support: Core
                                 type: string
                               start:
                                 description: |-
                                   Start defines a network port that is the start of a port range, the Start
                                   value must be less than End.
-
 
                                   Support: Core
                                 format: int32
@@ -724,7 +696,6 @@ spec:
                   implementation can apply any of the matching policies to the connection, and
                   there is no way for the user to reliably determine which one it will choose.
 
-
                   Support: Core
                 format: int32
                 maximum: 1000
@@ -734,7 +705,6 @@ spec:
                 description: |-
                   Subject defines the pods to which this AdminNetworkPolicy applies.
                   Note that host-networked pods are not included in subject selection.
-
 
                   Support: Core
                 maxProperties: 1
@@ -900,16 +870,8 @@ spec:
             properties:
               conditions:
                 items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource.\n---\nThis struct is intended for
-                    direct use as an array at the field path .status.conditions.  For
-                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
-                    observations of a foo's current state.\n\t    // Known .status.conditions.type
-                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
-                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
-                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t
-                    \   // other fields\n\t}"
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
                   properties:
                     lastTransitionTime:
                       description: |-
@@ -950,12 +912,7 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: |-
-                        type of condition in CamelCase or in foo.example.com/CamelCase.
-                        ---
-                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
-                        useful (see .node.status.conditions), the ability to deconflict is important.
-                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string

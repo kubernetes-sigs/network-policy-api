@@ -22,14 +22,14 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// AdminNetworkPolicySubjectApplyConfiguration represents an declarative configuration of the AdminNetworkPolicySubject type for use
+// AdminNetworkPolicySubjectApplyConfiguration represents a declarative configuration of the AdminNetworkPolicySubject type for use
 // with apply.
 type AdminNetworkPolicySubjectApplyConfiguration struct {
 	Namespaces *v1.LabelSelectorApplyConfiguration `json:"namespaces,omitempty"`
 	Pods       *NamespacedPodApplyConfiguration    `json:"pods,omitempty"`
 }
 
-// AdminNetworkPolicySubjectApplyConfiguration constructs an declarative configuration of the AdminNetworkPolicySubject type for use with
+// AdminNetworkPolicySubjectApplyConfiguration constructs a declarative configuration of the AdminNetworkPolicySubject type for use with
 // apply.
 func AdminNetworkPolicySubject() *AdminNetworkPolicySubjectApplyConfiguration {
 	return &AdminNetworkPolicySubjectApplyConfiguration{}

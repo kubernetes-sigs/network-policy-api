@@ -22,13 +22,13 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// BaselineAdminNetworkPolicyStatusApplyConfiguration represents an declarative configuration of the BaselineAdminNetworkPolicyStatus type for use
+// BaselineAdminNetworkPolicyStatusApplyConfiguration represents a declarative configuration of the BaselineAdminNetworkPolicyStatus type for use
 // with apply.
 type BaselineAdminNetworkPolicyStatusApplyConfiguration struct {
 	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
-// BaselineAdminNetworkPolicyStatusApplyConfiguration constructs an declarative configuration of the BaselineAdminNetworkPolicyStatus type for use with
+// BaselineAdminNetworkPolicyStatusApplyConfiguration constructs a declarative configuration of the BaselineAdminNetworkPolicyStatus type for use with
 // apply.
 func BaselineAdminNetworkPolicyStatus() *BaselineAdminNetworkPolicyStatusApplyConfiguration {
 	return &BaselineAdminNetworkPolicyStatusApplyConfiguration{}
