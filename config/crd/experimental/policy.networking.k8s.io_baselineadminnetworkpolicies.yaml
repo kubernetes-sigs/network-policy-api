@@ -280,7 +280,10 @@ spec:
                           nodes:
                             description: |-
                               Nodes defines a way to select a set of nodes in
-                              the cluster. This field follows standard label selector
+                              the cluster (based on the node's labels). It selects
+                              the nodeIPs as the peer type by matching on the IPs
+                              present in the node.Status.Addresses field of the node.
+                              This field follows standard label selector
                               semantics; if present but empty, it selects all Nodes.
 
                               Support: Extended
