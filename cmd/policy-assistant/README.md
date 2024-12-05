@@ -36,10 +36,11 @@ verdict walkthrough:
 Download the latest `policy-assistant` release either from GitHub ([web page](https://github.com/kubernetes-sigs/network-policy-api/releases/v0.0.1-policy-assistant)) or via these bash commands:
 
 ```bash
-curl -O https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.0.1-policy-assistant/policy-assistant_linux_amd64.tar.gz
+curl -LO https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.0.1-policy-assistant/policy-assistant_linux_amd64.tar.gz
 # optionally verify check sum
 tar -xvf policy-assistant_linux_amd64.tar.gz
-./policy-assistant analyze --help
+sudo mv policy-assistant_linux_amd64/policy-assistant /usr/bin/policy-assistant
+policy-assistant analyze --help
 ```
 
 Alternatively, [install from source](#make-from-source).
