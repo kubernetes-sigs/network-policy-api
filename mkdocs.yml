@@ -56,6 +56,7 @@ nav:
     - Implementations: implementations.md
   - Guides:
     - Getting started: getting-started.md
+    - Developer Guide: contributing/devguide.md
   - Reference:
     - Examples: reference/examples.md
     - API Reference: reference/spec.md
@@ -73,8 +74,6 @@ nav:
         # - Declined:
   - Blog:
     - blog/index.md
-  - Contributing:
-    - Developer Guide: contributing/devguide.md
 
 plugins:
   - blog:

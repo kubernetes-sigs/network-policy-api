@@ -1,4 +1,4 @@
-# Dev Guide
+# Developer Guide
 
 ## Project management
 
@@ -30,7 +30,7 @@ following prerequisites installed:
 * [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl): Kubenetes command line tool.
 
 
-### Building, testing and deploying
+## Building, Deploying, and Submitting the code
 
 Clone the repo:
 
@@ -44,7 +44,7 @@ cd network-policy-api
 This project works with Go modules; you can chose to setup your environment
 outside $GOPATH as well.
 
-### Building the code
+### Building and Deploying the code
 
 The project uses `make` to drive the build. `make` will run code generators, and
 run static analysis against the code and generate Kubernetes CRDs. You can kick
@@ -53,6 +53,19 @@ off an overall build from the top-level makefile:
 ```shell
 make install
 ```
+
+### Verifying
+
+Make sure you run the static analysis over the repo before submitting your
+changes. The [Prow presubmit][prow-setup] will not let your change merge if
+verification fails.
+
+```shell
+make verify
+```
+
+[prow-setup]: https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/network-policy-api
+
 
 ### Submitting a Pull Request
 
@@ -66,37 +79,25 @@ pull request will be merged automatically.
 - Pass [verification](#verify) tests
 - Get all necessary approvals from reviewers and code owners
 
-### Verify
-
-Make sure you run the static analysis over the repo before submitting your
-changes. The [Prow presubmit][prow-setup] will not let your change merge if
-verification fails.
-
-```shell
-make verify
-```
-
-[prow-setup]: https://github.com/kubernetes/test-infra/tree/master/config/jobs/kubernetes-sigs/network-policy-api
-
-### Documentation
+## Documentation
 
 The site documentation is written in Markdown and compiled with
 [mkdocs](https://www.mkdocs.org/). Each PR will automatically include a
 [Netlify](https://netlify.com/) deploy preview. When new code merges, it will
 automatically be deployed with Netlify to
 [network-policy-api.sigs.k8s.io](https://network-policy-api.sigs.k8s.io). If you want to
-manually preview docs changes locally, you can install mkdocs and run:
+manually preview docs changes locally, you can install the required mkdocs and plugins:
+
+```shell
+pip install mkdocs mkdocs-material mkdocs-awesome-pages-plugin mkdocs-macros-plugin mike
+```
+
+Note: You might want to install [Python Vitural environment](https://docs.python.org/3/library/venv.html) to avoid conflicts.
+
+and then run:
 
 ```shell
  make docs
-```
-
-You might want to install [Python Vitural environment](https://docs.python.org/3/library/venv.html) to avoid conflicts.
-
-Install the required plugins.
-
-```shell
-pip install mkdocs mkdocs-material mkdocs-awesome-pages-plugin mkdocs-macros-plugin
 ```
 
 Once the build is complete, there would be a new folder called `site` generated, and you can deploy the website locally at port 8000 and run:
