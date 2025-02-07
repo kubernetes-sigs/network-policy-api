@@ -9,6 +9,7 @@ import (
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
 	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
@@ -48,6 +49,30 @@ func NewDefaultResources(kubernetes kube.IKubernetes, namespaces []string, podNa
 	}
 	if err := r.getNamespaceLabelsFromKube(kubernetes); err != nil {
 		return nil, err
+	}
+
+	if err := r.getExternalIPs(kubernetes, podCreationTimeoutSeconds); err != nil {
+		return nil, err
+	}
+
+	// set remote node IPs
+	nodeIPs := make(map[string]struct{})
+	for _, pod := range r.Pods {
+		nodeIPs[pod.LocalNodeIP] = struct{}{}
+	}
+
+	if len(nodeIPs) == 1 {
+		// TODO only check this there are nodeport tests
+		return nil, errors.New("all cyclonus pods were scheduled on one node. tests involving remote node IPs will fail. please provision more nodes")
+	} else {
+		for _, pod := range r.Pods {
+			for nodeIP := range nodeIPs {
+				if pod.LocalNodeIP != nodeIP {
+					pod.RemoteNodeIP = nodeIP
+					break
+				}
+			}
+		}
 	}
 
 	return r, nil
@@ -93,16 +118,75 @@ func (r *Resources) getPodIPsFromKube(kubernetes kube.IKubernetes) error {
 			return errors.Errorf("unable to find pod %s/%s in resources", kubePod.Namespace, kubePod.Name)
 		}
 		pod.IP = kubePod.Status.PodIP
-		kubeService, err := kubernetes.GetService(pod.Namespace, pod.ServiceName())
+		if pod.IP == "" {
+			return errors.Errorf("empty ip for pod %s/%s", kubePod.Namespace, kubePod.Name)
+		}
+		logrus.Debugf("ip for pod %s/%s: %s", pod.Namespace, pod.Name, pod.IP)
+
+		pod.LocalNodeIP = kubePod.Status.HostIP
+		if pod.LocalNodeIP == "" {
+			return errors.Errorf("empty node ip for pod %s/%s", pod.Namespace, pod.Name)
+		}
+		logrus.Debugf("node ip for pod %s/%s: %s", pod.Namespace, pod.Name, pod.LocalNodeIP)
+
+		kubeService, err := kubernetes.GetService(pod.Namespace, pod.ServiceName(generator.ClusterIP))
 		if err != nil {
-			return err
+			return errors.Errorf("unable to get service %s/%s", pod.Namespace, pod.ServiceName(generator.ClusterIP))
 		}
 		pod.ServiceIP = kubeService.Spec.ClusterIP
-
-		logrus.Debugf("ip for pod %s/%s: %s", pod.Namespace, pod.Name, pod.IP)
+		if pod.ServiceIP == "" {
+			return errors.Errorf("empty service ip for pod %s/%s", pod.Namespace, pod.Name)
+		}
+		logrus.Debugf("service ip for pod %s/%s: %s", pod.Namespace, pod.Name, pod.ServiceIP)
 	}
 
 	return nil
+}
+
+func (r *Resources) getExternalIPs(kubernetes kube.IKubernetes, maxRetrySeconds int) error {
+	waitBetweenRetries := time.Duration(5) * time.Second
+	timeout := time.After(time.Duration(maxRetrySeconds) * time.Second)
+	ticker := time.NewTicker(waitBetweenRetries)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout:
+			return errors.Errorf("timed out waiting for external IPs")
+		case <-ticker.C:
+			allFound := true
+			for _, pod := range r.Pods {
+				svcKinds := []generator.ServiceKind{generator.LoadBalancerLocal, generator.LoadBalancerCluster}
+				if len(pod.ExternalServiceIPs) == len(svcKinds) {
+					continue
+				}
+
+				for _, kind := range svcKinds {
+					svcName := pod.ServiceName(kind)
+					kubeService, err := kubernetes.GetService(pod.Namespace, svcName)
+					if err != nil {
+						logrus.Errorf("unable to get service. will retry. svc: %s/%s", pod.Namespace, svcName)
+						allFound = false
+						break
+					}
+
+					if len(kubeService.Spec.ExternalIPs) == 0 {
+						allFound = false
+						break
+					}
+					pod.ExternalServiceIPs[kind] = kubeService.Spec.ExternalIPs[0]
+				}
+
+				if !allFound {
+					break
+				}
+			}
+
+			if allFound {
+				return nil
+			}
+		}
+	}
 }
 
 func (r *Resources) getNamespaceLabelsFromKube(kubernetes kube.IKubernetes) error {
@@ -265,6 +349,7 @@ func (r *Resources) CreateResourcesInKube(kubernetes kube.IKubernetes) error {
 			}
 		}
 	}
+
 	for _, pod := range r.Pods {
 		_, err := kubernetes.GetPod(pod.Namespace, pod.Name)
 		if err != nil {
@@ -273,12 +358,17 @@ func (r *Resources) CreateResourcesInKube(kubernetes kube.IKubernetes) error {
 				return err
 			}
 		}
-		kubeService := pod.KubeService()
-		_, err = kubernetes.GetService(kubeService.Namespace, kubeService.Name)
-		if err != nil {
-			_, err = kubernetes.CreateService(kubeService)
+
+		for _, kindStr := range generator.AllServiceKinds {
+			kind := generator.ServiceKind(kindStr)
+			svc := pod.KubeService(kind)
+			// not sure why we get the service here but not in TestCaseState.CreatePod()
+			_, err = kubernetes.GetService(svc.Namespace, svc.Name)
 			if err != nil {
-				return err
+				_, err = kubernetes.CreateService(svc)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

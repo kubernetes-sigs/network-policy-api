@@ -45,24 +45,46 @@ func NewDefaultPod(ns string, name string, ports []int, protocols []v1.Protocol,
 }
 
 type Pod struct {
-	Namespace  string
-	Name       string
-	Labels     map[string]string
-	ServiceIP  string
-	IP         string
-	Containers []*Container
+	Namespace          string
+	Name               string
+	Labels             map[string]string
+	ServiceIP          string
+	IP                 string
+	Containers         []*Container
+	ExternalServiceIPs map[generator.ServiceKind]string
+	LocalNodeIP        string
+	// RemoteNodeIP should be set to the IP of any remote node which another cyclonus pod is running on
+	RemoteNodeIP string
+	// TODO populate in future if needed for AdminNetPol node selector
+	NodeLabels map[string]string
 }
 
-func (p *Pod) Host(probeMode generator.ProbeMode) string {
-	switch probeMode {
-	case generator.ProbeModeServiceName:
-		return kube.QualifiedServiceAddress(p.ServiceName(), p.Namespace)
-	case generator.ProbeModePodIP:
-		return p.IP
-	case generator.ProbeModeServiceIP:
-		return p.ServiceIP
+func (p *Pod) Host(config *generator.ProbeConfig) string {
+	switch config.Service {
+	case generator.NodePortLocal, generator.NodePortCluster:
+		switch config.NodePortMode {
+		case generator.RemoteNode:
+			return p.RemoteNodeIP
+		case generator.LocalNode:
+			return p.LocalNodeIP
+		default:
+			panic(errors.Errorf("invalid node port mode %s", config.NodePortMode))
+		}
+	case generator.LoadBalancerLocal, generator.LoadBalancerCluster:
+		return p.ExternalServiceIPs[config.Service]
+	case generator.ClusterIP:
+		switch config.Mode {
+		case generator.ProbeModeServiceName:
+			return kube.QualifiedServiceAddress(p.ServiceName(config.Service), p.Namespace)
+		case generator.ProbeModePodIP:
+			return p.IP
+		case generator.ProbeModeServiceIP:
+			return p.ServiceIP
+		default:
+			panic(errors.Errorf("invalid mode %s", config.Mode))
+		}
 	default:
-		panic(errors.Errorf("invalid mode %s", probeMode))
+		panic(errors.Errorf("invalid service kind %s", config.Service))
 	}
 }
 
@@ -87,8 +109,21 @@ func (p *Pod) IsEqualToKubePod(kubePod v1.Pod) (string, bool) {
 	return "", true
 }
 
-func (p *Pod) ServiceName() string {
-	return fmt.Sprintf("s-%s-%s", p.Namespace, p.Name)
+func (p *Pod) ServiceName(kind generator.ServiceKind) string {
+	switch kind {
+	case generator.ClusterIP:
+		return fmt.Sprintf("s-%s-%s", p.Namespace, p.Name)
+	case generator.NodePortLocal:
+		return fmt.Sprintf("s-%s-%s-nodeport-local", p.Namespace, p.Name)
+	case generator.LoadBalancerLocal:
+		return fmt.Sprintf("s-%s-%s-loadbalancer-local", p.Namespace, p.Name)
+	case generator.NodePortCluster:
+		return fmt.Sprintf("s-%s-%s-nodeport-cluster", p.Namespace, p.Name)
+	case generator.LoadBalancerCluster:
+		return fmt.Sprintf("s-%s-%s-loadbalancer-cluster", p.Namespace, p.Name)
+	default:
+		panic(errors.Errorf("invalid service kind %s", kind))
+	}
 }
 
 func (p *Pod) KubePod() *v1.Pod {
@@ -106,10 +141,10 @@ func (p *Pod) KubePod() *v1.Pod {
 	}
 }
 
-func (p *Pod) KubeService() *v1.Service {
-	return &v1.Service{
+func (p *Pod) KubeService(kind generator.ServiceKind) *v1.Service {
+	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      p.ServiceName(),
+			Name:      p.ServiceName(kind),
 			Namespace: p.Namespace,
 		},
 		Spec: v1.ServiceSpec{
@@ -117,6 +152,25 @@ func (p *Pod) KubeService() *v1.Service {
 			Selector: p.Labels,
 		},
 	}
+
+	switch kind {
+	case generator.ClusterIP:
+		svc.Spec.Type = v1.ServiceTypeClusterIP
+	case generator.NodePortLocal:
+		svc.Spec.Type = v1.ServiceTypeNodePort
+		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
+	case generator.NodePortCluster:
+		svc.Spec.Type = v1.ServiceTypeNodePort
+		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeCluster
+	case generator.LoadBalancerLocal:
+		svc.Spec.Type = v1.ServiceTypeLoadBalancer
+		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
+	case generator.LoadBalancerCluster:
+		svc.Spec.Type = v1.ServiceTypeLoadBalancer
+		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeCluster
+	}
+
+	return svc
 }
 
 func (p *Pod) KubeContainers() []v1.Container {

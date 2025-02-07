@@ -1,12 +1,13 @@
 package generator
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"sort"
-	"strings"
 )
 
 type TestCase struct {
@@ -108,14 +109,22 @@ func mergeSets(l, r map[string]bool) map[string]bool {
 	return merged
 }
 
+// ProbeMode defines what the destination should be (Pod/service IP or service FQDN)
+// This does not impact the destination for tests involving NodePort and LoadBalancer services
+// For LoadBalancer services, the external IP is always targeted.
+// For NodePort services, a node IP is always targeted. Specify which node with NodePortProbeMode
 type ProbeMode string
 
+// probe modes for ClusterIP services
 const (
+	// ProbeModeServiceName is currently the default mode in generate and analyze commands
 	ProbeModeServiceName = "service-name"
-	ProbeModeServiceIP   = "service-ip"
-	ProbeModePodIP       = "pod-ip"
+	// all are unreferenced except service
+	ProbeModeServiceIP = "service-ip"
+	ProbeModePodIP     = "pod-ip"
 )
 
+// AllProbeModes is a list of all valid ProbeModes for ClusterIP services
 var AllProbeModes = []string{
 	ProbeModeServiceName,
 	ProbeModeServiceIP,
@@ -134,13 +143,56 @@ func ParseProbeMode(mode string) (ProbeMode, error) {
 	return "", errors.Errorf("invalid probe mode %s", mode)
 }
 
-// ProbeConfig: exactly one field must be non-null (or, in AllAvailable's case, non-false).  This
+// NodePortProbeMode is intended for coding test cases only. Whereas ProbeMode can be specified via CLI options.
+type NodePortProbeMode string
+
+// probe modes for NodePort services
+const (
+	LocalNode  NodePortProbeMode = "local-node"
+	RemoteNode NodePortProbeMode = "remote-node"
+)
+
+type ServiceKind string
+
+const (
+	ClusterIP           ServiceKind = "ClusterIP"
+	NodePortLocal       ServiceKind = "NodePort_etpLocal"
+	LoadBalancerLocal   ServiceKind = "LoadBalancer_etpLocal"
+	NodePortCluster     ServiceKind = "NodePort_etpCluster"
+	LoadBalancerCluster ServiceKind = "LoadBalancer_etpCluster"
+)
+
+var AllServiceKinds = []string{
+	string(ClusterIP),
+	string(NodePortLocal),
+	string(LoadBalancerLocal),
+	string(NodePortCluster),
+	string(LoadBalancerCluster),
+}
+
+func ParseServiceKind(kindStr string) (ServiceKind, error) {
+	kind := ServiceKind(kindStr)
+	for _, k := range AllServiceKinds {
+		if k == kindStr {
+			return kind, nil
+		}
+	}
+	return "", errors.Errorf("invalid service kind %s", kind)
+}
+
+// ProbeConfig: exactly one of AllAvailabe or PortProtocol must be non-null (or, in AllAvailable's case, non-false).  This
 //
 //	models a discriminated union (sum type).
 type ProbeConfig struct {
 	AllAvailable bool
 	PortProtocol *PortProtocol
-	Mode         ProbeMode
+	// Mode is used for ClusterIP services. Must always be set?
+	Mode ProbeMode
+	// NodePortMode is only used for coding test cases for nodeport service
+	NodePortMode NodePortProbeMode
+	// Service will default to ClusterIP if not set
+	// This should be accessed via GetService() to handle the default value
+	Service ServiceKind
 }
 
 func NewAllAvailable(mode ProbeMode) *ProbeConfig {
@@ -149,6 +201,13 @@ func NewAllAvailable(mode ProbeMode) *ProbeConfig {
 
 func NewProbeConfig(port intstr.IntOrString, protocol v1.Protocol, mode ProbeMode) *ProbeConfig {
 	return &ProbeConfig{PortProtocol: &PortProtocol{Protocol: protocol, Port: port}, Mode: mode}
+}
+
+func (p ProbeConfig) GetService() ServiceKind {
+	if p.Service == ServiceKind("") {
+		return ClusterIP
+	}
+	return p.Service
 }
 
 type PortProtocol struct {

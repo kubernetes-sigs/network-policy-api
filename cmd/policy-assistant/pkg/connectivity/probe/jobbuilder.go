@@ -13,15 +13,15 @@ type JobBuilder struct {
 
 func (j *JobBuilder) GetJobsForProbeConfig(resources *Resources, config *generator.ProbeConfig) *Jobs {
 	if config.AllAvailable {
-		return j.GetJobsAllAvailableServers(resources, config.Mode)
+		return j.GetJobsAllAvailableServers(resources, config)
 	} else if config.PortProtocol != nil {
-		return j.GetJobsForNamedPortProtocol(resources, config.PortProtocol.Port, config.PortProtocol.Protocol, config.Mode)
+		return j.GetJobsForNamedPortProtocol(resources, config.PortProtocol.Port, config.PortProtocol.Protocol, config)
 	} else {
 		panic(errors.Errorf("invalid ProbeConfig %+v", config))
 	}
 }
 
-func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port intstr.IntOrString, protocol v1.Protocol, mode generator.ProbeMode) *Jobs {
+func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port intstr.IntOrString, protocol v1.Protocol, config *generator.ProbeConfig) *Jobs {
 	jobs := &Jobs{}
 	for _, podFrom := range resources.Pods {
 		for _, podTo := range resources.Pods {
@@ -34,7 +34,7 @@ func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port ints
 				FromContainer:       podFrom.Containers[0].Name,
 				FromIP:              podFrom.IP,
 				ToKey:               podTo.PodString().String(),
-				ToHost:              podTo.Host(mode),
+				ToHost:              podTo.Host(config),
 				ToNamespace:         podTo.Namespace,
 				ToNamespaceLabels:   resources.Namespaces[podTo.Namespace],
 				ToPodLabels:         podTo.Labels,
@@ -74,7 +74,7 @@ func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port ints
 	return jobs
 }
 
-func (j *JobBuilder) GetJobsAllAvailableServers(resources *Resources, mode generator.ProbeMode) *Jobs {
+func (j *JobBuilder) GetJobsAllAvailableServers(resources *Resources, config *generator.ProbeConfig) *Jobs {
 	var jobs []*Job
 	for _, podFrom := range resources.Pods {
 		for _, podTo := range resources.Pods {
@@ -88,7 +88,7 @@ func (j *JobBuilder) GetJobsAllAvailableServers(resources *Resources, mode gener
 					FromContainer:       podFrom.Containers[0].Name,
 					FromIP:              podFrom.IP,
 					ToKey:               podTo.PodString().String(),
-					ToHost:              podTo.Host(mode),
+					ToHost:              podTo.Host(config),
 					ToNamespace:         podTo.Namespace,
 					ToNamespaceLabels:   resources.Namespaces[podTo.Namespace],
 					ToPodLabels:         podTo.Labels,
