@@ -85,7 +85,8 @@ func (t *Interpreter) ExecuteTestCase(testCase *generator.TestCase) *Result {
 	}
 
 	if t.Config.VerifyClusterStateBeforeTestCase {
-		err = testCaseState.VerifyClusterState()
+		services := generator.ServicesNeeded([]*generator.TestCase{testCase})
+		err = testCaseState.VerifyClusterState(services)
 		if err != nil {
 			result.Err = err
 			return result
@@ -113,12 +114,12 @@ func (t *Interpreter) ExecuteTestCase(testCase *generator.TestCase) *Result {
 			} else if action.ReadNetworkPolicies != nil {
 				err = testCaseState.ReadPolicies(action.ReadNetworkPolicies.Namespaces)
 			} else if action.CreatePod != nil {
-				err = testCaseState.CreatePod(action.CreatePod.Namespace, action.CreatePod.Pod, action.CreatePod.Labels)
+				err = testCaseState.CreatePod(action.CreatePod.Namespace, action.CreatePod.Pod, action.CreatePod.Labels, []generator.ServiceKind{generator.ClusterIP})
 			} else if action.SetPodLabels != nil {
 				ns, pod, labels := action.SetPodLabels.Namespace, action.SetPodLabels.Pod, action.SetPodLabels.Labels
 				err = testCaseState.SetPodLabels(ns, pod, labels)
 			} else if action.DeletePod != nil {
-				err = testCaseState.DeletePod(action.DeletePod.Namespace, action.DeletePod.Pod)
+				err = testCaseState.DeletePod(action.DeletePod.Namespace, action.DeletePod.Pod, []generator.ServiceKind{generator.ClusterIP})
 			} else {
 				err = errors.Errorf("invalid Action at step %d, action %d", stepIndex, actionIndex)
 			}

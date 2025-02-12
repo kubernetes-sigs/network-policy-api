@@ -82,7 +82,7 @@ func (t *TestCaseState) DeleteNamespace(ns string) error {
 	return t.Kubernetes.DeleteNamespace(ns)
 }
 
-func (t *TestCaseState) CreatePod(ns string, pod string, labels map[string]string) error {
+func (t *TestCaseState) CreatePod(ns string, pod string, labels map[string]string, services []generator.ServiceKind) error {
 	newResources, err := t.Resources.CreatePod(ns, pod, labels)
 	if err != nil {
 		return err
@@ -97,8 +97,7 @@ func (t *TestCaseState) CreatePod(ns string, pod string, labels map[string]strin
 		return err
 	}
 
-	for _, kindStr := range generator.AllServiceKinds {
-		kind := generator.ServiceKind(kindStr)
+	for _, kind := range services {
 		svc := newPod.KubeService(kind)
 		_, err = t.Kubernetes.CreateService(svc)
 		if err != nil {
@@ -131,7 +130,7 @@ func (t *TestCaseState) SetPodLabels(ns string, pod string, labels map[string]st
 	return err
 }
 
-func (t *TestCaseState) DeletePod(ns string, pod string) error {
+func (t *TestCaseState) DeletePod(ns string, pod string, services []generator.ServiceKind) error {
 	deletedPod, err := t.Resources.GetPod(ns, pod)
 	if err != nil {
 		return err
@@ -142,8 +141,7 @@ func (t *TestCaseState) DeletePod(ns string, pod string) error {
 	}
 	t.Resources = newResources
 
-	for _, kindStr := range generator.AllServiceKinds {
-		kind := generator.ServiceKind(kindStr)
+	for _, kind := range services {
 		svc := deletedPod.KubeService(kind)
 		err := t.Kubernetes.DeleteService(ns, svc.Name)
 		if err != nil {
@@ -196,7 +194,7 @@ func getSliceOfPointers(netpols []networkingv1.NetworkPolicy) []*networkingv1.Ne
 	return netpolPointers
 }
 
-func (t *TestCaseState) verifyClusterStateHelper() error {
+func (t *TestCaseState) verifyClusterStateHelper(services []generator.ServiceKind) error {
 	kubePods, err := kube.GetPodsInNamespaces(t.Kubernetes, t.Resources.NamespacesSlice())
 	if err != nil {
 		return err
@@ -226,8 +224,7 @@ func (t *TestCaseState) verifyClusterStateHelper() error {
 
 	// 2. services: selectors, ports
 	for _, expectedPod := range t.Resources.Pods {
-		for _, kindStr := range generator.AllServiceKinds {
-			kind := generator.ServiceKind(kindStr)
+		for _, kind := range services {
 			expected := expectedPod.KubeService(kind)
 			svc, err := t.Kubernetes.GetService(expected.Namespace, expected.Name)
 			if err != nil {
@@ -350,8 +347,8 @@ func (t *TestCaseState) ResetClusterState() error {
 	return t.resetLabelsInKubeHelper()
 }
 
-func (t *TestCaseState) VerifyClusterState() error {
-	err := t.verifyClusterStateHelper()
+func (t *TestCaseState) VerifyClusterState(services []generator.ServiceKind) error {
+	err := t.verifyClusterStateHelper(services)
 	if err != nil {
 		return err
 	}
