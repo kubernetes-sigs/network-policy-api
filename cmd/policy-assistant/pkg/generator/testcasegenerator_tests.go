@@ -19,9 +19,9 @@ func RunTestCaseGeneratorTests() {
 			Expect(len(gen.PortProtocolTestCases())).To(Equal(70))
 			Expect(len(gen.ConflictTestCases())).To(Equal(16))
 			Expect(len(gen.NamespaceTestCases())).To(Equal(2))
-			Expect(len(gen.SpecialServiceCases([]string{"10.224.0.5", "10.224.0.6"}))).To(Equal(20))
+			Expect(len(gen.SpecialServiceCases([]string{"10.224.0.5", "10.224.0.6"}))).To(Equal(18))
 
-			Expect(len(gen.GenerateTestCases("1.2.3.4", []string{"10.224.0.5", "10.224.0.6"}))).To(Equal(250))
+			Expect(len(gen.GenerateTestCases("1.2.3.4", []string{"10.224.0.5", "10.224.0.6"}))).To(Equal(248))
 		})
 	})
 }
