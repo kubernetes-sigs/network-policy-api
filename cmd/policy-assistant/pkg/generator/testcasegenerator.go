@@ -71,7 +71,7 @@ func (t *TestCaseGenerator) GenerateAllTestCases(podIP string, nodeIPs []string)
 		t.ConflictTestCases(),
 		t.NamespaceTestCases(),
 		t.UpstreamE2ETestCases(),
-		t.ServiceCases(nodeIPs),
+		t.SpecialServiceCases(nodeIPs),
 	)
 }
 

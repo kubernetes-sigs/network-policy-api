@@ -96,8 +96,8 @@ const (
 	TagNodePort                          = "nodeport"
 	TagExternalTrafficPolicyCluster      = "external-traffic-policy-cluster"
 	TagExternalTrafficPolicyLocal        = "external-traffic-policy-local"
-	TagDestinationPodNode                = "destination-pod-node"
-	TagNotDestinationPodNode             = "not-destination-pod-node"
+	TagToDestinationPodNode              = "to-destination-pod-node"
+	TagToSourcePodNode                   = "to-source-pod-node"
 )
 
 var AllTags = map[string][]string{
@@ -164,8 +164,8 @@ var AllTags = map[string][]string{
 		TagNodePort,
 		TagExternalTrafficPolicyCluster,
 		TagExternalTrafficPolicyLocal,
-		TagDestinationPodNode,
-		TagNotDestinationPodNode,
+		TagToDestinationPodNode,
+		TagToSourcePodNode,
 		TagCNIBringsSourcePodInfoToOtherNode,
 		TagNoCNISourcePodInfoToOtherNode,
 	},
@@ -308,4 +308,8 @@ func (s StringSet) ContainsAny(stringSlice []string) bool {
 		}
 	}
 	return false
+}
+
+func tags(baseTags []string, additionalTags ...string) StringSet {
+	return NewStringSet(append(baseTags, additionalTags...)...)
 }

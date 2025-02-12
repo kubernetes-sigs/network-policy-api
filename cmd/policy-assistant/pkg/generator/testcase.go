@@ -148,8 +148,8 @@ type NodePortProbeMode string
 
 // probe modes for NodePort services
 const (
-	DestinationPodNode    NodePortProbeMode = "destination-pod-node"
-	NotDestinationPodNode NodePortProbeMode = "not-destination-pod-node"
+	ToDestinationPodNode NodePortProbeMode = "to-destination-pod-node"
+	ToSourcePodNode      NodePortProbeMode = "to-source-pod-node"
 )
 
 type ServiceKind string

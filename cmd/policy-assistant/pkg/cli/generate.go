@@ -113,7 +113,7 @@ func RunGenerateCommand(args *GenerateArgs) {
 	serverProtocols := parseProtocols(args.ServerProtocols)
 
 	testCaseGenerator := generator.NewTestCaseGenerator(args.AllowDNS, args.ServerNamespaces, args.Include, args.Exclude)
-	testCasesWithoutIPs := testCaseGenerator.GenerateTestCases("placeholder-pod-ip", []string{"placeholder-node1-ip"})
+	testCasesWithoutIPs := testCaseGenerator.GenerateTestCases("0.0.0.0", []string{"0.0.0.0"})
 	fmt.Printf("test cases to run by tag:\n")
 	for tag, count := range generator.CountTestCasesByTag(testCasesWithoutIPs) {
 		fmt.Printf("- %s: %d\n", tag, count)

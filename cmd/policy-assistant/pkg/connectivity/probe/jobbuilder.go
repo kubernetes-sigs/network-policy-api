@@ -34,7 +34,7 @@ func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port ints
 				FromContainer:       podFrom.Containers[0].Name,
 				FromIP:              podFrom.IP,
 				ToKey:               podTo.PodString().String(),
-				ToHost:              podTo.Host(config),
+				ToHost:              podTo.Host(config, podFrom),
 				ToNamespace:         podTo.Namespace,
 				ToNamespaceLabels:   resources.Namespaces[podTo.Namespace],
 				ToPodLabels:         podTo.Labels,
@@ -76,6 +76,7 @@ func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port ints
 			}
 
 			if config.Service == generator.LoadBalancerLocal && podFrom.LocalNodeIP != podTo.LocalNodeIP {
+				// due to external traffic policy local, the source and destination pod must be on the same node
 				jobs.Ignored = append(jobs.Ignored, job)
 				continue
 			}
@@ -100,7 +101,7 @@ func (j *JobBuilder) GetJobsAllAvailableServers(resources *Resources, config *ge
 					FromContainer:       podFrom.Containers[0].Name,
 					FromIP:              podFrom.IP,
 					ToKey:               podTo.PodString().String(),
-					ToHost:              podTo.Host(config),
+					ToHost:              podTo.Host(config, podFrom),
 					ToNamespace:         podTo.Namespace,
 					ToNamespaceLabels:   resources.Namespaces[podTo.Namespace],
 					ToPodLabels:         podTo.Labels,

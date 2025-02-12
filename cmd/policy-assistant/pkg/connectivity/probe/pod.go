@@ -62,13 +62,13 @@ type Pod struct {
 	NodeLabels map[string]string
 }
 
-func (p *Pod) Host(config *generator.ProbeConfig) string {
+func (p *Pod) Host(config *generator.ProbeConfig, srcPod *Pod) string {
 	switch config.Service {
 	case generator.NodePortLocal, generator.NodePortCluster:
 		switch config.DestinationNode {
-		case generator.NotDestinationPodNode:
-			return p.RemoteNodeIP
-		case generator.DestinationPodNode:
+		case generator.ToSourcePodNode:
+			return srcPod.LocalNodeIP
+		case generator.ToDestinationPodNode:
 			return p.LocalNodeIP
 		default:
 			panic(errors.Errorf("invalid node port mode %s", config.DestinationNode))
