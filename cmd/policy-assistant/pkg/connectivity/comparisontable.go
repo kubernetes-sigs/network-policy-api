@@ -14,10 +14,11 @@ type Item struct {
 func (i *Item) ResultsByProtocol() map[Comparison]map[v1.Protocol]int {
 	counts := map[Comparison]map[v1.Protocol]int{SameComparison: {}, DifferentComparison: {}, IgnoredComparison: {}}
 	for key, kr := range i.Kube.JobResults {
+		r, ok := i.Simulated.JobResults[key]
 		switch {
-		case kr.Combined == probe.ConnectivityUndefined || i.Simulated.JobResults[key].Combined == probe.ConnectivityUndefined:
+		case kr.Combined == probe.ConnectivityUndefined || (ok && r.Combined == probe.ConnectivityUndefined):
 			counts[IgnoredComparison][kr.Job.Protocol]++
-		case kr.Combined == i.Simulated.JobResults[key].Combined:
+		case ok && kr.Combined == i.Simulated.JobResults[key].Combined:
 			counts[SameComparison][kr.Job.Protocol]++
 		default:
 			counts[DifferentComparison][kr.Job.Protocol]++
