@@ -235,7 +235,7 @@ func (p *Pod) PodString() PodString {
 
 func (p *Pod) NodePort(svc generator.ServiceKind, port int) int {
 	if len(p.nodePorts) == 0 || len(p.nodePorts[svc]) == 0 {
-		panic(errors.Errorf("no node ports for pod %s/%s", p.Namespace, p.Name))
+		return 0
 	}
 	return p.nodePorts[svc][port]
 }

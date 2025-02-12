@@ -5,17 +5,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Test cases for traffic destined to LoadBalancer and NodePort services (testing both externalTrafficPolicy values).
+// Test cases for traffic to LoadBalancer and NodePort services (for both externalTrafficPolicy values).
 //
-// For LoadBalancer tests, traffic is sent from each Pod to each LoadBalancer service's external IP.
+// For LoadBalancer tests, tests send traffic from each Pod to each LoadBalancer service's external IP.
 // The source Pod's node is expected to "intercept" this traffic and redirect to the one backend Pod (which may be on another node).
-// In the case of etp=Local, the backend Pod must be on the source node. Therefore, we ignore inter-node probes.
+// In the case of etp=Local, the backend Pod must be on the source node. Therefore, tests ignore inter-node probes.
 // In the case of etp=Cluster, if the backend Pod is on another node, the CNI will SNAT traffic to the node IP.
 // For some NetworkPolicy implementations, the source Pod info is lost in this case; to allow traffic requires a policy that allows traffic from the source node.
 //
-// For NodePort tests, traffic is sent from each Pod to each NodePort service's node port.
-// In the case of etp=Local, the traffic is sent to the destination Pod's node.
-// In the case of etp=Cluster, the traffic is sent to the source Pod's node (since this etp supports redirecting traffic to another node).
+// For NodePort tests, tests send traffic from each Pod to each NodePort service's node port.
+// In the case of etp=Local, the tests send traffic to the destination Pod's node.
+// In the case of etp=Cluster, the tests send traffic to the source Pod's node (since this etp supports redirecting traffic to another node).
 //
 // Example runs for two NetworkPolicy implementations:
 // Cilium:
