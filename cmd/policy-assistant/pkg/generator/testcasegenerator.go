@@ -37,16 +37,14 @@ Test cases:
 */
 
 type TestCaseGenerator struct {
-	PodIP        string
 	AllowDNS     bool
 	Namespaces   []string
 	Tags         []string
 	ExcludedTags []string
 }
 
-func NewTestCaseGenerator(allowDNS bool, podIP string, namespaces []string, tags []string, excludedTags []string) *TestCaseGenerator {
+func NewTestCaseGenerator(allowDNS bool, namespaces []string, tags []string, excludedTags []string) *TestCaseGenerator {
 	return &TestCaseGenerator{
-		PodIP:        podIP,
 		AllowDNS:     allowDNS,
 		Namespaces:   namespaces,
 		Tags:         tags,
@@ -62,22 +60,24 @@ func flatten(caseSlices ...[]*TestCase) []*TestCase {
 	return cases
 }
 
-func (t *TestCaseGenerator) GenerateAllTestCases() []*TestCase {
+func (t *TestCaseGenerator) GenerateAllTestCases(podIP string, nodeIPs []string) []*TestCase {
 	return flatten(
 		t.TargetTestCases(),
 		t.RulesTestCases(),
-		t.PeersTestCases(),
+		t.PeersTestCases(podIP),
 		t.PortProtocolTestCases(),
 		t.ExampleTestCases(),
 		t.ActionTestCases(),
 		t.ConflictTestCases(),
 		t.NamespaceTestCases(),
-		t.UpstreamE2ETestCases())
+		t.UpstreamE2ETestCases(),
+		t.ServiceCases(nodeIPs),
+	)
 }
 
-func (t *TestCaseGenerator) GenerateTestCases() []*TestCase {
+func (t *TestCaseGenerator) GenerateTestCases(podIP string, nodeIPs []string) []*TestCase {
 	var cases []*TestCase
-	for _, testcase := range t.GenerateAllTestCases() {
+	for _, testcase := range t.GenerateAllTestCases(podIP, nodeIPs) {
 		if (len(t.Tags) == 0 || testcase.Tags.ContainsAny(t.Tags)) && !testcase.Tags.ContainsAny(t.ExcludedTags) {
 			cases = append(cases, testcase)
 		}

@@ -74,7 +74,6 @@ func SetupProbeCommand() *cobra.Command {
 }
 
 func RunProbeCommand(args *ProbeArgs) {
-	externalIPs := []string{"http://www.google.com"} // TODO make these be IPs?  or not?
 	if len(args.ServerNamespaces) == 0 || len(args.ServerPods) == 0 {
 		panic(errors.Errorf("found 0 namespaces or pods, must have at least 1 of each"))
 	}
@@ -85,7 +84,7 @@ func RunProbeCommand(args *ProbeArgs) {
 	protocols := parseProtocols(args.Protocols)
 	serverProtocols := parseProtocols(args.ServerProtocols)
 
-	resources, err := probe.NewDefaultResources(kubernetes, args.ServerNamespaces, args.ServerPods, args.ServerPorts, serverProtocols, externalIPs, args.PodCreationTimeoutSeconds, false, args.ImageRegistry)
+	resources, err := probe.NewDefaultResources(kubernetes, args.ServerNamespaces, args.ServerPods, args.ServerPorts, serverProtocols, args.PodCreationTimeoutSeconds, false, args.ImageRegistry, []generator.ServiceKind{generator.ClusterIP})
 	utils.DoOrDie(err)
 
 	interpreterConfig := &connectivity.InterpreterConfig{
@@ -93,9 +92,10 @@ func RunProbeCommand(args *ProbeArgs) {
 		KubeProbeRetries:                 0,
 		PerturbationWaitSeconds:          args.PerturbationWaitSeconds,
 		VerifyClusterStateBeforeTestCase: false,
-		BatchJobs:                        false,
-		IgnoreLoopback:                   args.IgnoreLoopback,
-		JobTimeoutSeconds:                args.JobTimeoutSeconds,
+		// NOTE: batch job runner does not support nodeports
+		BatchJobs:         false,
+		IgnoreLoopback:    args.IgnoreLoopback,
+		JobTimeoutSeconds: args.JobTimeoutSeconds,
 	}
 	interpreter := connectivity.NewInterpreter(kubernetes, resources, interpreterConfig)
 

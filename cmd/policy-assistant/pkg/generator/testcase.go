@@ -148,8 +148,8 @@ type NodePortProbeMode string
 
 // probe modes for NodePort services
 const (
-	LocalNode  NodePortProbeMode = "local-node"
-	RemoteNode NodePortProbeMode = "remote-node"
+	DestinationPodNode    NodePortProbeMode = "destination-pod-node"
+	NotDestinationPodNode NodePortProbeMode = "not-destination-pod-node"
 )
 
 type ServiceKind string
@@ -188,11 +188,11 @@ type ProbeConfig struct {
 	PortProtocol *PortProtocol
 	// Mode is used for ClusterIP services. Must always be set?
 	Mode ProbeMode
-	// NodePortMode is only used for coding test cases for nodeport service
-	NodePortMode NodePortProbeMode
 	// Service will default to ClusterIP if not set
 	// This should be accessed via GetService() to handle the default value
 	Service ServiceKind
+	// DestinationNode specifies whether to use the destination Pod's local node or remote node when coding test cases
+	DestinationNode NodePortProbeMode
 }
 
 func NewAllAvailable(mode ProbeMode) *ProbeConfig {

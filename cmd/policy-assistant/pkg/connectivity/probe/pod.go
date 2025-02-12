@@ -52,7 +52,10 @@ type Pod struct {
 	IP                 string
 	Containers         []*Container
 	ExternalServiceIPs map[generator.ServiceKind]string
-	LocalNodeIP        string
+	// NodePorts maps service kind to target port to node port. Assumes that different protocols on the same target port share the same node port.
+	NodePorts map[generator.ServiceKind]map[int]int
+	// LocalNodeIP should be set to the IP of the node that the pod is running on
+	LocalNodeIP string
 	// RemoteNodeIP should be set to the IP of any remote node which another cyclonus pod is running on
 	RemoteNodeIP string
 	// TODO populate in future if needed for AdminNetPol node selector
@@ -62,13 +65,13 @@ type Pod struct {
 func (p *Pod) Host(config *generator.ProbeConfig) string {
 	switch config.Service {
 	case generator.NodePortLocal, generator.NodePortCluster:
-		switch config.NodePortMode {
-		case generator.RemoteNode:
+		switch config.DestinationNode {
+		case generator.NotDestinationPodNode:
 			return p.RemoteNodeIP
-		case generator.LocalNode:
+		case generator.DestinationPodNode:
 			return p.LocalNodeIP
 		default:
-			panic(errors.Errorf("invalid node port mode %s", config.NodePortMode))
+			panic(errors.Errorf("invalid node port mode %s", config.DestinationNode))
 		}
 	case generator.LoadBalancerLocal, generator.LoadBalancerCluster:
 		return p.ExternalServiceIPs[config.Service]
@@ -165,9 +168,17 @@ func (p *Pod) KubeService(kind generator.ServiceKind) *v1.Service {
 	case generator.LoadBalancerLocal:
 		svc.Spec.Type = v1.ServiceTypeLoadBalancer
 		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
+		svc.Spec.AllocateLoadBalancerNodePorts = new(bool)
+		svc.ObjectMeta.Annotations = map[string]string{
+			"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
+		}
 	case generator.LoadBalancerCluster:
 		svc.Spec.Type = v1.ServiceTypeLoadBalancer
 		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeCluster
+		// svc.Spec.AllocateLoadBalancerNodePorts = new(bool)
+		// svc.ObjectMeta.Annotations = map[string]string{
+		// 	"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
+		// }
 	}
 
 	return svc
@@ -216,6 +227,13 @@ func (p *Pod) SetLabels(labels map[string]string) *Pod {
 
 func (p *Pod) PodString() PodString {
 	return NewPodString(p.Namespace, p.Name)
+}
+
+func (p *Pod) NodePort(svc generator.ServiceKind, port int) int {
+	if len(p.NodePorts) == 0 || len(p.NodePorts[svc]) == 0 {
+		panic(errors.Errorf("no node ports for pod %s/%s", p.Namespace, p.Name))
+	}
+	return p.NodePorts[svc][port]
 }
 
 type Container struct {

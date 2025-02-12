@@ -84,9 +84,9 @@ func describePeer(peer NetworkPolicyPeer) []string {
 	}
 }
 
-func (t *TestCaseGenerator) SinglePeersTestCases() []*TestCase {
+func (t *TestCaseGenerator) SinglePeersTestCases(podIP string) []*TestCase {
 	var cases []*TestCase
-	peers := makePeers(t.PodIP)
+	peers := makePeers(podIP)
 	for _, isIngress := range []bool{true, false} {
 		for _, p := range peers {
 			tags := append(describePeer(p.Peer), describeDirectionality(isIngress))
@@ -98,9 +98,9 @@ func (t *TestCaseGenerator) SinglePeersTestCases() []*TestCase {
 	return cases
 }
 
-func (t *TestCaseGenerator) TwoPeersTestCases() []*TestCase {
+func (t *TestCaseGenerator) TwoPeersTestCases(podIP string) []*TestCase {
 	var cases []*TestCase
-	peers := makePeers(t.PodIP)
+	peers := makePeers(podIP)
 	for _, isIngress := range []bool{true, false} {
 		for i, p1 := range peers {
 			for j, p2 := range peers {
@@ -118,9 +118,9 @@ func (t *TestCaseGenerator) TwoPeersTestCases() []*TestCase {
 	return cases
 }
 
-func (t *TestCaseGenerator) PeersTestCases() []*TestCase {
+func (t *TestCaseGenerator) PeersTestCases(podIP string) []*TestCase {
 	return flatten(
 		t.ZeroPeersTestCases(),
-		t.SinglePeersTestCases(),
-		t.TwoPeersTestCases())
+		t.SinglePeersTestCases(podIP),
+		t.TwoPeersTestCases(podIP))
 }

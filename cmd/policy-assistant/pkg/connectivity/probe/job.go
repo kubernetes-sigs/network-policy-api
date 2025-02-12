@@ -14,6 +14,7 @@ type Jobs struct {
 	Valid           []*Job
 	BadNamedPort    []*Job
 	BadPortProtocol []*Job
+	Ignored         []*Job
 }
 
 type JobResult struct {
@@ -36,7 +37,8 @@ type Job struct {
 	FromContainer       string
 	FromIP              string
 
-	ToKey             string
+	ToKey string
+	// ToHost is the destination FQDN or IP which the probe will reach out to
 	ToHost            string
 	ToNamespace       string
 	ToNamespaceLabels map[string]string
@@ -44,6 +46,9 @@ type Job struct {
 	ToContainer       string
 	ToIP              string
 
+	// DestinationPort is the port that the probe will reach out to
+	DestinationPort int
+	// ResolvedPort is the target port of the service's backend pod or whatever other destination
 	ResolvedPort     int
 	ResolvedPortName string
 	Protocol         v1.Protocol
@@ -56,7 +61,7 @@ func (j *Job) Key() string {
 }
 
 func (j *Job) ToAddress() string {
-	return net.JoinHostPort(j.ToHost, strconv.Itoa(j.ResolvedPort))
+	return net.JoinHostPort(j.ToHost, strconv.Itoa(j.DestinationPort))
 }
 
 func (j *Job) ClientCommand() []string {

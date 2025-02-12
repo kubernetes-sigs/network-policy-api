@@ -39,6 +39,7 @@ func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port ints
 				ToNamespaceLabels:   resources.Namespaces[podTo.Namespace],
 				ToPodLabels:         podTo.Labels,
 				ToIP:                podTo.IP,
+				DestinationPort:     -1,
 				ResolvedPort:        -1,
 				ResolvedPortName:    "",
 				Protocol:            protocol,
@@ -55,8 +56,10 @@ func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port ints
 					continue
 				}
 				job.ResolvedPort = portInt
+				job.DestinationPort = portInt
 			case intstr.Int:
 				job.ResolvedPort = int(port.IntVal)
+				job.DestinationPort = int(port.IntVal)
 				// TODO what about protocol?
 				portName, err := podTo.ResolveNumberedPort(int(port.IntVal))
 				if err != nil {
@@ -68,6 +71,15 @@ func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port ints
 				panic(errors.Errorf("invalid IntOrString value %+v", port))
 			}
 
+			if config.Service == generator.NodePortCluster || config.Service == generator.NodePortLocal {
+				job.ResolvedPort = podTo.NodePort(config.Service, job.DestinationPort)
+			}
+
+			if config.Service == generator.LoadBalancerLocal && podFrom.LocalNodeIP != podTo.LocalNodeIP {
+				jobs.Ignored = append(jobs.Ignored, job)
+				continue
+			}
+
 			jobs.Valid = append(jobs.Valid, job)
 		}
 	}
@@ -75,11 +87,11 @@ func (j *JobBuilder) GetJobsForNamedPortProtocol(resources *Resources, port ints
 }
 
 func (j *JobBuilder) GetJobsAllAvailableServers(resources *Resources, config *generator.ProbeConfig) *Jobs {
-	var jobs []*Job
+	jobs := &Jobs{}
 	for _, podFrom := range resources.Pods {
 		for _, podTo := range resources.Pods {
 			for _, contTo := range podTo.Containers {
-				jobs = append(jobs, &Job{
+				job := &Job{
 					FromKey:             podFrom.PodString().String(),
 					FromNamespace:       podFrom.Namespace,
 					FromNamespaceLabels: resources.Namespaces[podFrom.Namespace],
@@ -94,13 +106,26 @@ func (j *JobBuilder) GetJobsAllAvailableServers(resources *Resources, config *ge
 					ToPodLabels:         podTo.Labels,
 					ToContainer:         contTo.Name,
 					ToIP:                podTo.IP,
+					DestinationPort:     contTo.Port,
 					ResolvedPort:        contTo.Port,
 					ResolvedPortName:    contTo.PortName,
 					Protocol:            contTo.Protocol,
 					TimeoutSeconds:      j.TimeoutSeconds,
-				})
+				}
+
+				if config.Service == generator.NodePortCluster || config.Service == generator.NodePortLocal {
+					job.DestinationPort = podTo.NodePort(config.Service, job.DestinationPort)
+				}
+
+				if config.Service == generator.LoadBalancerLocal && podFrom.LocalNodeIP != podTo.LocalNodeIP {
+					jobs.Ignored = append(jobs.Ignored, job)
+					continue
+				}
+
+				jobs.Valid = append(jobs.Valid, job)
 			}
 		}
 	}
-	return &Jobs{Valid: jobs}
+
+	return jobs
 }

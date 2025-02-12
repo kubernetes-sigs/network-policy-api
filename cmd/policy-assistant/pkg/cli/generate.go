@@ -98,8 +98,6 @@ func RunGenerateCommand(args *GenerateArgs) {
 
 	utils.DoOrDie(generator.ValidateTags(append(args.Include, args.Exclude...)))
 
-	externalIPs := []string{} // "http://www.google.com"} // TODO make these be IPs?  or not?
-
 	var kubernetes kube.IKubernetes
 	if args.Mock {
 		kubernetes = kube.NewMockKubernetes(1.0)
@@ -114,9 +112,41 @@ func RunGenerateCommand(args *GenerateArgs) {
 
 	serverProtocols := parseProtocols(args.ServerProtocols)
 
+	testCaseGenerator := generator.NewTestCaseGenerator(args.AllowDNS, args.ServerNamespaces, args.Include, args.Exclude)
+	testCasesWithoutIPs := testCaseGenerator.GenerateTestCases("placeholder-pod-ip", []string{"placeholder-node1-ip"})
+	fmt.Printf("test cases to run by tag:\n")
+	for tag, count := range generator.CountTestCasesByTag(testCasesWithoutIPs) {
+		fmt.Printf("- %s: %d\n", tag, count)
+	}
+
+	fmt.Printf("testing %d cases\n\n", len(testCasesWithoutIPs))
+	for i, testCase := range testCasesWithoutIPs {
+		fmt.Printf("test #%d: %s\n - tags: %+v\n", i+1, testCase.Description, strings.Join(testCase.Tags.Keys(), ", "))
+	}
+
+	// NOTE: batch job runner does not support nodeports
 	batchJobs := false // args.BatchJobs
-	resources, err := probe.NewDefaultResources(kubernetes, args.ServerNamespaces, args.ServerPods, args.ServerPorts, serverProtocols, externalIPs, args.PodCreationTimeoutSeconds, batchJobs, args.ImageRegistry)
+	services := generator.ServicesNeeded(testCasesWithoutIPs)
+	resources, err := probe.NewDefaultResources(kubernetes, args.ServerNamespaces, args.ServerPods, args.ServerPorts, serverProtocols, args.PodCreationTimeoutSeconds, batchJobs, args.ImageRegistry, services)
 	utils.DoOrDie(err)
+
+	if args.DryRun {
+		return
+	}
+
+	zcPod, err := resources.GetPod("z", "c")
+	utils.DoOrDie(err)
+	testCases := testCaseGenerator.GenerateTestCases(zcPod.IP, resources.GetNodeIPs())
+
+	if args.DestinationType != "" {
+		mode, err := generator.ParseProbeMode(args.DestinationType)
+		utils.DoOrDie(err)
+		for _, testCase := range testCases {
+			for _, step := range testCase.Steps {
+				step.Probe.Mode = mode
+			}
+		}
+	}
 
 	interpreterConfig := &connectivity.InterpreterConfig{
 		ResetClusterBeforeTestCase:       true,
@@ -133,35 +163,6 @@ func RunGenerateCommand(args *GenerateArgs) {
 		Noisy:            args.Noisy,
 		IgnoreLoopback:   args.IgnoreLoopback,
 		JunitResultsFile: args.JunitResultsFile,
-	}
-
-	zcPod, err := resources.GetPod("z", "c")
-	utils.DoOrDie(err)
-
-	testCaseGenerator := generator.NewTestCaseGenerator(args.AllowDNS, zcPod.IP, args.ServerNamespaces, args.Include, args.Exclude)
-
-	testCases := testCaseGenerator.GenerateTestCases()
-	fmt.Printf("test cases to run by tag:\n")
-	for tag, count := range generator.CountTestCasesByTag(testCases) {
-		fmt.Printf("- %s: %d\n", tag, count)
-	}
-	fmt.Printf("testing %d cases\n\n", len(testCases))
-	for i, testCase := range testCases {
-		fmt.Printf("test #%d: %s\n - tags: %+v\n", i+1, testCase.Description, strings.Join(testCase.Tags.Keys(), ", "))
-	}
-
-	if args.DryRun {
-		return
-	}
-
-	if args.DestinationType != "" {
-		mode, err := generator.ParseProbeMode(args.DestinationType)
-		utils.DoOrDie(err)
-		for _, testCase := range testCases {
-			for _, step := range testCase.Steps {
-				step.Probe.Mode = mode
-			}
-		}
 	}
 
 	for i, testCase := range testCases {

@@ -1393,7 +1393,7 @@ func runConnectivityTests(t *testing.T, tests ...connectivityTest) {
 
 func getResources(t *testing.T, namespaces, podNames []string, ports []int, protocols []v1.Protocol) *probe.Resources {
 	kubernetes := kube.NewMockKubernetes(1.0)
-	resources, err := probe.NewDefaultResources(kubernetes, namespaces, podNames, ports, protocols, []string{}, 5, false, "registry.k8s.io")
+	resources, err := probe.NewDefaultResources(kubernetes, namespaces, podNames, ports, protocols, 5, false, "registry.k8s.io", []generator.ServiceKind{generator.ClusterIP})
 	require.Nil(t, err, "failed to create resources")
 	return resources
 }

@@ -28,9 +28,21 @@ func equalsDict(l map[string]*probe.JobResult, r map[string]*probe.JobResult) bo
 		return false
 	}
 	for k, lv := range l {
-		if rv, ok := r[k]; !ok || rv.Combined != lv.Combined {
+		if lv.Combined == probe.ConnectivityUndefined {
+			continue
+		}
+
+		rv, ok := r[k]
+		if !ok {
 			return false
 		}
+		if rv.Combined == probe.ConnectivityUndefined {
+			continue
+		}
+		if rv.Combined != lv.Combined {
+			return false
+		}
+
 	}
 	return true
 }

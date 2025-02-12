@@ -49,6 +49,7 @@ func NewInterpreter(kubernetes kube.IKubernetes, resources *probe.Resources, con
 	jobBuilder := &probe.JobBuilder{TimeoutSeconds: config.JobTimeoutSeconds}
 	var kubeRunner *probe.Runner
 	if config.BatchJobs {
+		// NOTE: batch job runner does not support nodeports
 		kubeRunner = probe.NewKubeBatchRunner(kubernetes, defaultBatchWorkersCount, jobBuilder)
 	} else {
 		kubeRunner = probe.NewKubeRunner(kubernetes, defaultWorkersCount, jobBuilder)

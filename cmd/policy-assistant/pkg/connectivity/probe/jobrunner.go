@@ -24,6 +24,7 @@ func NewKubeRunner(kubernetes kube.IKubernetes, workers int, jobBuilder *JobBuil
 	return &Runner{JobRunner: &KubeJobRunner{Kubernetes: kubernetes, Workers: workers}, JobBuilder: jobBuilder}
 }
 
+// NOTE: batch job runner does not support nodeports
 func NewKubeBatchRunner(kubernetes kube.IKubernetes, workers int, jobBuilder *JobBuilder) *Runner {
 	return &Runner{JobRunner: NewKubeBatchJobRunner(kubernetes, workers), JobBuilder: jobBuilder}
 }
@@ -53,6 +54,16 @@ func (p *Runner) runProbe(jobs *Jobs) []*JobResult {
 			Ingress:  &invalidNamedPort,
 			Egress:   &unknown,
 			Combined: ConnectivityInvalidNamedPort,
+		})
+	}
+
+	undefined := ConnectivityUndefined
+	for _, j := range jobs.Ignored {
+		resultSlice = append(resultSlice, &JobResult{
+			Job:      j,
+			Ingress:  &undefined,
+			Egress:   &undefined,
+			Combined: ConnectivityUndefined,
 		})
 	}
 
@@ -158,6 +169,7 @@ type KubeBatchJobRunner struct {
 	Workers int
 }
 
+// NOTE: batch job runner does not support nodeports
 func NewKubeBatchJobRunner(k8s kube.IKubernetes, workers int) *KubeBatchJobRunner {
 	return &KubeBatchJobRunner{Client: &worker.Client{Kubernetes: k8s}, Workers: workers}
 }
@@ -177,7 +189,8 @@ func (k *KubeBatchJobRunner) RunJobs(jobs []*Job) []*JobResult {
 			Key:      job.Key(),
 			Protocol: job.Protocol,
 			Host:     job.ToHost,
-			Port:     job.ResolvedPort,
+			// NOTE: batch job runner does not support nodeports
+			Port: job.ResolvedPort,
 		})
 
 		jobMap[job.Key()] = job
