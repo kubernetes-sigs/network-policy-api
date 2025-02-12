@@ -188,26 +188,18 @@ type ProbeConfig struct {
 	PortProtocol *PortProtocol
 	// Mode is used for ClusterIP services. Must always be set?
 	Mode ProbeMode
-	// Service will default to ClusterIP if not set
-	// This should be accessed via GetService() to handle the default value
+	// Service to probe. If unspecified, should be treated as ClusterIP
 	Service ServiceKind
-	// DestinationNode specifies whether to use the destination Pod's local node or remote node when coding test cases
+	// DestinationNode specifies which node to target when coding test cases
 	DestinationNode NodePortProbeMode
 }
 
 func NewAllAvailable(mode ProbeMode) *ProbeConfig {
-	return &ProbeConfig{AllAvailable: true, Mode: mode}
+	return &ProbeConfig{AllAvailable: true, Mode: mode, Service: ClusterIP}
 }
 
 func NewProbeConfig(port intstr.IntOrString, protocol v1.Protocol, mode ProbeMode) *ProbeConfig {
-	return &ProbeConfig{PortProtocol: &PortProtocol{Protocol: protocol, Port: port}, Mode: mode}
-}
-
-func (p ProbeConfig) GetService() ServiceKind {
-	if p.Service == ServiceKind("") {
-		return ClusterIP
-	}
-	return p.Service
+	return &ProbeConfig{PortProtocol: &PortProtocol{Protocol: protocol, Port: port}, Mode: mode, Service: ClusterIP}
 }
 
 type PortProtocol struct {

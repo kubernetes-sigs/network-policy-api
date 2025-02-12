@@ -52,11 +52,12 @@ type Pod struct {
 	IP                 string
 	Containers         []*Container
 	ExternalServiceIPs map[generator.ServiceKind]string
-	// NodePorts maps service kind to target port to node port. Assumes that different protocols on the same target port share the same node port.
-	NodePorts map[generator.ServiceKind]map[int]int
+	// nodePorts maps service kind to target port to node port. Assumes that different protocols on the same target port share the same node port.
+	nodePorts map[generator.ServiceKind]map[int]int
 	// LocalNodeIP should be set to the IP of the node that the pod is running on
 	LocalNodeIP string
 	// RemoteNodeIP should be set to the IP of any remote node which another cyclonus pod is running on
+	// This value is currently unused but might be used for future tests.
 	RemoteNodeIP string
 	// TODO populate in future if needed for AdminNetPol node selector
 	NodeLabels map[string]string
@@ -168,17 +169,20 @@ func (p *Pod) KubeService(kind generator.ServiceKind) *v1.Service {
 	case generator.LoadBalancerLocal:
 		svc.Spec.Type = v1.ServiceTypeLoadBalancer
 		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
+		// disable node port allocation
 		svc.Spec.AllocateLoadBalancerNodePorts = new(bool)
+		// optimization to not use public IPs on azure
 		svc.ObjectMeta.Annotations = map[string]string{
 			"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
 		}
 	case generator.LoadBalancerCluster:
 		svc.Spec.Type = v1.ServiceTypeLoadBalancer
 		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeCluster
-		// svc.Spec.AllocateLoadBalancerNodePorts = new(bool)
-		// svc.ObjectMeta.Annotations = map[string]string{
-		// 	"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
-		// }
+		// node port allocation is required
+		// optimization to not use public IPs on azure
+		svc.ObjectMeta.Annotations = map[string]string{
+			"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
+		}
 	}
 
 	return svc
@@ -230,10 +234,10 @@ func (p *Pod) PodString() PodString {
 }
 
 func (p *Pod) NodePort(svc generator.ServiceKind, port int) int {
-	if len(p.NodePorts) == 0 || len(p.NodePorts[svc]) == 0 {
+	if len(p.nodePorts) == 0 || len(p.nodePorts[svc]) == 0 {
 		panic(errors.Errorf("no node ports for pod %s/%s", p.Namespace, p.Name))
 	}
-	return p.NodePorts[svc][port]
+	return p.nodePorts[svc][port]
 }
 
 type Container struct {

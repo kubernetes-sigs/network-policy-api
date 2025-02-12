@@ -244,10 +244,22 @@ func (t *TestCaseState) verifyClusterStateHelper() error {
 				if kubePort.Protocol != port.Protocol || kubePort.Port != port.Port {
 					return errors.Errorf("for service %s/%s, expected port %+v (found %+v)", expected.Namespace, expected.Name, port, kubePort)
 				}
+
+				if kind == generator.NodePortCluster || kind == generator.NodePortLocal {
+					nodePort := expectedPod.NodePort(kind, int(port.Port))
+					if nodePort == 0 || nodePort != int(kubePort.NodePort) {
+						return errors.Errorf("for service %s/%s, need non-zero node port. Data model: %d. API server: %d", expected.Namespace, expected.Name, nodePort, kubePort.NodePort)
+					}
+				}
 			}
 
 			if kind == generator.LoadBalancerCluster || kind == generator.LoadBalancerLocal {
-				// TODO: check for external IPs
+				if expectedPod.ExternalServiceIPs == nil ||
+					len(svc.Status.LoadBalancer.Ingress) == 0 ||
+					svc.Status.LoadBalancer.Ingress[0].IP == "" ||
+					svc.Status.LoadBalancer.Ingress[0].IP != expectedPod.ExternalServiceIPs[kind] {
+					return errors.Errorf("for service %s/%s, missing load balancer external IP", expected.Namespace, expected.Name)
+				}
 			}
 		}
 	}

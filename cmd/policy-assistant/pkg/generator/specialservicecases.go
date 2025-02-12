@@ -5,6 +5,27 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Test cases for traffic destined to LoadBalancer and NodePort services (testing both externalTrafficPolicy values).
+//
+// For LoadBalancer tests, traffic is sent from each Pod to each LoadBalancer service's external IP.
+// The source Pod's node is expected to "intercept" this traffic and redirect to the one backend Pod (which may be on another node).
+// In the case of etp=Local, the backend Pod must be on the source node. Therefore, we ignore inter-node probes.
+// In the case of etp=Cluster, if the backend Pod is on another node, the CNI will SNAT traffic to the node IP.
+// For some NetworkPolicy implementations, the source Pod info is lost in this case; to allow traffic requires a policy that allows traffic from the source node.
+//
+// For NodePort tests, traffic is sent from each Pod to each NodePort service's node port.
+// In the case of etp=Local, the traffic is sent to the destination Pod's node.
+// In the case of etp=Cluster, the traffic is sent to the source Pod's node (since this etp supports redirecting traffic to another node).
+//
+// Example runs for two NetworkPolicy implementations:
+// Cilium:
+//   policy-assistant generate --pod-creation-timeout-seconds 600 --server-protocol TCP,UDP --ignore-loopback --include special-services --exclude ip-block-no-except
+//
+// Azure NPM:
+//   policy-assistant generate --pod-creation-timeout-seconds 600 --server-protocol TCP,UDP --ignore-loopback --include special-services --exclude cni-brings-source-pod-info-to-other-node
+
+// TODO: it would be good in the future to add unit tests for these special services. Some relevant code has already been added in the mock kubernetes.
+
 func (t *TestCaseGenerator) SpecialServiceCases(nodeIPs []string) []*TestCase {
 	cases := loadBalancerClusterCases(nodeIPs)
 	cases = append(cases, nodePortClusterCases(nodeIPs)...)
@@ -70,7 +91,7 @@ func loadBalancerClusterCases(nodeIPs []string) []*TestCase {
 		),
 
 		NewSingleStepTestCase("LoadBalancer with externalTrafficPolicy=Cluster: allow egress to pods",
-			tags(baseTags, TagEgress, TagAllNamespaces, TagCNIBringsSourcePodInfoToOtherNode),
+			tags(baseTags, TagEgress, TagAllNamespaces),
 			cfg,
 			createPolicyInAllNamespaces("allow-egress-to-pods", NetworkPolicySpec{
 				PodSelector: metav1.LabelSelector{},
@@ -80,20 +101,6 @@ func loadBalancerClusterCases(nodeIPs []string) []*TestCase {
 						To: []NetworkPolicyPeer{
 							{NamespaceSelector: &metav1.LabelSelector{}},
 						},
-					},
-				},
-			})...,
-		),
-
-		NewSingleStepTestCase("LoadBalancer with externalTrafficPolicy=Cluster: allow egress to pods and nodes",
-			tags(baseTags, TagEgress, TagAllNamespaces, TagNoCNISourcePodInfoToOtherNode, TagIPBlockNoExcept),
-			cfg,
-			createPolicyInAllNamespaces("allow-egress-to-pods-nodes", NetworkPolicySpec{
-				PodSelector: metav1.LabelSelector{},
-				PolicyTypes: []PolicyType{PolicyTypeEgress},
-				Egress: []NetworkPolicyEgressRule{
-					{
-						To: allNamespaceAndNodePeers(nodeIPs),
 					},
 				},
 			})...,
@@ -277,24 +284,8 @@ func nodePortLocalCases(nodeIPs []string) []*TestCase {
 			})...,
 		),
 
-		NewSingleStepTestCase("NodePort with externalTrafficPolicy=Local: allow egress to pods (to destination pod's node)",
-			tags(baseTags, TagEgress, TagAllNamespaces, TagCNIBringsSourcePodInfoToOtherNode),
-			cfg,
-			createPolicyInAllNamespaces("allow-egress-to-pods", NetworkPolicySpec{
-				PodSelector: metav1.LabelSelector{},
-				PolicyTypes: []PolicyType{PolicyTypeEgress},
-				Egress: []NetworkPolicyEgressRule{
-					{
-						To: []NetworkPolicyPeer{
-							{NamespaceSelector: &metav1.LabelSelector{}},
-						},
-					},
-				},
-			})...,
-		),
-
 		NewSingleStepTestCase("NodePort with externalTrafficPolicy=Local: allow egress to pods and nodes (to destination pod's node)",
-			tags(baseTags, TagEgress, TagAllNamespaces, TagNoCNISourcePodInfoToOtherNode, TagIPBlockNoExcept),
+			tags(baseTags, TagEgress, TagAllNamespaces, TagIPBlockNoExcept),
 			cfg,
 			createPolicyInAllNamespaces("allow-egress-to-pods", NetworkPolicySpec{
 				PodSelector: metav1.LabelSelector{},

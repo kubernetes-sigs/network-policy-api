@@ -120,6 +120,7 @@ type MockKubernetes struct {
 	NetworkPolicyError          error
 	passRate                    float64
 	podID                       int
+	svcID                       int
 }
 
 func NewMockKubernetes(passRate float64) *MockKubernetes {
@@ -276,6 +277,30 @@ func (m *MockKubernetes) CreateService(svc *v1.Service) (*v1.Service, error) {
 	if _, ok := nsObject.Services[svc.Name]; ok {
 		return nil, errors.Errorf("service %s/%s already present", svc.Namespace, svc.Name)
 	}
+
+	if m.svcID >= 255 {
+		panic(errors.Errorf("unable to handle more than 254 services in mock"))
+	}
+
+	svc.Spec.ClusterIP = fmt.Sprintf("15.0.0.%d", m.svcID)
+
+	if svc.Spec.Type == v1.ServiceTypeLoadBalancer && svc.Spec.ExternalTrafficPolicy == v1.ServiceExternalTrafficPolicyTypeCluster {
+		svc.Status.LoadBalancer.Ingress = []v1.LoadBalancerIngress{
+			{
+				IP: fmt.Sprintf("16.0.0.%d", m.svcID),
+			},
+		}
+	}
+
+	if svc.Spec.Type == v1.ServiceTypeNodePort ||
+		(svc.Spec.Type == v1.ServiceTypeLoadBalancer &&
+			svc.Spec.AllocateLoadBalancerNodePorts != nil &&
+			*svc.Spec.AllocateLoadBalancerNodePorts) {
+		svc.Spec.Ports[0].NodePort = int32(30000 + m.svcID)
+	}
+
+	m.svcID++
+
 	nsObject.Services[svc.Name] = svc
 	return svc, nil
 }
@@ -349,6 +374,7 @@ func (m *MockKubernetes) CreatePod(pod *v1.Pod) (*v1.Pod, error) {
 	}
 	pod.Status.Phase = v1.PodRunning
 	pod.Status.PodIP = fmt.Sprintf("192.168.1.%d", m.podID)
+	pod.Status.HostIP = fmt.Sprintf("10.0.0.%d", m.podID)
 	m.podID++
 	nsObject.Pods[pod.Name] = pod
 	return pod, nil

@@ -71,7 +71,10 @@ func NewDefaultResources(kubernetes kube.IKubernetes, namespaces []string, podNa
 		if err := r.getNodePorts(kubernetes); err != nil {
 			return nil, err
 		}
+	}
 
+	if haveLoadBalancer || haveNodePort {
+		// will also validate that there are two or more nodes
 		if err := r.setRemoteNodeIPs(); err != nil {
 			return nil, err
 		}
@@ -214,12 +217,12 @@ func (r *Resources) getNodePorts(kubernetes kube.IKubernetes) error {
 				return errors.Errorf("no ports found for service %s/%s", pod.Namespace, svcName)
 			}
 
-			if pod.NodePorts == nil {
-				pod.NodePorts = make(map[generator.ServiceKind]map[int]int, len(svcKinds))
+			if pod.nodePorts == nil {
+				pod.nodePorts = make(map[generator.ServiceKind]map[int]int, len(svcKinds))
 			}
 
-			if pod.NodePorts[kind] == nil {
-				pod.NodePorts[kind] = make(map[int]int, len(kubeService.Spec.Ports))
+			if pod.nodePorts[kind] == nil {
+				pod.nodePorts[kind] = make(map[int]int, len(kubeService.Spec.Ports))
 			}
 
 			for _, port := range kubeService.Spec.Ports {
@@ -231,7 +234,7 @@ func (r *Resources) getNodePorts(kubernetes kube.IKubernetes) error {
 					return errors.Errorf("no node port found for service %s/%s", pod.Namespace, svcName)
 				}
 
-				pod.NodePorts[kind][int(port.TargetPort.IntVal)] = int(port.NodePort)
+				pod.nodePorts[kind][int(port.TargetPort.IntVal)] = int(port.NodePort)
 			}
 		}
 	}
@@ -246,7 +249,6 @@ func (r *Resources) setRemoteNodeIPs() error {
 	}
 
 	if len(nodeIPs) == 1 {
-		// TODO only check this there are nodeport tests
 		return errors.New("all cyclonus pods were scheduled on one node. tests involving remote node IPs will fail. please provision more nodes")
 	} else {
 		for _, pod := range r.Pods {

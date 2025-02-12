@@ -89,7 +89,6 @@ const (
 
 const (
 	TagSpecialServices                   = "special-services"
-	TagClusterIP                         = "clusterip"
 	TagLoadBalancer                      = "loadbalancer"
 	TagCNIBringsSourcePodInfoToOtherNode = "cni-brings-source-pod-info-to-other-node"
 	TagNoCNISourcePodInfoToOtherNode     = "no-cni-source-pod-info-to-other-node"
@@ -159,7 +158,6 @@ var AllTags = map[string][]string{
 		TagUpstreamE2E,
 	},
 	TagSpecialServices: {
-		TagClusterIP,
 		TagLoadBalancer,
 		TagNodePort,
 		TagExternalTrafficPolicyCluster,
