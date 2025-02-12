@@ -20,7 +20,9 @@ var (
 		generator.TagUpstreamE2E,
 		generator.TagExample,
 		generator.TagEndPort,
-		generator.TagNamespacesByDefaultLabel}
+		generator.TagNamespacesByDefaultLabel,
+		generator.TagSpecialServices,
+	}
 )
 
 type GenerateArgs struct {
