@@ -18,7 +18,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-readonly VERSION="v1.61.0"
+readonly VERSION="v1.64.7"
 KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 readonly KUBE_ROOT
 

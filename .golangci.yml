@@ -2,7 +2,6 @@ run:
   timeout: 10m
   issues-exit-code: 1
   tests: true
-  skip-dirs-use-default: true
   modules-download-mode: readonly
   allow-parallel-runners: false
 
@@ -41,6 +40,7 @@ linters-settings:
     ignore-words:
 
 issues:
+  exclude-dirs-use-default: true
   exclude-rules:
     # Exclude some linters from running on tests files.
     - path: _test\.go
