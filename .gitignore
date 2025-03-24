@@ -1,5 +1,6 @@
 .idea/
 .vscode/
+bin/
 vendor/
 site/
 .DS_Store
