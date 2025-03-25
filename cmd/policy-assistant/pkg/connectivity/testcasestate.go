@@ -2,6 +2,7 @@ package connectivity
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -9,6 +10,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/connectivity/probe"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
 	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
@@ -80,7 +82,7 @@ func (t *TestCaseState) DeleteNamespace(ns string) error {
 	return t.Kubernetes.DeleteNamespace(ns)
 }
 
-func (t *TestCaseState) CreatePod(ns string, pod string, labels map[string]string) error {
+func (t *TestCaseState) CreatePod(ns string, pod string, labels map[string]string, services []generator.ServiceKind) error {
 	newResources, err := t.Resources.CreatePod(ns, pod, labels)
 	if err != nil {
 		return err
@@ -94,10 +96,15 @@ func (t *TestCaseState) CreatePod(ns string, pod string, labels map[string]strin
 	if err != nil {
 		return err
 	}
-	_, err = t.Kubernetes.CreateService(newPod.KubeService())
-	if err != nil {
-		return err
+
+	for _, kind := range services {
+		svc := newPod.KubeService(kind)
+		_, err = t.Kubernetes.CreateService(svc)
+		if err != nil {
+			return fmt.Errorf("error creating service with kind [%v]: %w", kind, err)
+		}
 	}
+
 	// wait for ready, get ip
 	for i := 0; i < 12; i++ {
 		kubePod, err := t.Kubernetes.GetPod(ns, pod)
@@ -123,7 +130,7 @@ func (t *TestCaseState) SetPodLabels(ns string, pod string, labels map[string]st
 	return err
 }
 
-func (t *TestCaseState) DeletePod(ns string, pod string) error {
+func (t *TestCaseState) DeletePod(ns string, pod string, services []generator.ServiceKind) error {
 	deletedPod, err := t.Resources.GetPod(ns, pod)
 	if err != nil {
 		return err
@@ -133,10 +140,15 @@ func (t *TestCaseState) DeletePod(ns string, pod string) error {
 		return err
 	}
 	t.Resources = newResources
-	err = t.Kubernetes.DeleteService(ns, deletedPod.KubeService().Name)
-	if err != nil {
-		return err
+
+	for _, kind := range services {
+		svc := deletedPod.KubeService(kind)
+		err := t.Kubernetes.DeleteService(ns, svc.Name)
+		if err != nil {
+			return fmt.Errorf("error deleting service with kind [%v]: %w", kind, err)
+		}
 	}
+
 	return t.Kubernetes.DeletePod(ns, pod)
 }
 
@@ -182,7 +194,7 @@ func getSliceOfPointers(netpols []networkingv1.NetworkPolicy) []*networkingv1.Ne
 	return netpolPointers
 }
 
-func (t *TestCaseState) verifyClusterStateHelper() error {
+func (t *TestCaseState) verifyClusterStateHelper(services []generator.ServiceKind) error {
 	kubePods, err := kube.GetPodsInNamespaces(t.Kubernetes, t.Resources.NamespacesSlice())
 	if err != nil {
 		return err
@@ -212,21 +224,39 @@ func (t *TestCaseState) verifyClusterStateHelper() error {
 
 	// 2. services: selectors, ports
 	for _, expectedPod := range t.Resources.Pods {
-		expected := expectedPod.KubeService()
-		svc, err := t.Kubernetes.GetService(expected.Namespace, expected.Name)
-		if err != nil {
-			return err
-		}
-		if !NewLabelsDiff(svc.Spec.Selector, expectedPod.Labels).AreLabelsEqual() {
-			return errors.Errorf("for service %s/%s, expected labels %+v (found %+v)", expectedPod.Namespace, expectedPod.Name, expectedPod.Labels, svc.Spec.Selector)
-		}
-		if len(expected.Spec.Ports) != len(svc.Spec.Ports) {
-			return errors.Errorf("for service %s/%s, expected %d ports (found %d)", expected.Namespace, expected.Name, len(expected.Spec.Ports), len(svc.Spec.Ports))
-		}
-		for i, port := range expected.Spec.Ports {
-			kubePort := svc.Spec.Ports[i]
-			if kubePort.Protocol != port.Protocol || kubePort.Port != port.Port {
-				return errors.Errorf("for service %s/%s, expected port %+v (found %+v)", expected.Namespace, expected.Name, port, kubePort)
+		for _, kind := range services {
+			expected := expectedPod.KubeService(kind)
+			svc, err := t.Kubernetes.GetService(expected.Namespace, expected.Name)
+			if err != nil {
+				return err
+			}
+			if !NewLabelsDiff(svc.Spec.Selector, expectedPod.Labels).AreLabelsEqual() {
+				return errors.Errorf("for service %s/%s, expected labels %+v (found %+v)", expectedPod.Namespace, expectedPod.Name, expectedPod.Labels, svc.Spec.Selector)
+			}
+			if len(expected.Spec.Ports) != len(svc.Spec.Ports) {
+				return errors.Errorf("for service %s/%s, expected %d ports (found %d)", expected.Namespace, expected.Name, len(expected.Spec.Ports), len(svc.Spec.Ports))
+			}
+			for i, port := range expected.Spec.Ports {
+				kubePort := svc.Spec.Ports[i]
+				if kubePort.Protocol != port.Protocol || kubePort.Port != port.Port {
+					return errors.Errorf("for service %s/%s, expected port %+v (found %+v)", expected.Namespace, expected.Name, port, kubePort)
+				}
+
+				if kind == generator.NodePortCluster || kind == generator.NodePortLocal {
+					nodePort := expectedPod.NodePort(kind, int(port.Port))
+					if nodePort == 0 || nodePort != int(kubePort.NodePort) {
+						return errors.Errorf("for service %s/%s, need non-zero node port. Data model: %d. API server: %d", expected.Namespace, expected.Name, nodePort, kubePort.NodePort)
+					}
+				}
+			}
+
+			if kind == generator.LoadBalancerCluster || kind == generator.LoadBalancerLocal {
+				if expectedPod.ExternalServiceIPs == nil ||
+					len(svc.Status.LoadBalancer.Ingress) == 0 ||
+					svc.Status.LoadBalancer.Ingress[0].IP == "" ||
+					svc.Status.LoadBalancer.Ingress[0].IP != expectedPod.ExternalServiceIPs[kind] {
+					return errors.Errorf("for service %s/%s, missing load balancer external IP", expected.Namespace, expected.Name)
+				}
 			}
 		}
 	}
@@ -317,8 +347,8 @@ func (t *TestCaseState) ResetClusterState() error {
 	return t.resetLabelsInKubeHelper()
 }
 
-func (t *TestCaseState) VerifyClusterState() error {
-	err := t.verifyClusterStateHelper()
+func (t *TestCaseState) VerifyClusterState(services []generator.ServiceKind) error {
+	err := t.verifyClusterStateHelper(services)
 	if err != nil {
 		return err
 	}

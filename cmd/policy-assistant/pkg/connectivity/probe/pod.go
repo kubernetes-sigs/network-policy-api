@@ -45,24 +45,50 @@ func NewDefaultPod(ns string, name string, ports []int, protocols []v1.Protocol,
 }
 
 type Pod struct {
-	Namespace  string
-	Name       string
-	Labels     map[string]string
-	ServiceIP  string
-	IP         string
-	Containers []*Container
+	Namespace          string
+	Name               string
+	Labels             map[string]string
+	ServiceIP          string
+	IP                 string
+	Containers         []*Container
+	ExternalServiceIPs map[generator.ServiceKind]string
+	// nodePorts maps service kind to target port to node port. Assumes that different protocols on the same target port share the same node port.
+	nodePorts map[generator.ServiceKind]map[int]int
+	// LocalNodeIP should be set to the IP of the node that the pod is running on
+	LocalNodeIP string
+	// RemoteNodeIP should be set to the IP of any remote node which another cyclonus pod is running on
+	// This value is currently unused but might be used for future tests.
+	RemoteNodeIP string
+	// TODO populate in future if needed for AdminNetPol node selector
+	NodeLabels map[string]string
 }
 
-func (p *Pod) Host(probeMode generator.ProbeMode) string {
-	switch probeMode {
-	case generator.ProbeModeServiceName:
-		return kube.QualifiedServiceAddress(p.ServiceName(), p.Namespace)
-	case generator.ProbeModePodIP:
-		return p.IP
-	case generator.ProbeModeServiceIP:
-		return p.ServiceIP
+func (p *Pod) Host(config *generator.ProbeConfig, srcPod *Pod) string {
+	switch config.Service {
+	case generator.NodePortLocal, generator.NodePortCluster:
+		switch config.DestinationNode {
+		case generator.ToSourcePodNode:
+			return srcPod.LocalNodeIP
+		case generator.ToDestinationPodNode:
+			return p.LocalNodeIP
+		default:
+			panic(errors.Errorf("invalid node port mode %s", config.DestinationNode))
+		}
+	case generator.LoadBalancerLocal, generator.LoadBalancerCluster:
+		return p.ExternalServiceIPs[config.Service]
+	case generator.ClusterIP:
+		switch config.Mode {
+		case generator.ProbeModeServiceName:
+			return kube.QualifiedServiceAddress(p.ServiceName(config.Service), p.Namespace)
+		case generator.ProbeModePodIP:
+			return p.IP
+		case generator.ProbeModeServiceIP:
+			return p.ServiceIP
+		default:
+			panic(errors.Errorf("invalid mode %s", config.Mode))
+		}
 	default:
-		panic(errors.Errorf("invalid mode %s", probeMode))
+		panic(errors.Errorf("invalid service kind %s", config.Service))
 	}
 }
 
@@ -87,8 +113,21 @@ func (p *Pod) IsEqualToKubePod(kubePod v1.Pod) (string, bool) {
 	return "", true
 }
 
-func (p *Pod) ServiceName() string {
-	return fmt.Sprintf("s-%s-%s", p.Namespace, p.Name)
+func (p *Pod) ServiceName(kind generator.ServiceKind) string {
+	switch kind {
+	case generator.ClusterIP:
+		return fmt.Sprintf("s-%s-%s", p.Namespace, p.Name)
+	case generator.NodePortLocal:
+		return fmt.Sprintf("s-%s-%s-nodeport-local", p.Namespace, p.Name)
+	case generator.LoadBalancerLocal:
+		return fmt.Sprintf("s-%s-%s-loadbalancer-local", p.Namespace, p.Name)
+	case generator.NodePortCluster:
+		return fmt.Sprintf("s-%s-%s-nodeport-cluster", p.Namespace, p.Name)
+	case generator.LoadBalancerCluster:
+		return fmt.Sprintf("s-%s-%s-loadbalancer-cluster", p.Namespace, p.Name)
+	default:
+		panic(errors.Errorf("invalid service kind %s", kind))
+	}
 }
 
 func (p *Pod) KubePod() *v1.Pod {
@@ -106,10 +145,10 @@ func (p *Pod) KubePod() *v1.Pod {
 	}
 }
 
-func (p *Pod) KubeService() *v1.Service {
-	return &v1.Service{
+func (p *Pod) KubeService(kind generator.ServiceKind) *v1.Service {
+	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      p.ServiceName(),
+			Name:      p.ServiceName(kind),
 			Namespace: p.Namespace,
 		},
 		Spec: v1.ServiceSpec{
@@ -117,6 +156,36 @@ func (p *Pod) KubeService() *v1.Service {
 			Selector: p.Labels,
 		},
 	}
+
+	switch kind {
+	case generator.ClusterIP:
+		svc.Spec.Type = v1.ServiceTypeClusterIP
+	case generator.NodePortLocal:
+		svc.Spec.Type = v1.ServiceTypeNodePort
+		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
+	case generator.NodePortCluster:
+		svc.Spec.Type = v1.ServiceTypeNodePort
+		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeCluster
+	case generator.LoadBalancerLocal:
+		svc.Spec.Type = v1.ServiceTypeLoadBalancer
+		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
+		// disable node port allocation
+		svc.Spec.AllocateLoadBalancerNodePorts = new(bool)
+		// optimization to not use public IPs on azure
+		svc.ObjectMeta.Annotations = map[string]string{
+			"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
+		}
+	case generator.LoadBalancerCluster:
+		svc.Spec.Type = v1.ServiceTypeLoadBalancer
+		svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeCluster
+		// node port allocation is required
+		// optimization to not use public IPs on azure
+		svc.ObjectMeta.Annotations = map[string]string{
+			"service.beta.kubernetes.io/azure-load-balancer-internal": "true",
+		}
+	}
+
+	return svc
 }
 
 func (p *Pod) KubeContainers() []v1.Container {
@@ -162,6 +231,13 @@ func (p *Pod) SetLabels(labels map[string]string) *Pod {
 
 func (p *Pod) PodString() PodString {
 	return NewPodString(p.Namespace, p.Name)
+}
+
+func (p *Pod) NodePort(svc generator.ServiceKind, port int) int {
+	if len(p.nodePorts) == 0 || len(p.nodePorts[svc]) == 0 {
+		return 0
+	}
+	return p.nodePorts[svc][port]
 }
 
 type Container struct {

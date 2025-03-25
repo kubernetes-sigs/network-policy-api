@@ -1,11 +1,12 @@
 package generator
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/mattfenwick/collections/pkg/slice"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
-	"sort"
-	"strings"
 )
 
 const (
@@ -86,6 +87,18 @@ const (
 	TagUpstreamE2E  = "upstream-e2e"
 )
 
+const (
+	TagSpecialServices                   = "special-services"
+	TagLoadBalancer                      = "loadbalancer"
+	TagCNIBringsSourcePodInfoToOtherNode = "cni-brings-source-pod-info-to-other-node"
+	TagNoCNISourcePodInfoToOtherNode     = "no-cni-source-pod-info-to-other-node"
+	TagNodePort                          = "nodeport"
+	TagExternalTrafficPolicyCluster      = "external-traffic-policy-cluster"
+	TagExternalTrafficPolicyLocal        = "external-traffic-policy-local"
+	TagToDestinationPodNode              = "to-destination-pod-node"
+	TagToSourcePodNode                   = "to-source-pod-node"
+)
+
 var AllTags = map[string][]string{
 	TagAction: {
 		TagCreatePolicy,
@@ -144,6 +157,16 @@ var AllTags = map[string][]string{
 		TagExample,
 		TagUpstreamE2E,
 	},
+	TagSpecialServices: {
+		TagLoadBalancer,
+		TagNodePort,
+		TagExternalTrafficPolicyCluster,
+		TagExternalTrafficPolicyLocal,
+		TagToDestinationPodNode,
+		TagToSourcePodNode,
+		TagCNIBringsSourcePodInfoToOtherNode,
+		TagNoCNISourcePodInfoToOtherNode,
+	},
 }
 
 var TagSet = map[string]bool{}
@@ -164,6 +187,43 @@ func init() {
 		}
 	}
 	sort.Strings(TagSlice)
+}
+
+func ServicesNeeded(testCases []*TestCase) []ServiceKind {
+	services := make([]ServiceKind, 0)
+	services = append(services, ClusterIP)
+
+	for _, testCase := range testCases {
+		haveLoadBalancer := false
+		haveNodePort := false
+		haveETPCluster := false
+		haveETPLocal := false
+		for tag := range testCase.Tags {
+			switch tag {
+			case TagLoadBalancer:
+				haveLoadBalancer = true
+			case TagNodePort:
+				haveNodePort = true
+			case TagExternalTrafficPolicyCluster:
+				haveETPCluster = true
+			case TagExternalTrafficPolicyLocal:
+				haveETPLocal = true
+			}
+		}
+
+		switch {
+		case haveLoadBalancer && haveETPCluster:
+			services = append(services, LoadBalancerCluster)
+		case haveLoadBalancer && haveETPLocal:
+			services = append(services, LoadBalancerLocal)
+		case haveNodePort && haveETPCluster:
+			services = append(services, NodePortCluster)
+		case haveNodePort && haveETPLocal:
+			services = append(services, NodePortLocal)
+		}
+	}
+
+	return services
 }
 
 func CountTestCasesByTag(testCases []*TestCase) map[string]int {
@@ -246,4 +306,8 @@ func (s StringSet) ContainsAny(stringSlice []string) bool {
 		}
 	}
 	return false
+}
+
+func tags(baseTags []string, additionalTags ...string) StringSet {
+	return NewStringSet(append(baseTags, additionalTags...)...)
 }
