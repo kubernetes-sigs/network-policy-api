@@ -57,8 +57,6 @@ type BaselineAdminNetworkPolicySpec struct {
 	// Subject defines the pods to which this BaselineAdminNetworkPolicy applies.
 	// Note that host-networked pods are not included in subject selection.
 	//
-	// Support: Core
-	//
 	Subject AdminNetworkPolicySubject `json:"subject"`
 
 	// Ingress is the list of Ingress rules to be applied to the selected pods
@@ -69,8 +67,6 @@ type BaselineAdminNetworkPolicySpec struct {
 	// Thus, a rule that appears at the top of the ingress rules
 	// would take the highest precedence.
 	// BANPs with no ingress rules do not affect ingress traffic.
-	//
-	// Support: Core
 	//
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
@@ -84,8 +80,6 @@ type BaselineAdminNetworkPolicySpec struct {
 	// Thus, a rule that appears at the top of the egress rules
 	// would take the highest precedence.
 	// BANPs with no egress rules do not affect egress traffic.
-	//
-	// Support: Core
 	//
 	// +optional
 	// +kubebuilder:validation:MaxItems=100
@@ -101,8 +95,6 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 	// improve observability, readability and error-reporting for any applied
 	// BaselineAdminNetworkPolicies.
 	//
-	// Support: Core
-	//
 	// +optional
 	// +kubebuilder:validation:MaxLength=100
 	Name string `json:"name,omitempty"`
@@ -112,16 +104,12 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 	// Allow: allows the selected traffic
 	// Deny: denies the selected traffic
 	//
-	// Support: Core
-	//
 	Action BaselineAdminNetworkPolicyRuleAction `json:"action"`
 
 	// From is the list of sources whose traffic this rule applies to.
 	// If any AdminNetworkPolicyIngressPeer matches the source of incoming
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
-	//
-	// Support: Core
 	//
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
@@ -132,8 +120,6 @@ type BaselineAdminNetworkPolicyIngressRule struct {
 	// the pods selected for this policy i.e the subject of the policy.
 	// So it matches on the destination port for the ingress traffic.
 	// If Ports is not set then the rule does not filter traffic via port.
-	//
-	// Support: Core
 	//
 	// +optional
 	// +kubebuilder:validation:MinItems=1
@@ -152,8 +138,6 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 	// improve observability, readability and error-reporting for any applied
 	// BaselineAdminNetworkPolicies.
 	//
-	// Support: Core
-	//
 	// +optional
 	// +kubebuilder:validation:MaxLength=100
 	Name string `json:"name,omitempty"`
@@ -163,8 +147,6 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 	// Allow: allows the selected traffic
 	// Deny: denies the selected traffic
 	//
-	// Support: Core
-	//
 	Action BaselineAdminNetworkPolicyRuleAction `json:"action"`
 
 	// To is the list of destinations whose traffic this rule applies to.
@@ -173,8 +155,6 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 	// This field must be defined and contain at least one item.
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
-	//
-	// Support: Core
 	//
 	To []BaselineAdminNetworkPolicyEgressPeer `json:"to"`
 
@@ -189,8 +169,6 @@ type BaselineAdminNetworkPolicyEgressRule struct {
 
 // BaselineAdminNetworkPolicyRuleAction string describes the BaselineAdminNetworkPolicy
 // action type.
-//
-// Support: Core
 //
 // +enum
 // +kubebuilder:validation:Enum={"Allow", "Deny"}
@@ -213,15 +191,11 @@ type BaselineAdminNetworkPolicyEgressPeer struct {
 	// Namespaces defines a way to select all pods within a set of Namespaces.
 	// Note that host-networked pods are not included in this type of peer.
 	//
-	// Support: Core
-	//
 	// +optional
 	Namespaces *metav1.LabelSelector `json:"namespaces,omitempty"`
 	// Pods defines a way to select a set of pods in
 	// a set of namespaces. Note that host-networked pods
 	// are not included in this type of peer.
-	//
-	// Support: Core
 	//
 	// +optional
 	Pods *NamespacedPod `json:"pods,omitempty"`
@@ -231,8 +205,6 @@ type BaselineAdminNetworkPolicyEgressPeer struct {
 	// present in the node.Status.Addresses field of the node.
 	// This field follows standard label selector
 	// semantics; if present but empty, it selects all Nodes.
-	//
-	// Support: Extended
 	//
 	// <network-policy-api:experimental>
 	// +optional
@@ -249,8 +221,6 @@ type BaselineAdminNetworkPolicyEgressPeer struct {
 	// IPv4 or IPv6, for example "10.0.0.0/8" or "fd00::/8".
 	//
 	// Networks can have upto 25 CIDRs specified.
-	//
-	// Support: Extended
 	//
 	// <network-policy-api:experimental>
 	// +optional
