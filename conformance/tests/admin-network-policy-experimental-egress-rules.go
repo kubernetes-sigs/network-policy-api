@@ -46,7 +46,7 @@ var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 		suite.SupportAdminNetworkPolicy,
 		suite.SupportAdminNetworkPolicyNamedPorts,
 	},
-	Manifests: []string{"base/admin_network_policy/core-egress-tcp-rules.yaml"},
+	Manifests: []string{"base/admin_network_policy/standard-egress-tcp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for named port", func(t *testing.T) {
@@ -100,7 +100,7 @@ var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 		suite.SupportAdminNetworkPolicy,
 		suite.SupportAdminNetworkPolicyEgressNodePeers,
 	},
-	Manifests: []string{"base/admin_network_policy/extended-egress-selector-rules.yaml"},
+	Manifests: []string{"base/admin_network_policy/experimental-egress-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()
@@ -151,7 +151,7 @@ var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 		suite.SupportAdminNetworkPolicy,
 		suite.SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 	},
-	Manifests: []string{"base/admin_network_policy/extended-egress-selector-rules.yaml"},
+	Manifests: []string{"base/admin_network_policy/experimental-egress-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()

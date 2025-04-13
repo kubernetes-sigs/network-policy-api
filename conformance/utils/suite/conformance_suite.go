@@ -49,13 +49,13 @@ type ConformanceProfileTestSuite struct {
 	// the test suite, organized by the tests unique name.
 	results map[string]testResult
 
-	// extendedSupportedFeatures is a compiled list of named features that were
+	// experimentalSupportedFeatures is a compiled list of named features that were
 	// marked as supported, and is used for reporting the test results.
-	extendedSupportedFeatures map[ConformanceProfileName]sets.Set[SupportedFeature]
+	experimentalSupportedFeatures map[ConformanceProfileName]sets.Set[SupportedFeature]
 
-	// extendedUnsupportedFeatures is a compiled list of named features that were
+	// experimentalUnsupportedFeatures is a compiled list of named features that were
 	// marked as not supported, and is used for reporting the test results.
-	extendedUnsupportedFeatures map[ConformanceProfileName]sets.Set[SupportedFeature]
+	experimentalUnsupportedFeatures map[ConformanceProfileName]sets.Set[SupportedFeature]
 
 	// lock is a mutex to help ensure thread safety of the test suite object.
 	lock sync.RWMutex
@@ -74,11 +74,11 @@ func NewConformanceProfileTestSuite(s ConformanceProfileOptions) (*ConformancePr
 	config.SetupTimeoutConfig(&s.TimeoutConfig)
 
 	suite := &ConformanceProfileTestSuite{
-		results:                     make(map[string]testResult),
-		extendedUnsupportedFeatures: make(map[ConformanceProfileName]sets.Set[SupportedFeature]),
-		extendedSupportedFeatures:   make(map[ConformanceProfileName]sets.Set[SupportedFeature]),
-		conformanceProfiles:         s.ConformanceProfiles,
-		implementation:              s.Implementation,
+		results:                         make(map[string]testResult),
+		experimentalUnsupportedFeatures: make(map[ConformanceProfileName]sets.Set[SupportedFeature]),
+		experimentalSupportedFeatures:   make(map[ConformanceProfileName]sets.Set[SupportedFeature]),
+		conformanceProfiles:             s.ConformanceProfiles,
+		implementation:                  s.Implementation,
 	}
 
 	// test suite callers are required to provide a conformance profile OR at
@@ -97,23 +97,23 @@ func NewConformanceProfileTestSuite(s ConformanceProfileOptions) (*ConformancePr
 			s.SupportedFeatures = sets.New[SupportedFeature]()
 		}
 		// the use of a conformance profile implicitly enables any features of
-		// that profile which are supported at a Core level of support.
+		// that profile which are supported at a Standard level of support.
 		for _, conformanceProfileName := range s.ConformanceProfiles.UnsortedList() {
 			conformanceProfile, err := getConformanceProfileForName(conformanceProfileName)
 			if err != nil {
 				return nil, fmt.Errorf("failed to retrieve conformance profile: %w", err)
 			}
-			for _, f := range conformanceProfile.ExtendedFeatures.UnsortedList() {
+			for _, f := range conformanceProfile.ExperimentalFeatures.UnsortedList() {
 				if s.SupportedFeatures.Has(f) {
-					if suite.extendedSupportedFeatures[conformanceProfileName] == nil {
-						suite.extendedSupportedFeatures[conformanceProfileName] = sets.New[SupportedFeature]()
+					if suite.experimentalSupportedFeatures[conformanceProfileName] == nil {
+						suite.experimentalSupportedFeatures[conformanceProfileName] = sets.New[SupportedFeature]()
 					}
-					suite.extendedSupportedFeatures[conformanceProfileName].Insert(f)
+					suite.experimentalSupportedFeatures[conformanceProfileName].Insert(f)
 				} else {
-					if suite.extendedUnsupportedFeatures[conformanceProfileName] == nil {
-						suite.extendedUnsupportedFeatures[conformanceProfileName] = sets.New[SupportedFeature]()
+					if suite.experimentalUnsupportedFeatures[conformanceProfileName] == nil {
+						suite.experimentalUnsupportedFeatures[conformanceProfileName] = sets.New[SupportedFeature]()
 					}
-					suite.extendedUnsupportedFeatures[conformanceProfileName].Insert(f)
+					suite.experimentalUnsupportedFeatures[conformanceProfileName].Insert(f)
 				}
 			}
 		}
@@ -200,7 +200,7 @@ func (suite *ConformanceProfileTestSuite) Report() (*confv1a1.ConformanceReport,
 		}
 	}
 
-	profileReports.compileResults(suite.extendedSupportedFeatures, suite.extendedUnsupportedFeatures)
+	profileReports.compileResults(suite.experimentalSupportedFeatures, suite.experimentalUnsupportedFeatures)
 
 	return &confv1a1.ConformanceReport{
 		TypeMeta: v1.TypeMeta{
