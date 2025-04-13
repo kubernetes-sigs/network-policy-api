@@ -43,7 +43,7 @@ var BaselineAdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
 		suite.SupportBaselineAdminNetworkPolicy,
 		suite.SupportBaselineAdminNetworkPolicyNamedPorts,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/core-ingress-tcp-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/standard-ingress-tcp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for named port", func(t *testing.T) {

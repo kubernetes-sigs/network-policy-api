@@ -42,7 +42,7 @@ var BaselineAdminNetworkPolicyGress = suite.ConformanceTest{
 	Features: []suite.SupportedFeature{
 		suite.SupportBaselineAdminNetworkPolicy,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/core-gress-rules-combined.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/standard-gress-rules-combined.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-gress' policy across different protocols", func(t *testing.T) {

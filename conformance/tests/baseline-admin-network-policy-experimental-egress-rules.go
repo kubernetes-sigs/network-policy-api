@@ -46,7 +46,7 @@ var BaselineAdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 		suite.SupportBaselineAdminNetworkPolicy,
 		suite.SupportBaselineAdminNetworkPolicyNamedPorts,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/core-egress-udp-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/standard-egress-udp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for named port", func(t *testing.T) {
@@ -100,7 +100,7 @@ var BaselineAdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
 		suite.SupportBaselineAdminNetworkPolicy,
 		suite.SupportBaselineAdminNetworkPolicyEgressNodePeers,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/extended-egress-selector-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/experimental-egress-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()
@@ -142,7 +142,7 @@ var BaselineAdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 		suite.SupportBaselineAdminNetworkPolicy,
 		suite.SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/extended-egress-selector-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/experimental-egress-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()

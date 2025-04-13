@@ -31,9 +31,9 @@ import (
 //
 // For more details see the relevant NPEP: https://network-policy-api.sigs.k8s.io/npeps/npep-137/
 type ConformanceProfile struct {
-	Name             ConformanceProfileName
-	CoreFeatures     sets.Set[SupportedFeature]
-	ExtendedFeatures sets.Set[SupportedFeature]
+	Name                 ConformanceProfileName
+	StandardFeatures     sets.Set[SupportedFeature]
+	ExperimentalFeatures sets.Set[SupportedFeature]
 }
 
 type ConformanceProfileName string
@@ -56,10 +56,10 @@ var (
 	// ANPConformanceProfile is a ConformanceProfile that covers testing ANP API
 	ANPConformanceProfile = ConformanceProfile{
 		Name: ANPConformanceProfileName,
-		CoreFeatures: sets.New(
+		StandardFeatures: sets.New(
 			SupportAdminNetworkPolicy,
 		),
-		ExtendedFeatures: sets.New(
+		ExperimentalFeatures: sets.New(
 			SupportAdminNetworkPolicyNamedPorts,
 			SupportAdminNetworkPolicyEgressNodePeers,
 			SupportAdminNetworkPolicyEgressInlineCIDRPeers,
@@ -69,10 +69,10 @@ var (
 	// BANPConformanceProfile is a ConformanceProfile that covers testing BANP API
 	BANPConformanceProfile = ConformanceProfile{
 		Name: BANPConformanceProfileName,
-		CoreFeatures: sets.New(
+		StandardFeatures: sets.New(
 			SupportBaselineAdminNetworkPolicy,
 		),
-		ExtendedFeatures: sets.New(
+		ExperimentalFeatures: sets.New(
 			SupportBaselineAdminNetworkPolicyNamedPorts,
 			SupportBaselineAdminNetworkPolicyEgressNodePeers,
 			SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
@@ -109,7 +109,7 @@ func getConformanceProfilesForTest(test ConformanceTest, conformanceProfiles set
 		cp := conformanceProfileMap[conformanceProfileName]
 		hasAllFeatures := true
 		for _, feature := range test.Features {
-			if !cp.CoreFeatures.Has(feature) && !cp.ExtendedFeatures.Has(feature) {
+			if !cp.StandardFeatures.Has(feature) && !cp.ExperimentalFeatures.Has(feature) {
 				hasAllFeatures = false
 				break
 			}
