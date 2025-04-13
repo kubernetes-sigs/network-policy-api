@@ -149,7 +149,6 @@ var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 	Description: "Tests support for egress traffic to CIDR peers using admin network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
 		suite.SupportAdminNetworkPolicy,
-		suite.SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 	},
 	Manifests: []string{"base/admin_network_policy/experimental-egress-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {

@@ -285,8 +285,6 @@ spec:
                               IPv4 or IPv6, for example "10.0.0.0/8" or "fd00::/8".
 
                               Networks can have upto 25 CIDRs specified.
-
-                              <network-policy-api:experimental>
                             items:
                               description: CIDR is an IP address range in CIDR notation
                                 (for example, "10.0.0.0/8" or "fd00::/8").
