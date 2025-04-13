@@ -31,44 +31,40 @@ type SupportedFeature string
 // -----------------------------------------------------------------------------
 
 const (
-	// This option indicates support for ANP (core conformance).
+	// This option indicates support for ANP (standard conformance).
 	SupportAdminNetworkPolicy SupportedFeature = "AdminNetworkPolicy"
-	// This option indicates support for BANP (core conformance).
+	// This option indicates support for BANP (standard conformance).
 	SupportBaselineAdminNetworkPolicy SupportedFeature = "BaselineAdminNetworkPolicy"
 )
 
-// CoreFeatures are the features that are required to be conformant with
+// StandardFeatures are the features that are required to be conformant with
 // the Core API features (e.g. all fields in the API except for NamedPorts).
-var CoreFeatures = sets.New(
+var StandardFeatures = sets.New(
 	SupportAdminNetworkPolicy,
 	SupportBaselineAdminNetworkPolicy,
 )
 
 // -----------------------------------------------------------------------------
-// Features - Extended
+// Features - Experimental
 // -----------------------------------------------------------------------------
 
 const (
-	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers, EgressInlineCIDRPeers
+	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers
 	// fall under the extended test conformance.
-	SupportAdminNetworkPolicyNamedPorts                    SupportedFeature = "AdminNetworkPolicyNamedPorts"
-	SupportAdminNetworkPolicyEgressNodePeers               SupportedFeature = "AdminNetworkPolicyEgressNodePeers"
-	SupportAdminNetworkPolicyEgressInlineCIDRPeers         SupportedFeature = "AdminNetworkPolicyEgressInlineCIDRPeers"
-	SupportBaselineAdminNetworkPolicyNamedPorts            SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
-	SupportBaselineAdminNetworkPolicyEgressNodePeers       SupportedFeature = "BaselineAdminNetworkPolicyEgressNodePeers"
-	SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers SupportedFeature = "BaselineAdminNetworkPolicyEgressInlineCIDRPeers"
+	SupportAdminNetworkPolicyNamedPorts              SupportedFeature = "AdminNetworkPolicyNamedPorts"
+	SupportAdminNetworkPolicyEgressNodePeers         SupportedFeature = "AdminNetworkPolicyEgressNodePeers"
+	SupportBaselineAdminNetworkPolicyNamedPorts      SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
+	SupportBaselineAdminNetworkPolicyEgressNodePeers SupportedFeature = "BaselineAdminNetworkPolicyEgressNodePeers"
 )
 
-// ExtendedFeatures are extra generic features that implementations may
+// ExperimentalFeatures are extra generic features that implementations may
 // choose to support as an opt-in.
-var ExtendedFeatures = sets.New(
+var ExperimentalFeatures = sets.New(
 	SupportAdminNetworkPolicyNamedPorts,
 	SupportAdminNetworkPolicyEgressNodePeers,
-	SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 	SupportBaselineAdminNetworkPolicyNamedPorts,
 	SupportBaselineAdminNetworkPolicyEgressNodePeers,
-	SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
-).Insert(CoreFeatures.UnsortedList()...)
+).Insert(StandardFeatures.UnsortedList()...)
 
 // -----------------------------------------------------------------------------
 // Features - Compilations
@@ -79,4 +75,4 @@ var ExtendedFeatures = sets.New(
 //
 // NOTE: as new feature sets are added they should be inserted into this set.
 var AllFeatures = sets.New[SupportedFeature]().
-	Insert(ExtendedFeatures.UnsortedList()...)
+	Insert(ExperimentalFeatures.UnsortedList()...)

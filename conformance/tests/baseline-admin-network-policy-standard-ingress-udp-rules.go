@@ -32,24 +32,23 @@ import (
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyIngressUDP,
-		AdminNetworkPolicyIngressNamedPort,
+		BaselineAdminNetworkPolicyIngressUDP,
 	)
 }
 
-var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyIngressUDP",
-	Description: "Tests support for ingress traffic (UDP protocol) using admin network policy API based on a server and client model",
+var BaselineAdminNetworkPolicyIngressUDP = suite.ConformanceTest{
+	ShortName:   "BaselineAdminNetworkPolicyIngressUDP",
+	Description: "Tests support for ingress traffic (UDP protocol) using baseline admin network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
+		suite.SupportBaselineAdminNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_network_policy/core-ingress-udp-rules.yaml"},
+	Manifests: []string{"base/baseline_admin_network_policy/standard-ingress-udp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-udp` ANP
+			// This test uses `default` BANP
 			// cedric-diggory-0 is our server pod in hufflepuff namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -71,7 +70,7 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 		t.Run("Should support an 'allow-ingress' policy for UDP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-udp` ANP
+			// This test uses `default` BANP
 			// cedric-diggory-1 is our server pod in hufflepuff namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -80,7 +79,7 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure ingress is ALLOWED from gryffindor to hufflepuff at port 53; ingressRule at index5
+			// ensure ingress is ALLOWED from gryffindor to hufflepuff at port 53; ingressRule at index5 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "udp",
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
 			assert.True(t, success)
@@ -94,7 +93,7 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 		t.Run("Should support an 'deny-ingress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-udp` ANP
+			// This test uses `default` BANP
 			// cedric-diggory-1 is our server pod in hufflepuff namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -102,18 +101,18 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 				Name:      "cedric-diggory-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "ingress-udp",
-			}, anp)
+				Name: "default",
+			}, banp)
 			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			mutate := banp.DeepCopy()
 			// swap rules at index0 and index1
 			allowRule := mutate.Spec.Ingress[0]
 			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[1]
 			mutate.Spec.Ingress[1] = allowRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
+			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
 			// luna-lovegood-0 is our client pod in ravenclaw namespace
 			// ensure ingress is DENIED from ravenclaw to hufflepuff
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -129,7 +128,7 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 		t.Run("Should support a 'deny-ingress' policy for UDP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-udp` ANP
+			// This test uses `default` BANP
 			// cedric-diggory-0 is our server pod in hufflepuff namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -141,76 +140,6 @@ var AdminNetworkPolicyIngressUDP = suite.ConformanceTest{
 			// ensure ingress from slytherin is DENIED to hufflepuff at port 80; ingressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-0", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			// draco-malfoy-1 is our client pod in slytherin namespace
-			// ensure ingress from slytherin is ALLOWED to hufflepuff for rest of the traffic; matches no rules hence allowed
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-1", "udp",
-				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-		})
-
-		t.Run("Should support an 'pass-ingress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
-			defer cancel()
-			// This test uses `ingress-udp` ANP
-			// cedric-diggory-1 is our server pod in hufflepuff namespace
-			serverPod := &v1.Pod{}
-			err := s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-hufflepuff",
-				Name:      "cedric-diggory-1",
-			}, serverPod)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "ingress-udp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
-			// swap rules at index0 and index2
-			denyRule := mutate.Spec.Ingress[0]
-			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[2]
-			mutate.Spec.Ingress[2] = denyRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
-			// luna-lovegood-0 is our client pod in ravenclaw namespace
-			// ensure ingress is PASSED from ravenclaw to hufflepuff
-			// ingressRule at index0 will take precedence over ingressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
-			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "udp",
-				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-			// luna-lovegood-1 is our client pod in ravenclaw namespace
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "udp",
-				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-		})
-
-		t.Run("Should support a 'pass-ingress' policy for UDP protocol at the specified port", func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
-			defer cancel()
-			// This test uses `ingress-udp` ANP
-			// cedric-diggory-0 is our server pod in hufflepuff namespace
-			serverPod := &v1.Pod{}
-			err := s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-hufflepuff",
-				Name:      "cedric-diggory-0",
-			}, serverPod)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "ingress-udp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
-			// swap rules at index3 and index4
-			denyRule := mutate.Spec.Ingress[3]
-			mutate.Spec.Ingress[3] = mutate.Spec.Ingress[4]
-			mutate.Spec.Ingress[4] = denyRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
-			// draco-malfoy-0 is our client pod in slytherin namespace
-			// ensure ingress from slytherin is PASSED to hufflepuff at port 5353; ingressRule at index3 should take effect
-			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-0", "udp",
-				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig.RequestTimeout, true)
 			assert.True(t, success)
 			// draco-malfoy-1 is our client pod in slytherin namespace
 			// ensure ingress from slytherin is ALLOWED to hufflepuff for rest of the traffic; matches no rules hence allowed

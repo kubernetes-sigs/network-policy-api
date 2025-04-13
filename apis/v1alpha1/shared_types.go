@@ -52,14 +52,10 @@ type NamespacedPod struct {
 type AdminNetworkPolicyPort struct {
 	// Port selects a port on a pod(s) based on number.
 	//
-	// Support: Core
-	//
 	// +optional
 	PortNumber *Port `json:"portNumber,omitempty"`
 
 	// NamedPort selects a port on a pod(s) based on name.
-	//
-	// Support: Extended
 	//
 	// <network-policy-api:experimental>
 	// +optional
@@ -67,8 +63,6 @@ type AdminNetworkPolicyPort struct {
 
 	// PortRange selects a port range on a pod(s) based on provided start and end
 	// values.
-	//
-	// Support: Core
 	//
 	// +optional
 	PortRange *PortRange `json:"portRange,omitempty"`
@@ -79,15 +73,11 @@ type Port struct {
 	// match. If not specified, this field defaults to TCP.
 	// +kubebuilder:default=TCP
 	//
-	// Support: Core
-	//
 	Protocol v1.Protocol `json:"protocol"`
 
 	// Number defines a network port value.
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
-	//
-	// Support: Core
 	//
 	Port int32 `json:"port"`
 }
@@ -99,8 +89,6 @@ type PortRange struct {
 	// match. If not specified, this field defaults to TCP.
 	// +kubebuilder:default=TCP
 	//
-	// Support: Core
-	//
 	Protocol v1.Protocol `json:"protocol,omitempty"`
 
 	// Start defines a network port that is the start of a port range, the Start
@@ -108,16 +96,12 @@ type PortRange struct {
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
 	//
-	// Support: Core
-	//
 	Start int32 `json:"start"`
 
 	// End defines a network port that is the end of a port range, the End value
 	// must be greater than Start.
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
-	//
-	// Support: Core
 	//
 	End int32 `json:"end"`
 }
@@ -139,15 +123,11 @@ type AdminNetworkPolicyIngressPeer struct {
 	// Namespaces defines a way to select all pods within a set of Namespaces.
 	// Note that host-networked pods are not included in this type of peer.
 	//
-	// Support: Core
-	//
 	// +optional
 	Namespaces *metav1.LabelSelector `json:"namespaces,omitempty"`
 	// Pods defines a way to select a set of pods in
 	// a set of namespaces. Note that host-networked pods
 	// are not included in this type of peer.
-	//
-	// Support: Core
 	//
 	// +optional
 	Pods *NamespacedPod `json:"pods,omitempty"`

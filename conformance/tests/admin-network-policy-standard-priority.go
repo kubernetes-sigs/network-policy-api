@@ -43,7 +43,7 @@ var AdminNetworkPolicyPriorityField = suite.ConformanceTest{
 		suite.SupportAdminNetworkPolicy,
 		suite.SupportBaselineAdminNetworkPolicy, // priority change of ANP should play well with existing BANP's
 	},
-	Manifests: []string{"base/admin_network_policy/core-priority-field.yaml"},
+	Manifests: []string{"base/admin_network_policy/standard-priority-field.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should Deny traffic from slytherin to gryffindor respecting ANP", func(t *testing.T) {
