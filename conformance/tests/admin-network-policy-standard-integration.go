@@ -44,13 +44,13 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 		suite.SupportAdminNetworkPolicy,
 		suite.SupportBaselineAdminNetworkPolicy,
 	},
-	Manifests: []string{"base/api_integration/core-anp-np-banp.yaml"},
+	Manifests: []string{"base/api_integration/standard-anp-np-banp.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should Deny traffic from slytherin to gryffindor respecting ANP", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass-example` ANP from api_integration/core-anp-np-banp.yaml
+			// This test uses `pass-example` ANP from api_integration/standard-anp-np-banp.yaml
 			// harry-potter-0 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -73,7 +73,7 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 		t.Run("Should Deny traffic to slytherin from gryffindor respecting ANP", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass-example` ANP from api_integration/core-anp-np-banp.yaml
+			// This test uses `pass-example` ANP from api_integration/standard-anp-np-banp.yaml
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -96,7 +96,7 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 		t.Run("Should support a 'pass-ingress' policy for ANP and respect the match for network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass example` ANP from api_integration/core-anp-np-banp.yaml
+			// This test uses `pass example` ANP from api_integration/standard-anp-np-banp.yaml
 			// and alters the ingress rule action to "pass"
 			anp := &v1alpha1.AdminNetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -130,7 +130,7 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 		t.Run("Should support a 'pass-egress' policy for ANP and respect the match for network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass example` ANP from api_integration/core-anp-np-banp.yaml
+			// This test uses `pass example` ANP from api_integration/standard-anp-np-banp.yaml
 			// and alters the egress rule action to "pass"
 			anp := &v1alpha1.AdminNetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -164,7 +164,7 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 		t.Run("Should support a 'pass-ingress' policy for ANP and respect the match for baseline admin network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP from api_integration/core-anp-np-banp.yaml
+			// This test uses `default` BANP from api_integration/standard-anp-np-banp.yaml
 			np := &networkingv1.NetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
@@ -196,7 +196,7 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 		t.Run("Should support a 'pass-egress' policy for ANP and respect the match for baseline admin network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP from api_integration/core-anp-np-banp.yaml
+			// This test uses `default` BANP from api_integration/standard-anp-np-banp.yaml
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			clientPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{

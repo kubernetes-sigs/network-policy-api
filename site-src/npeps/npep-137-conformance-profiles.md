@@ -37,10 +37,20 @@ the results.
 
 ## Introduction
 
-Currently, the conformance tests are grouped into `CoreFeatures` and
-`ExtendedFeatures`. The support for features that fall under the `CoreFeatures`
-are a requirement for conformant implementations, while the support for features that fall
-under `ExtendedFeatures` are optional and do not gate API conformance for implementations.
+Currently, the conformance tests are grouped into `StandardFeatures` and
+`ExperimentalFeatures`.
+
+* A feature is considered to be `Standard` and is part of the `StandardCRD` if it is
+stable and has had more than 6 months of soak time and has two or more implementations
+implementing it.
+* A feature is considered to be `Experimental` and is part of the `ExperimentalCRD` if
+it is relatively new, not stable enough as decided by the community or doesn't have at
+least two implementations implementing it.
+
+The support for features that fall under the `StandardFeatures`
+are a requirement for conformant implementations. If implementations implement
+features that fall under `ExperimentalFeatures`, they have to pass the experimental
+feature conformance tests for those features.
 
 In this NPEP, we will add a concept called `named profiles` which will indicate a
 "level of conformance" for a given resource. We are picking profiles on a resource
@@ -89,13 +99,13 @@ We will start with two named profiles and expand this as the project evolves.
 2. BaselineAdminNetworkPolicy
 
 Each of these profiles may have a combination of conformance tests that fall under
-`CoreFeatures` and `ExtendedFeatures`. Example; if you pick the profile
+`StandardFeatures` and `ExperimentalFeatures`. Example; if you pick the profile
 `AdminNetworkPolicy`, all tests like `AdminNetworkPolicyEgressSCTP` and
 `AdminNetworkPolicyPriorityField` fall under the `SupportAdminNetworkPolicy` feature
-which is under the `CoreFeatures` subset. So these tests must pass for the
+which is under the `StandardFeatures` subset. So these tests must pass for the
 `AdminNetworkPolicy` profile conformance. Whereas tests (we don't have any today)
 that fall under `AdminNetworkPolicySameLabels` feature which is under the
-`ExtendedFeatures` subset are not mandatory for `AdminNetworkPolicy`
+`ExperimentalFeatures` subset are not mandatory for `AdminNetworkPolicy`
 profile conformance.
 
 ## Integration

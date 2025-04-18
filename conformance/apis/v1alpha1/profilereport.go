@@ -23,26 +23,25 @@ type ProfileReport struct {
 	// (e.g. "AdminNetworkPolicy", "BaselineAdminNetworkPolicy")
 	Name string `json:"name"`
 
-	// Core indicates the core support level which includes the set of tests
+	// Standard indicates the standard support level which includes the set of tests
 	// which are the minimum the implementation must pass to be considered at
 	// all conformant.
-	Core Status `json:"core"`
+	Standard Status `json:"standard"`
 
-	// Extended indicates the extended support level which includes additional
-	// optional features which the implementation may choose to implement
-	// support for, but are not required.
-	Extended *ExtendedStatus `json:"extended,omitempty"`
+	// Experimental indicates the experimental support level, which includes additional features
+	// that have not yet graduated to Standard.
+	Experimental *ExperimentalStatus `json:"experimental,omitempty"`
 }
 
-// ExtendedStatus shows the testing results for the extended support level.
-type ExtendedStatus struct {
+// ExperimentalStatus shows the testing results for the experimental support level.
+type ExperimentalStatus struct {
 	Status `json:",inline"`
 
-	// SupportedFeatures indicates which extended features were flagged as
+	// SupportedFeatures indicates which experimental features were flagged as
 	// supported by the implementation and tests will be attempted for.
 	SupportedFeatures []string `json:"supportedFeatures,omitempty"`
 
-	// UnsupportedFeatures indicates which extended features the implementation
+	// UnsupportedFeatures indicates which experimental features the implementation
 	// does not have support for and therefore will not attempt to test.
 	UnsupportedFeatures []string `json:"unsupportedFeatures,omitempty"`
 }
