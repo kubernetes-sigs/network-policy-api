@@ -103,8 +103,6 @@ type AdminNetworkPolicyEgressPeer struct {
 	// in the cluster. This field follows standard label selector
 	// semantics; if present but empty, it selects all Nodes.
 	//
-	// Support: Core
-	//
 	// +optional
 	Nodes *metav1.LabelSelector `json:"nodes,omitempty"`
 }
@@ -170,8 +168,6 @@ type AdminNetworkPolicyEgressPeer struct {
 	// well, so if you Allow or Deny traffic to `"0.0.0.0/0"`, that will allow
 	// or deny all IPv4 pod-to-pod traffic as well. If you don't want that,
 	// add a rule that Passes all pod traffic before the Networks rule.
-	//
-	// Support: Core
 	//
 	// +optional
 	// +kubebuilder:validation:MinItems=1

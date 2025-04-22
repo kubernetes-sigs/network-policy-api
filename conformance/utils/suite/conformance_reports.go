@@ -54,53 +54,53 @@ func (p profileReportsMap) addTestResults(conformanceProfile ConformanceProfile,
 		}
 	}
 
-	testIsExtended := isTestExtended(conformanceProfile, result.test)
+	testIsExperimental := isTestExperimental(conformanceProfile, result.test)
 	report := p[conformanceProfile.Name]
 
 	switch result.result {
 	case testSucceeded:
-		if testIsExtended {
-			if report.Extended == nil {
-				report.Extended = &confv1a1.ExtendedStatus{}
+		if testIsExperimental {
+			if report.Experimental == nil {
+				report.Experimental = &confv1a1.ExperimentalStatus{}
 			}
-			report.Extended.Statistics.Passed++
+			report.Experimental.Statistics.Passed++
 
 		} else {
-			report.Core.Statistics.Passed++
+			report.Standard.Statistics.Passed++
 		}
 	case testFailed:
-		if testIsExtended {
-			if report.Extended == nil {
-				report.Extended = &confv1a1.ExtendedStatus{}
+		if testIsExperimental {
+			if report.Experimental == nil {
+				report.Experimental = &confv1a1.ExperimentalStatus{}
 			}
-			if report.Extended.FailedTests == nil {
-				report.Extended.FailedTests = []string{}
+			if report.Experimental.FailedTests == nil {
+				report.Experimental.FailedTests = []string{}
 			}
-			report.Extended.FailedTests = append(report.Extended.FailedTests, result.test.ShortName)
-			report.Extended.Statistics.Failed++
+			report.Experimental.FailedTests = append(report.Experimental.FailedTests, result.test.ShortName)
+			report.Experimental.Statistics.Failed++
 		} else {
-			report.Core.Statistics.Failed++
-			if report.Core.FailedTests == nil {
-				report.Core.FailedTests = []string{}
+			report.Standard.Statistics.Failed++
+			if report.Standard.FailedTests == nil {
+				report.Standard.FailedTests = []string{}
 			}
-			report.Core.FailedTests = append(report.Core.FailedTests, result.test.ShortName)
+			report.Standard.FailedTests = append(report.Standard.FailedTests, result.test.ShortName)
 		}
 	case testSkipped:
-		if testIsExtended {
-			if report.Extended == nil {
-				report.Extended = &confv1a1.ExtendedStatus{}
+		if testIsExperimental {
+			if report.Experimental == nil {
+				report.Experimental = &confv1a1.ExperimentalStatus{}
 			}
-			report.Extended.Statistics.Skipped++
-			if report.Extended.SkippedTests == nil {
-				report.Extended.SkippedTests = []string{}
+			report.Experimental.Statistics.Skipped++
+			if report.Experimental.SkippedTests == nil {
+				report.Experimental.SkippedTests = []string{}
 			}
-			report.Extended.SkippedTests = append(report.Extended.SkippedTests, result.test.ShortName)
+			report.Experimental.SkippedTests = append(report.Experimental.SkippedTests, result.test.ShortName)
 		} else {
-			report.Core.Statistics.Skipped++
-			if report.Core.SkippedTests == nil {
-				report.Core.SkippedTests = []string{}
+			report.Standard.Statistics.Skipped++
+			if report.Standard.SkippedTests == nil {
+				report.Standard.SkippedTests = []string{}
 			}
-			report.Core.SkippedTests = append(report.Core.SkippedTests, result.test.ShortName)
+			report.Standard.SkippedTests = append(report.Standard.SkippedTests, result.test.ShortName)
 		}
 	}
 	p[conformanceProfile.Name] = report
@@ -115,47 +115,47 @@ func (p profileReportsMap) list() (profileReports []confv1a1.ProfileReport) {
 
 func (p profileReportsMap) compileResults(supportedFeaturesMap map[ConformanceProfileName]sets.Set[SupportedFeature], unsupportedFeaturesMap map[ConformanceProfileName]sets.Set[SupportedFeature]) {
 	for key, report := range p {
-		// report the overall result for core features
-		if report.Core.Failed > 0 {
-			report.Core.Result = confv1a1.Failure
-		} else if report.Core.Skipped > 0 {
-			report.Core.Result = confv1a1.Partial
+		// report the overall result for Standard features
+		if report.Standard.Failed > 0 {
+			report.Standard.Result = confv1a1.Failure
+		} else if report.Standard.Skipped > 0 {
+			report.Standard.Result = confv1a1.Partial
 		} else {
-			report.Core.Result = confv1a1.Success
+			report.Standard.Result = confv1a1.Success
 		}
 
-		if report.Extended != nil {
-			// report the overall result for extended features
-			if report.Extended.Failed > 0 {
-				report.Extended.Result = confv1a1.Failure
-			} else if report.Extended.Skipped > 0 {
-				report.Extended.Result = confv1a1.Partial
+		if report.Experimental != nil {
+			// report the overall result for Experimental features
+			if report.Experimental.Failed > 0 {
+				report.Experimental.Result = confv1a1.Failure
+			} else if report.Experimental.Skipped > 0 {
+				report.Experimental.Result = confv1a1.Partial
 			} else {
-				report.Extended.Result = confv1a1.Success
+				report.Experimental.Result = confv1a1.Success
 			}
 		}
 		p[key] = report
 
 		supportedFeatures := supportedFeaturesMap[ConformanceProfileName(report.Name)]
-		if report.Extended != nil {
+		if report.Experimental != nil {
 			if supportedFeatures != nil {
-				if report.Extended.SupportedFeatures == nil {
-					report.Extended.SupportedFeatures = make([]string, 0)
+				if report.Experimental.SupportedFeatures == nil {
+					report.Experimental.SupportedFeatures = make([]string, 0)
 				}
 				for _, f := range supportedFeatures.UnsortedList() {
-					report.Extended.SupportedFeatures = append(report.Extended.SupportedFeatures, string(f))
+					report.Experimental.SupportedFeatures = append(report.Experimental.SupportedFeatures, string(f))
 				}
 			}
 		}
 
 		unsupportedFeatures := unsupportedFeaturesMap[ConformanceProfileName(report.Name)]
-		if report.Extended != nil {
+		if report.Experimental != nil {
 			if unsupportedFeatures != nil {
-				if report.Extended.UnsupportedFeatures == nil {
-					report.Extended.UnsupportedFeatures = make([]string, 0)
+				if report.Experimental.UnsupportedFeatures == nil {
+					report.Experimental.UnsupportedFeatures = make([]string, 0)
 				}
 				for _, f := range unsupportedFeatures.UnsortedList() {
-					report.Extended.UnsupportedFeatures = append(report.Extended.UnsupportedFeatures, string(f))
+					report.Experimental.UnsupportedFeatures = append(report.Experimental.UnsupportedFeatures, string(f))
 				}
 			}
 		}
@@ -166,21 +166,21 @@ func (p profileReportsMap) compileResults(supportedFeaturesMap map[ConformancePr
 // ConformanceReport - Private Helper Functions
 // -----------------------------------------------------------------------------
 
-// isTestExtended determines if a provided test is considered to be supported
-// at an extended level of support given the provided conformance profile.
+// isTestExperimental determines if a provided test is considered to be supported
+// at an experimental level of support given the provided conformance profile.
 //
 // TODO: right now the tests themselves don't indicate the conformance
 // support level associated with them. The only way we have right now
 // in this prototype to know whether a test belongs to any particular
 // conformance level is to compare the features needed for the test to
-// the conformance profiles known list of core vs extended features.
+// the conformance profiles known list of Standard vs Experimental features.
 // We should fix this to indicate the conformance support level of each
 // test, but for now this hack works.
-func isTestExtended(profile ConformanceProfile, test ConformanceTest) bool {
+func isTestExperimental(profile ConformanceProfile, test ConformanceTest) bool {
 	for _, supportedFeature := range test.Features {
-		// if ANY of the features needed for the test are extended features,
-		// then we consider the entire test extended level support.
-		if profile.ExtendedFeatures.Has(supportedFeature) {
+		// if ANY of the features needed for the test are experimental features,
+		// then we consider the entire test experimental level support.
+		if profile.ExperimentalFeatures.Has(supportedFeature) {
 			return true
 		}
 	}

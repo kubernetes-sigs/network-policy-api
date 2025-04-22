@@ -37,7 +37,7 @@ var AdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
 		suite.SupportAdminNetworkPolicy,
 		suite.SupportAdminNetworkPolicyNamedPorts,
 	},
-	Manifests: []string{"base/admin_network_policy/core-ingress-udp-rules.yaml"},
+	Manifests: []string{"base/admin_network_policy/standard-ingress-udp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for named port", func(t *testing.T) {
