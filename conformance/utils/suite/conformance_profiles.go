@@ -62,7 +62,6 @@ var (
 		ExperimentalFeatures: sets.New(
 			SupportAdminNetworkPolicyNamedPorts,
 			SupportAdminNetworkPolicyEgressNodePeers,
-			SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 		),
 	}
 
@@ -75,7 +74,6 @@ var (
 		ExperimentalFeatures: sets.New(
 			SupportBaselineAdminNetworkPolicyNamedPorts,
 			SupportBaselineAdminNetworkPolicyEgressNodePeers,
-			SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 		),
 	}
 )
