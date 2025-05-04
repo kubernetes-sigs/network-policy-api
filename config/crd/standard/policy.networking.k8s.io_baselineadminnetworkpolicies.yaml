@@ -220,6 +220,32 @@ spec:
                                 type: object
                             type: object
                             x-kubernetes-map-type: atomic
+                          networks:
+                            description: |-
+                              Networks defines a way to select peers via CIDR blocks.
+                              This is intended for representing entities that live outside the cluster,
+                              which can't be selected by pods, namespaces and nodes peers, but note
+                              that cluster-internal traffic will be checked against the rule as
+                              well. So if you Allow or Deny traffic to `"0.0.0.0/0"`, that will allow
+                              or deny all IPv4 pod-to-pod traffic as well. If you don't want that,
+                              add a rule that Passes all pod traffic before the Networks rule.
+
+                              Each item in Networks should be provided in the CIDR format and should be
+                              IPv4 or IPv6, for example "10.0.0.0/8" or "fd00::/8".
+
+                              Networks can have upto 25 CIDRs specified.
+                            items:
+                              description: CIDR is an IP address range in CIDR notation
+                                (for example, "10.0.0.0/8" or "fd00::/8").
+                              maxLength: 43
+                              type: string
+                              x-kubernetes-validations:
+                              - message: Invalid CIDR format provided
+                                rule: isCIDR(self)
+                            maxItems: 25
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
                           pods:
                             description: |-
                               Pods defines a way to select a set of pods in
