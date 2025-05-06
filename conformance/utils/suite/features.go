@@ -49,14 +49,12 @@ var StandardFeatures = sets.New(
 // -----------------------------------------------------------------------------
 
 const (
-	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers, EgressInlineCIDRPeers
+	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers
 	// fall under the extended test conformance.
-	SupportAdminNetworkPolicyNamedPorts                    SupportedFeature = "AdminNetworkPolicyNamedPorts"
-	SupportAdminNetworkPolicyEgressNodePeers               SupportedFeature = "AdminNetworkPolicyEgressNodePeers"
-	SupportAdminNetworkPolicyEgressInlineCIDRPeers         SupportedFeature = "AdminNetworkPolicyEgressInlineCIDRPeers"
-	SupportBaselineAdminNetworkPolicyNamedPorts            SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
-	SupportBaselineAdminNetworkPolicyEgressNodePeers       SupportedFeature = "BaselineAdminNetworkPolicyEgressNodePeers"
-	SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers SupportedFeature = "BaselineAdminNetworkPolicyEgressInlineCIDRPeers"
+	SupportAdminNetworkPolicyNamedPorts              SupportedFeature = "AdminNetworkPolicyNamedPorts"
+	SupportAdminNetworkPolicyEgressNodePeers         SupportedFeature = "AdminNetworkPolicyEgressNodePeers"
+	SupportBaselineAdminNetworkPolicyNamedPorts      SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
+	SupportBaselineAdminNetworkPolicyEgressNodePeers SupportedFeature = "BaselineAdminNetworkPolicyEgressNodePeers"
 )
 
 // ExperimentalFeatures are newer, unstable features that are not part of the standard channel.
@@ -64,10 +62,8 @@ const (
 var ExperimentalFeatures = sets.New(
 	SupportAdminNetworkPolicyNamedPorts,
 	SupportAdminNetworkPolicyEgressNodePeers,
-	SupportAdminNetworkPolicyEgressInlineCIDRPeers,
 	SupportBaselineAdminNetworkPolicyNamedPorts,
 	SupportBaselineAdminNetworkPolicyEgressNodePeers,
-	SupportBaselineAdminNetworkPolicyEgressInlineCIDRPeers,
 ).Insert(StandardFeatures.UnsortedList()...)
 
 // -----------------------------------------------------------------------------

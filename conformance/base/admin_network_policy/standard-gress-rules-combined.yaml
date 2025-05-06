@@ -59,7 +59,7 @@ spec:
       - portNumber:
           protocol: SCTP
           port: 9003
-  - name: "allow-to-hufflepuff-at-ports-8080-5353"
+  - name: "allow-to-hufflepuff-at-ports-8080-5353-9003"
     action: "Allow"
     to:
     - namespaces:

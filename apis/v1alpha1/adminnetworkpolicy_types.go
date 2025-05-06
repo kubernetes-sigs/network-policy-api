@@ -245,7 +245,6 @@ type AdminNetworkPolicyEgressPeer struct {
 	//
 	// Networks can have upto 25 CIDRs specified.
 	//
-	// <network-policy-api:experimental>
 	// +optional
 	// +listType=set
 	// +kubebuilder:validation:MinItems=1
