@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	apisv1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
 )
 
 // BaselineAdminNetworkPolicyLister helps list BaselineAdminNetworkPolicies.
@@ -30,19 +30,19 @@ import (
 type BaselineAdminNetworkPolicyLister interface {
 	// List lists all BaselineAdminNetworkPolicies in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.BaselineAdminNetworkPolicy, err error)
+	List(selector labels.Selector) (ret []*apisv1alpha1.BaselineAdminNetworkPolicy, err error)
 	// Get retrieves the BaselineAdminNetworkPolicy from the index for a given name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.BaselineAdminNetworkPolicy, error)
+	Get(name string) (*apisv1alpha1.BaselineAdminNetworkPolicy, error)
 	BaselineAdminNetworkPolicyListerExpansion
 }
 
 // baselineAdminNetworkPolicyLister implements the BaselineAdminNetworkPolicyLister interface.
 type baselineAdminNetworkPolicyLister struct {
-	listers.ResourceIndexer[*v1alpha1.BaselineAdminNetworkPolicy]
+	listers.ResourceIndexer[*apisv1alpha1.BaselineAdminNetworkPolicy]
 }
 
 // NewBaselineAdminNetworkPolicyLister returns a new BaselineAdminNetworkPolicyLister.
 func NewBaselineAdminNetworkPolicyLister(indexer cache.Indexer) BaselineAdminNetworkPolicyLister {
-	return &baselineAdminNetworkPolicyLister{listers.New[*v1alpha1.BaselineAdminNetworkPolicy](indexer, v1alpha1.Resource("baselineadminnetworkpolicy"))}
+	return &baselineAdminNetworkPolicyLister{listers.New[*apisv1alpha1.BaselineAdminNetworkPolicy](indexer, apisv1alpha1.Resource("baselineadminnetworkpolicy"))}
 }

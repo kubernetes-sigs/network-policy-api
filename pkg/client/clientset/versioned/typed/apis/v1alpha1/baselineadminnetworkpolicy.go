@@ -19,14 +19,14 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
-	apisv1alpha1 "sigs.k8s.io/network-policy-api/pkg/client/applyconfiguration/apis/v1alpha1"
+	apisv1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	applyconfigurationapisv1alpha1 "sigs.k8s.io/network-policy-api/pkg/client/applyconfiguration/apis/v1alpha1"
 	scheme "sigs.k8s.io/network-policy-api/pkg/client/clientset/versioned/scheme"
 )
 
@@ -38,36 +38,39 @@ type BaselineAdminNetworkPoliciesGetter interface {
 
 // BaselineAdminNetworkPolicyInterface has methods to work with BaselineAdminNetworkPolicy resources.
 type BaselineAdminNetworkPolicyInterface interface {
-	Create(ctx context.Context, baselineAdminNetworkPolicy *v1alpha1.BaselineAdminNetworkPolicy, opts v1.CreateOptions) (*v1alpha1.BaselineAdminNetworkPolicy, error)
-	Update(ctx context.Context, baselineAdminNetworkPolicy *v1alpha1.BaselineAdminNetworkPolicy, opts v1.UpdateOptions) (*v1alpha1.BaselineAdminNetworkPolicy, error)
+	Create(ctx context.Context, baselineAdminNetworkPolicy *apisv1alpha1.BaselineAdminNetworkPolicy, opts v1.CreateOptions) (*apisv1alpha1.BaselineAdminNetworkPolicy, error)
+	Update(ctx context.Context, baselineAdminNetworkPolicy *apisv1alpha1.BaselineAdminNetworkPolicy, opts v1.UpdateOptions) (*apisv1alpha1.BaselineAdminNetworkPolicy, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, baselineAdminNetworkPolicy *v1alpha1.BaselineAdminNetworkPolicy, opts v1.UpdateOptions) (*v1alpha1.BaselineAdminNetworkPolicy, error)
+	UpdateStatus(ctx context.Context, baselineAdminNetworkPolicy *apisv1alpha1.BaselineAdminNetworkPolicy, opts v1.UpdateOptions) (*apisv1alpha1.BaselineAdminNetworkPolicy, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.BaselineAdminNetworkPolicy, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.BaselineAdminNetworkPolicyList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apisv1alpha1.BaselineAdminNetworkPolicy, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apisv1alpha1.BaselineAdminNetworkPolicyList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.BaselineAdminNetworkPolicy, err error)
-	Apply(ctx context.Context, baselineAdminNetworkPolicy *apisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.BaselineAdminNetworkPolicy, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apisv1alpha1.BaselineAdminNetworkPolicy, err error)
+	Apply(ctx context.Context, baselineAdminNetworkPolicy *applyconfigurationapisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration, opts v1.ApplyOptions) (result *apisv1alpha1.BaselineAdminNetworkPolicy, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, baselineAdminNetworkPolicy *apisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.BaselineAdminNetworkPolicy, err error)
+	ApplyStatus(ctx context.Context, baselineAdminNetworkPolicy *applyconfigurationapisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration, opts v1.ApplyOptions) (result *apisv1alpha1.BaselineAdminNetworkPolicy, err error)
 	BaselineAdminNetworkPolicyExpansion
 }
 
 // baselineAdminNetworkPolicies implements BaselineAdminNetworkPolicyInterface
 type baselineAdminNetworkPolicies struct {
-	*gentype.ClientWithListAndApply[*v1alpha1.BaselineAdminNetworkPolicy, *v1alpha1.BaselineAdminNetworkPolicyList, *apisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration]
+	*gentype.ClientWithListAndApply[*apisv1alpha1.BaselineAdminNetworkPolicy, *apisv1alpha1.BaselineAdminNetworkPolicyList, *applyconfigurationapisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration]
 }
 
 // newBaselineAdminNetworkPolicies returns a BaselineAdminNetworkPolicies
 func newBaselineAdminNetworkPolicies(c *PolicyV1alpha1Client) *baselineAdminNetworkPolicies {
 	return &baselineAdminNetworkPolicies{
-		gentype.NewClientWithListAndApply[*v1alpha1.BaselineAdminNetworkPolicy, *v1alpha1.BaselineAdminNetworkPolicyList, *apisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration](
+		gentype.NewClientWithListAndApply[*apisv1alpha1.BaselineAdminNetworkPolicy, *apisv1alpha1.BaselineAdminNetworkPolicyList, *applyconfigurationapisv1alpha1.BaselineAdminNetworkPolicyApplyConfiguration](
 			"baselineadminnetworkpolicies",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1alpha1.BaselineAdminNetworkPolicy { return &v1alpha1.BaselineAdminNetworkPolicy{} },
-			func() *v1alpha1.BaselineAdminNetworkPolicyList { return &v1alpha1.BaselineAdminNetworkPolicyList{} }),
+			func() *apisv1alpha1.BaselineAdminNetworkPolicy { return &apisv1alpha1.BaselineAdminNetworkPolicy{} },
+			func() *apisv1alpha1.BaselineAdminNetworkPolicyList {
+				return &apisv1alpha1.BaselineAdminNetworkPolicyList{}
+			},
+		),
 	}
 }
