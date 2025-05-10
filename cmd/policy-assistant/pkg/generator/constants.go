@@ -36,7 +36,7 @@ var (
 )
 
 var (
-	ProbeAllAvailable = &ProbeConfig{AllAvailable: true, Mode: ProbeModeServiceName}
+	ProbeAllAvailable = &ProbeConfig{AllAvailable: true, Mode: ProbeModeServiceName, Service: ClusterIP}
 
 	probePort80TCP = NewProbeConfig(port80, tcp, ProbeModeServiceName)
 	probePort81TCP = NewProbeConfig(port81, tcp, ProbeModeServiceName)

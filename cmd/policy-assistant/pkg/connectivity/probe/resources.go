@@ -9,6 +9,7 @@ import (
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/generator"
 	"sigs.k8s.io/network-policy-api/policy-assistant/pkg/kube"
 )
 
@@ -20,14 +21,13 @@ type Resources struct {
 	protocols []v1.Protocol
 }
 
-func NewDefaultResources(kubernetes kube.IKubernetes, namespaces []string, podNames []string, ports []int, protocols []v1.Protocol, externalIPs []string, podCreationTimeoutSeconds int, batchJobs bool, imageRegistry string) (*Resources, error) {
-	//sort.Strings(externalIPs) // TODO why is this here?
-
+func NewDefaultResources(kubernetes kube.IKubernetes, namespaces []string, podNames []string, ports []int, protocols []v1.Protocol,
+	podCreationTimeoutSeconds int, batchJobs bool, imageRegistry string,
+	services []generator.ServiceKind) (*Resources, error) {
 	r := &Resources{
 		Namespaces: map[string]map[string]string{},
-		//ExternalIPs: externalIPs,
-		ports:     ports,
-		protocols: protocols,
+		ports:      ports,
+		protocols:  protocols,
 	}
 
 	for _, ns := range namespaces {
@@ -37,7 +37,7 @@ func NewDefaultResources(kubernetes kube.IKubernetes, namespaces []string, podNa
 		r.Namespaces[ns] = map[string]string{"ns": ns}
 	}
 
-	if err := r.CreateResourcesInKube(kubernetes); err != nil {
+	if err := r.CreateResourcesInKube(kubernetes, services); err != nil {
 		return nil, err
 	}
 	if err := r.waitForPodsReady(kubernetes, podCreationTimeoutSeconds); err != nil {
@@ -48,6 +48,36 @@ func NewDefaultResources(kubernetes kube.IKubernetes, namespaces []string, podNa
 	}
 	if err := r.getNamespaceLabelsFromKube(kubernetes); err != nil {
 		return nil, err
+	}
+
+	haveLoadBalancer := false
+	haveNodePort := false
+	for _, svc := range services {
+		if svc == generator.LoadBalancerCluster || svc == generator.LoadBalancerLocal {
+			haveLoadBalancer = true
+		}
+		if svc == generator.NodePortCluster || svc == generator.NodePortLocal {
+			haveNodePort = true
+		}
+	}
+
+	if haveLoadBalancer {
+		if err := r.getExternalIPs(kubernetes, podCreationTimeoutSeconds); err != nil {
+			return nil, err
+		}
+	}
+
+	if haveNodePort {
+		if err := r.getNodePorts(kubernetes); err != nil {
+			return nil, err
+		}
+	}
+
+	if haveLoadBalancer || haveNodePort {
+		// will also validate that there are two or more nodes
+		if err := r.setRemoteNodeIPs(); err != nil {
+			return nil, err
+		}
 	}
 
 	return r, nil
@@ -93,13 +123,142 @@ func (r *Resources) getPodIPsFromKube(kubernetes kube.IKubernetes) error {
 			return errors.Errorf("unable to find pod %s/%s in resources", kubePod.Namespace, kubePod.Name)
 		}
 		pod.IP = kubePod.Status.PodIP
-		kubeService, err := kubernetes.GetService(pod.Namespace, pod.ServiceName())
+		if pod.IP == "" {
+			return errors.Errorf("empty ip for pod %s/%s", kubePod.Namespace, kubePod.Name)
+		}
+		logrus.Debugf("ip for pod %s/%s: %s", pod.Namespace, pod.Name, pod.IP)
+
+		pod.LocalNodeIP = kubePod.Status.HostIP
+		if pod.LocalNodeIP == "" {
+			return errors.Errorf("empty node ip for pod %s/%s", pod.Namespace, pod.Name)
+		}
+		logrus.Debugf("node ip for pod %s/%s: %s", pod.Namespace, pod.Name, pod.LocalNodeIP)
+
+		kubeService, err := kubernetes.GetService(pod.Namespace, pod.ServiceName(generator.ClusterIP))
 		if err != nil {
-			return err
+			return errors.Errorf("unable to get service %s/%s", pod.Namespace, pod.ServiceName(generator.ClusterIP))
 		}
 		pod.ServiceIP = kubeService.Spec.ClusterIP
+		if pod.ServiceIP == "" {
+			return errors.Errorf("empty service ip for pod %s/%s", pod.Namespace, pod.Name)
+		}
+		logrus.Debugf("service ip for pod %s/%s: %s", pod.Namespace, pod.Name, pod.ServiceIP)
+	}
 
-		logrus.Debugf("ip for pod %s/%s: %s", pod.Namespace, pod.Name, pod.IP)
+	return nil
+}
+
+func (r *Resources) getExternalIPs(kubernetes kube.IKubernetes, maxRetrySeconds int) error {
+	waitBetweenRetries := time.Duration(5) * time.Second
+	timeout := time.After(time.Duration(maxRetrySeconds) * time.Second)
+	ticker := time.NewTicker(waitBetweenRetries)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout:
+			return errors.Errorf("timed out waiting for external IPs")
+		case <-ticker.C:
+			allFound := true
+			for _, pod := range r.Pods {
+				svcKinds := []generator.ServiceKind{generator.LoadBalancerLocal, generator.LoadBalancerCluster}
+				if len(pod.ExternalServiceIPs) == len(svcKinds) {
+					continue
+				}
+
+				for _, kind := range svcKinds {
+					svcName := pod.ServiceName(kind)
+					kubeService, err := kubernetes.GetService(pod.Namespace, svcName)
+					if err != nil {
+						logrus.Errorf("unable to get service. will retry. svc: %s/%s", pod.Namespace, svcName)
+						allFound = false
+						break
+					}
+
+					if len(kubeService.Status.LoadBalancer.Ingress) == 0 {
+						allFound = false
+						break
+					}
+					ip := kubeService.Status.LoadBalancer.Ingress[0].IP
+					if ip == "" {
+						allFound = false
+						break
+					}
+
+					if pod.ExternalServiceIPs == nil {
+						pod.ExternalServiceIPs = make(map[generator.ServiceKind]string, len(svcKinds))
+					}
+					pod.ExternalServiceIPs[kind] = ip
+				}
+
+				if !allFound {
+					break
+				}
+			}
+
+			if allFound {
+				return nil
+			}
+		}
+	}
+}
+
+func (r *Resources) getNodePorts(kubernetes kube.IKubernetes) error {
+	for _, pod := range r.Pods {
+		svcKinds := []generator.ServiceKind{generator.NodePortLocal, generator.NodePortCluster}
+		for _, kind := range svcKinds {
+			svcName := pod.ServiceName(kind)
+			kubeService, err := kubernetes.GetService(pod.Namespace, svcName)
+			if err != nil {
+				return errors.Errorf("unable to get service %s/%s", pod.Namespace, svcName)
+			}
+
+			if len(kubeService.Spec.Ports) == 0 {
+				return errors.Errorf("no ports found for service %s/%s", pod.Namespace, svcName)
+			}
+
+			if pod.nodePorts == nil {
+				pod.nodePorts = make(map[generator.ServiceKind]map[int]int, len(svcKinds))
+			}
+
+			if pod.nodePorts[kind] == nil {
+				pod.nodePorts[kind] = make(map[int]int, len(kubeService.Spec.Ports))
+			}
+
+			for _, port := range kubeService.Spec.Ports {
+				if port.TargetPort.IntVal == 0 {
+					return errors.Errorf("no target port found for service %s/%s", pod.Namespace, svcName)
+				}
+
+				if port.NodePort == 0 {
+					return errors.Errorf("no node port found for service %s/%s", pod.Namespace, svcName)
+				}
+
+				pod.nodePorts[kind][int(port.TargetPort.IntVal)] = int(port.NodePort)
+			}
+		}
+	}
+	return nil
+}
+
+func (r *Resources) setRemoteNodeIPs() error {
+	// set remote node IPs
+	nodeIPs := make(map[string]struct{})
+	for _, pod := range r.Pods {
+		nodeIPs[pod.LocalNodeIP] = struct{}{}
+	}
+
+	if len(nodeIPs) == 1 {
+		return errors.New("all cyclonus pods were scheduled on one node. tests involving remote node IPs will fail. please provision more nodes")
+	} else {
+		for _, pod := range r.Pods {
+			for nodeIP := range nodeIPs {
+				if pod.LocalNodeIP != nodeIP {
+					pod.RemoteNodeIP = nodeIP
+					break
+				}
+			}
+		}
 	}
 
 	return nil
@@ -120,6 +279,18 @@ func (r *Resources) getNamespaceLabelsFromKube(kubernetes kube.IKubernetes) erro
 	}
 
 	return nil
+}
+
+func (r *Resources) GetNodeIPs() []string {
+	nodeIPs := make(map[string]struct{})
+	for _, pod := range r.Pods {
+		nodeIPs[pod.LocalNodeIP] = struct{}{}
+	}
+	var ips []string
+	for ip := range nodeIPs {
+		ips = append(ips, ip)
+	}
+	return ips
 }
 
 func (r *Resources) GetPod(ns string, name string) (*Pod, error) {
@@ -255,7 +426,7 @@ func (r *Resources) NamespacesSlice() []string {
 	return maps.Keys(r.Namespaces)
 }
 
-func (r *Resources) CreateResourcesInKube(kubernetes kube.IKubernetes) error {
+func (r *Resources) CreateResourcesInKube(kubernetes kube.IKubernetes, services []generator.ServiceKind) error {
 	for ns, labels := range r.Namespaces {
 		_, err := kubernetes.GetNamespace(ns)
 		if err != nil {
@@ -265,6 +436,7 @@ func (r *Resources) CreateResourcesInKube(kubernetes kube.IKubernetes) error {
 			}
 		}
 	}
+
 	for _, pod := range r.Pods {
 		_, err := kubernetes.GetPod(pod.Namespace, pod.Name)
 		if err != nil {
@@ -273,12 +445,17 @@ func (r *Resources) CreateResourcesInKube(kubernetes kube.IKubernetes) error {
 				return err
 			}
 		}
-		kubeService := pod.KubeService()
-		_, err = kubernetes.GetService(kubeService.Namespace, kubeService.Name)
-		if err != nil {
-			_, err = kubernetes.CreateService(kubeService)
+
+		for _, kindStr := range services {
+			kind := generator.ServiceKind(kindStr)
+			svc := pod.KubeService(kind)
+			// not sure why we get the service here but not in TestCaseState.CreatePod()
+			_, err = kubernetes.GetService(svc.Namespace, svc.Name)
 			if err != nil {
-				return err
+				_, err = kubernetes.CreateService(svc)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
