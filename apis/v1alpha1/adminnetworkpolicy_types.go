@@ -150,7 +150,7 @@ type AdminNetworkPolicyIngressRule struct {
 // set of traffic originating from pods selected by a AdminNetworkPolicy's
 // Subject field.
 // <network-policy-api:experimental:validation>
-// +kubebuilder:validation:XValidation:rule="!(self.to.exists(peer, has(peer.networks) || has(peer.nodes)) && has(self.ports) && self.ports.exists(port, has(port.namedPort)))",message="networks/nodes peer cannot be set with namedPorts since there are no namedPorts for networks/nodes"
+// +kubebuilder:validation:XValidation:rule="!(self.to.exists(peer, has(peer.networks) || has(peer.nodes) || has(peer.domainNames)) && has(self.ports) && self.ports.exists(port, has(port.namedPort)))",message="networks/nodes/domainNames peer cannot be set with namedPorts since there are no namedPorts for networks/nodes/domainNames"
 type AdminNetworkPolicyEgressRule struct {
 	// Name is an identifier for this rule, that may be no more than 100 characters
 	// in length. This field should be used by the implementation to help
