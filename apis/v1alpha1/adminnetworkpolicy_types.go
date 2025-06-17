@@ -254,7 +254,7 @@ type AdminNetworkPolicyEgressPeer struct {
 	// DomainNames provides a way to specify domain names as peers.
 	//
 	// DomainNames is only supported for ALLOW rules. In order to control
-	// access, DomainNames ALLOW rules should be used with a lower priority
+	// access, DomainNames Allow rules should be used with a lower priority
 	// egress deny -- this allows the admin to maintain an explicit "allowlist"
 	// of reachable domains.
 	//
