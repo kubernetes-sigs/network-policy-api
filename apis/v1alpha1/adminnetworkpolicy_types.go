@@ -126,7 +126,7 @@ type AdminNetworkPolicyIngressRule struct {
 	Action AdminNetworkPolicyRuleAction `json:"action"`
 
 	// From is the list of sources whose traffic this rule applies to.
-	// If any AdminNetworkPolicyIngressPeer matches the source of incoming
+	// If any element matches the source of incoming
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
 	//
@@ -173,7 +173,7 @@ type AdminNetworkPolicyEgressRule struct {
 	Action AdminNetworkPolicyRuleAction `json:"action"`
 
 	// To is the List of destinations whose traffic this rule applies to.
-	// If any AdminNetworkPolicyEgressPeer matches the destination of outgoing
+	// If any element matches the destination of outgoing
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
 	//
