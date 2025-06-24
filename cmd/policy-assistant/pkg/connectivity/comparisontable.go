@@ -11,10 +11,18 @@ type Item struct {
 	Simulated *probe.Item
 }
 
-func (i *Item) ResultsByProtocol() map[bool]map[v1.Protocol]int {
-	counts := map[bool]map[v1.Protocol]int{true: {}, false: {}}
+func (i *Item) ResultsByProtocol() map[Comparison]map[v1.Protocol]int {
+	counts := map[Comparison]map[v1.Protocol]int{SameComparison: {}, DifferentComparison: {}, IgnoredComparison: {}}
 	for key, kr := range i.Kube.JobResults {
-		counts[kr.Combined == i.Simulated.JobResults[key].Combined][kr.Job.Protocol]++
+		r, ok := i.Simulated.JobResults[key]
+		switch {
+		case kr.Combined == probe.ConnectivityUndefined || (ok && r.Combined == probe.ConnectivityUndefined):
+			counts[IgnoredComparison][kr.Job.Protocol]++
+		case ok && kr.Combined == i.Simulated.JobResults[key].Combined:
+			counts[SameComparison][kr.Job.Protocol]++
+		default:
+			counts[DifferentComparison][kr.Job.Protocol]++
+		}
 	}
 	return counts
 }
@@ -32,6 +40,27 @@ func equalsDict(l map[string]*probe.JobResult, r map[string]*probe.JobResult) bo
 			return false
 		}
 	}
+	return true
+}
+
+func (i *Item) IsUndefined() bool {
+	l := i.Kube.JobResults
+	r := i.Simulated.JobResults
+	if len(l) != len(r) {
+		return false
+	}
+
+	for k, lv := range l {
+		if lv.Combined == probe.ConnectivityUndefined {
+			continue
+		}
+		rv, ok := r[k]
+		if ok && rv.Combined == probe.ConnectivityUndefined {
+			continue
+		}
+		return false
+	}
+
 	return true
 }
 
@@ -66,18 +95,6 @@ func NewComparisonTableFrom(kubeProbe *probe.Table, simulatedProbe *probe.Table)
 	return table
 }
 
-func (c *ComparisonTable) ResultsByProtocol() map[bool]map[v1.Protocol]int {
-	counts := map[bool]map[v1.Protocol]int{true: {}, false: {}}
-	for _, key := range c.Wrapped.Keys() {
-		for isSuccess, protocolCounts := range c.Get(key.From, key.To).ResultsByProtocol() {
-			for protocol, count := range protocolCounts {
-				counts[isSuccess][protocol] += count
-			}
-		}
-	}
-	return counts
-}
-
 func (c *ComparisonTable) Set(from string, to string, value *Item) {
 	c.Wrapped.Set(from, to, value)
 }
@@ -89,15 +106,11 @@ func (c *ComparisonTable) Get(from string, to string) *Item {
 func (c *ComparisonTable) ValueCountsByProtocol(ignoreLoopback bool) map[v1.Protocol]map[Comparison]int {
 	counts := map[v1.Protocol]map[Comparison]int{v1.ProtocolTCP: {}, v1.ProtocolSCTP: {}, v1.ProtocolUDP: {}}
 	for _, key := range c.Wrapped.Keys() {
-		for isSuccess, protocolCounts := range c.Get(key.From, key.To).ResultsByProtocol() {
-			var c Comparison
+		for c, protocolCounts := range c.Get(key.From, key.To).ResultsByProtocol() {
 			if ignoreLoopback && key.From == key.To {
 				c = IgnoredComparison
-			} else if isSuccess {
-				c = SameComparison
-			} else {
-				c = DifferentComparison
 			}
+
 			for protocol, count := range protocolCounts {
 				counts[protocol][c] += count
 			}
@@ -112,9 +125,13 @@ func (c *ComparisonTable) ValueCounts(ignoreLoopback bool) map[Comparison]int {
 		if ignoreLoopback && key.From == key.To {
 			counts[IgnoredComparison] += 1
 		} else {
-			if c.Get(key.From, key.To).IsSuccess() {
+			item := c.Get(key.From, key.To)
+			switch {
+			case item.IsUndefined():
+				counts[IgnoredComparison] += 1
+			case item.IsSuccess():
 				counts[SameComparison] += 1
-			} else {
+			default:
 				counts[DifferentComparison] += 1
 			}
 		}
@@ -125,6 +142,9 @@ func (c *ComparisonTable) ValueCounts(ignoreLoopback bool) map[Comparison]int {
 func (c *ComparisonTable) RenderSuccessTable() string {
 	return c.Wrapped.Table("", false, func(fr, to string, i interface{}) string {
 		item := c.Get(fr, to)
+		if item.IsUndefined() {
+			return probe.ConnectivityUndefined.ShortString()
+		}
 		if item.IsSuccess() {
 			return "."
 		} else {
