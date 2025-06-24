@@ -126,7 +126,7 @@ type AdminNetworkPolicyIngressRule struct {
 	Action AdminNetworkPolicyRuleAction `json:"action"`
 
 	// From is the list of sources whose traffic this rule applies to.
-	// If any AdminNetworkPolicyIngressPeer matches the source of incoming
+	// If any element matches the source of incoming
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
 	//
@@ -150,7 +150,7 @@ type AdminNetworkPolicyIngressRule struct {
 // set of traffic originating from pods selected by a AdminNetworkPolicy's
 // Subject field.
 // <network-policy-api:experimental:validation>
-// +kubebuilder:validation:XValidation:rule="!(self.to.exists(peer, has(peer.networks) || has(peer.nodes)) && has(self.ports) && self.ports.exists(port, has(port.namedPort)))",message="networks/nodes peer cannot be set with namedPorts since there are no namedPorts for networks/nodes"
+// +kubebuilder:validation:XValidation:rule="!(self.to.exists(peer, has(peer.networks) || has(peer.nodes) || has(peer.domainNames)) && has(self.ports) && self.ports.exists(port, has(port.namedPort)))",message="networks/nodes/domainNames peer cannot be set with namedPorts since there are no namedPorts for networks/nodes/domainNames"
 type AdminNetworkPolicyEgressRule struct {
 	// Name is an identifier for this rule, that may be no more than 100 characters
 	// in length. This field should be used by the implementation to help
@@ -173,7 +173,7 @@ type AdminNetworkPolicyEgressRule struct {
 	Action AdminNetworkPolicyRuleAction `json:"action"`
 
 	// To is the List of destinations whose traffic this rule applies to.
-	// If any AdminNetworkPolicyEgressPeer matches the destination of outgoing
+	// If any element matches the destination of outgoing
 	// traffic then the specified action is applied.
 	// This field must be defined and contain at least one item.
 	//
@@ -254,7 +254,7 @@ type AdminNetworkPolicyEgressPeer struct {
 	// DomainNames provides a way to specify domain names as peers.
 	//
 	// DomainNames is only supported for ALLOW rules. In order to control
-	// access, DomainNames ALLOW rules should be used with a lower priority
+	// access, DomainNames Allow rules should be used with a lower priority
 	// egress deny -- this allows the admin to maintain an explicit "allowlist"
 	// of reachable domains.
 	//
