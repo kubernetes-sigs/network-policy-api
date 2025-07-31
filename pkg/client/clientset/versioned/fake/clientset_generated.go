@@ -29,6 +29,8 @@ import (
 	clientset "sigs.k8s.io/network-policy-api/pkg/client/clientset/versioned"
 	policyv1alpha1 "sigs.k8s.io/network-policy-api/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 	fakepolicyv1alpha1 "sigs.k8s.io/network-policy-api/pkg/client/clientset/versioned/typed/apis/v1alpha1/fake"
+	policyv1alpha2 "sigs.k8s.io/network-policy-api/pkg/client/clientset/versioned/typed/apis/v1alpha2"
+	fakepolicyv1alpha2 "sigs.k8s.io/network-policy-api/pkg/client/clientset/versioned/typed/apis/v1alpha2/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -128,4 +130,9 @@ var (
 // PolicyV1alpha1 retrieves the PolicyV1alpha1Client
 func (c *Clientset) PolicyV1alpha1() policyv1alpha1.PolicyV1alpha1Interface {
 	return &fakepolicyv1alpha1.FakePolicyV1alpha1{Fake: &c.Fake}
+}
+
+// PolicyV1alpha2 retrieves the PolicyV1alpha2Client
+func (c *Clientset) PolicyV1alpha2() policyv1alpha2.PolicyV1alpha2Interface {
+	return &fakepolicyv1alpha2.FakePolicyV1alpha2{Fake: &c.Fake}
 }
