@@ -1,7 +1,7 @@
 # NPEP-285: NPEP template
 
 * Issue: [#285](https://github.com/kubernetes-sigs/network-policy-api/issues/285)
-* Status: Provisional
+* Status: Experimental
 
 ## TLDR
 
