@@ -25,25 +25,25 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
-var AdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyIngressNamedPort",
-	Description: "Tests support for ingress traffic on a named port using admin network policy API based on a server and client model",
+var CNPAdminTierIngressNamedPort = suite.ConformanceTest{
+	ShortName:   "CNPAdminTierIngressNamedPort",
+	Description: "Tests support for ingress traffic on a named port using cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
-		suite.SupportAdminNetworkPolicyNamedPorts,
+		suite.SupportClusterNetworkPolicy,
+		suite.SupportClusterNetworkPolicyNamedPorts,
 	},
-	Manifests: []string{"base/admin_network_policy/standard-ingress-udp-rules.yaml"},
+	Manifests: []string{"base/admin_tier/standard-ingress-udp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for named port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `ingress-udp` ANP
+			// This test uses `ingress-udp` admin CNP
 			// cedric-diggory-1 is our server pod in hufflepuff namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -51,23 +51,23 @@ var AdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
 				Name:      "cedric-diggory-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "ingress-udp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			dnsPortRule := mutate.DeepCopy().Spec.Ingress[5]
 			dnsPort := "dns"
 			// rewrite the udp port 53 rule as named port rule
-			dnsPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
+			dnsPortRule.Ports = &[]api.ClusterNetworkPolicyPort{
 				{
 					NamedPort: &dnsPort,
 				},
 			}
 			mutate.Spec.Ingress[5] = dnsPortRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure ingress is ALLOWED from gryffindor to hufflepuff at the dns port, which is defined as UDP at port 53 in pod spec
 			// modified ingressRule at index5 should take effect

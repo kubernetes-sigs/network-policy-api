@@ -1,13 +1,14 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
-  name: ingress-udp
+  name: ingress-tcp
 spec:
-  priority: 4
+  tier: Admin
+  priority: 3
   subject:
     namespaces:
       matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   ingress:
   - name: "allow-from-ravenclaw-everything"
     action: "Allow"
@@ -27,7 +28,7 @@ spec:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
-  - name: "deny-from-slytherin-at-port-5353"
+  - name: "deny-from-slytherin-at-port-80"
     action: "Deny"
     from:
     - namespaces:
@@ -35,9 +36,9 @@ spec:
           kubernetes.io/metadata.name: network-policy-conformance-slytherin
     ports:
       - portNumber:
-          protocol: UDP
-          port: 5353
-  - name: "pass-from-slytherin-at-port-5353"
+          protocol: TCP
+          port: 80
+  - name: "pass-from-slytherin-at-port-80"
     action: "Pass"
     from:
     - namespaces:
@@ -45,21 +46,21 @@ spec:
           kubernetes.io/metadata.name: network-policy-conformance-slytherin
     ports:
       - portNumber:
-          protocol: UDP
-          port: 5353
-  - name: "allow-from-gryffindor-at-port-53"
+          protocol: TCP
+          port: 80
+  - name: "allow-from-hufflepuff-at-port-80"
     action: "Allow"
     from:
     - namespaces:
         matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
     ports:
       - portNumber:
-          protocol: UDP
-          port: 53
-  - name: "deny-from-gryffindor-everything-else"
+          protocol: TCP
+          port: 80
+  - name: "deny-from-hufflepuff-everything-else"
     action: "Deny"
     from:
     - namespaces:
         matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff

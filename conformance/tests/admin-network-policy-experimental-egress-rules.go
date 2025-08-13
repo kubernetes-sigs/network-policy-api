@@ -25,32 +25,32 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyEgressNamedPort,
-		AdminNetworkPolicyEgressNodePeers,
+		CNPAdminTierEgressNamedPort,
+		CNPAdminTierEgressNodePeers,
 	)
 }
 
-var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyEgressNamedPort",
-	Description: "Tests support for egress traffic on a named port using admin network policy API based on a server and client model",
+var CNPAdminTierEgressNamedPort = suite.ConformanceTest{
+	ShortName:   "CNPAdminTierEgressNamedPort",
+	Description: "Tests support for egress traffic on a named port using cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
-		suite.SupportAdminNetworkPolicyNamedPorts,
+		suite.SupportClusterNetworkPolicy,
+		suite.SupportClusterNetworkPolicyNamedPorts,
 	},
-	Manifests: []string{"base/admin_network_policy/standard-egress-tcp-rules.yaml"},
+	Manifests: []string{"base/admin_tier/standard-egress-tcp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for named port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-tcp` ANP
+			// This test uses `egress-tcp` admin CNP
 			// cedric-diggory-1 is our server pod in hufflepuff namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -58,23 +58,23 @@ var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 				Name:      "cedric-diggory-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-tcp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			namedPortRule := mutate.Spec.Egress[5]
 			webPort := "web"
 			// replace the tcp port 8080 rule as named port rule which translate to tcp port 80 instead
-			namedPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
+			namedPortRule.Ports = &[]api.ClusterNetworkPolicyPort{
 				{
 					NamedPort: &webPort,
 				},
 			}
 			mutate.Spec.Egress[5] = namedPortRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to hufflepuff from gryffindor at the web port, which is defined as TCP at port 80 in pod spec
 			// egressRule at index5 should take effect
@@ -91,18 +91,18 @@ var AdminNetworkPolicyEgressNamedPort = suite.ConformanceTest{
 	},
 }
 
-var AdminNetworkPolicyEgressNodePeers = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyEgressNodePeers",
-	Description: "Tests support for egress traffic to node peers using admin network policy API based on a server and client model",
+var CNPAdminTierEgressNodePeers = suite.ConformanceTest{
+	ShortName:   "CNPAdminTierEgressNodePeers",
+	Description: "Tests support for egress traffic to node peers using cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
-		suite.SupportAdminNetworkPolicyEgressNodePeers,
+		suite.SupportClusterNetworkPolicy,
+		suite.SupportClusterNetworkPolicyEgressNodePeers,
 	},
-	Manifests: []string{"base/admin_network_policy/experimental-egress-selector-rules.yaml"},
+	Manifests: []string{"base/admin_tier/experimental-egress-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()
-		// This test uses `node-and-cidr-as-peers-example` ANP
+		// This test uses `node-and-cidr-as-peers-example` admin CNP
 		// centaur-1 is our server host-networked pod in forbidden-forrest namespace
 		serverPod := &v1.Pod{}
 		err := s.Client.Get(ctx, client.ObjectKey{

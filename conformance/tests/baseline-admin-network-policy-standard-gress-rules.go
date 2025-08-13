@@ -25,30 +25,30 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		BaselineAdminNetworkPolicyGress,
+		CNPBaselineTierGress,
 	)
 }
 
-var BaselineAdminNetworkPolicyGress = suite.ConformanceTest{
-	ShortName:   "BaselineAdminNetworkPolicyGress",
-	Description: "Tests support for combined ingress and egress traffic rules in the baseline admin network policy API based on a server and client model",
+var CNPBaselineTierGress = suite.ConformanceTest{
+	ShortName:   "CNPBaselineTierGress",
+	Description: "Tests support for combined ingress and egress traffic rules in the baseline cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportBaselineAdminNetworkPolicy,
+		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/standard-gress-rules-combined.yaml"},
+	Manifests: []string{"base/baseline_tier/standard-gress-rules-combined.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-gress' policy across different protocols", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 
 			/* First; let's test egress works! */
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
@@ -95,7 +95,7 @@ var BaselineAdminNetworkPolicyGress = suite.ConformanceTest{
 		t.Run("Should support an 'allow-gress' policy across different protocols at the specified ports", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 
 			/* First; let's test egress works! */
 			// cedric-diggory-1 is our server pod in hufflepuff namespace
@@ -178,7 +178,7 @@ var BaselineAdminNetworkPolicyGress = suite.ConformanceTest{
 		t.Run("Should support an 'deny-gress' policy across different protocols", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 
 			/* First; let's test egress works! */
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
@@ -188,12 +188,12 @@ var BaselineAdminNetworkPolicyGress = suite.ConformanceTest{
 				Name:      "luna-lovegood-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "default",
-			}, banp)
-			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
-			mutate := banp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the baseline cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index0 and index1 for both ingress and egress
 			allowOutRule := mutate.Spec.Egress[0]
 			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
@@ -201,8 +201,8 @@ var BaselineAdminNetworkPolicyGress = suite.ConformanceTest{
 			allowInRule := mutate.Spec.Ingress[0]
 			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[1]
 			mutate.Spec.Ingress[1] = allowInRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
-			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the baseline cluster network policy")
 			// harry-potter-x is our client pod in gryffindor namespace
 			// ensure egress is DENIED to ravenclaw from gryffindor
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -240,7 +240,7 @@ var BaselineAdminNetworkPolicyGress = suite.ConformanceTest{
 		t.Run("Should support a 'deny-gress' policy across different protocols at the specified ports", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 
 			/* First; let's test egress works! */
 			// draco-malfoy-0 is our server pod in slytherin namespace

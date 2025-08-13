@@ -26,28 +26,28 @@ import (
 	"k8s.io/utils/net"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyEgressInlineCIDRPeers,
+		CNPAdminTierEgressInlineCIDRPeers,
 	)
 }
 
-var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyEgressInlineCIDRPeers",
-	Description: "Tests support for egress traffic to CIDR peers using admin network policy API based on a server and client model",
+var CNPAdminTierEgressInlineCIDRPeers = suite.ConformanceTest{
+	ShortName:   "CNPAdminTierEgressInlineCIDRPeers",
+	Description: "Tests support for egress traffic to CIDR peers using cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
+		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_network_policy/standard-egress-inline-cidr-rules.yaml"},
+	Manifests: []string{"base/admin_tier/standard-egress-inline-cidr-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()
-		// This test uses `inline-cidr-as-peers-example` ANP
+		// This test uses `inline-cidr-as-peers-example` admin CNP
 		t.Run("Should support a 'deny-egress' rule policy for egress-cidr-peer", func(t *testing.T) {
 			// harry-potter-1 is our client pod in gryffindor namespace
 			// Let us pick a pod in ravenclaw namespace and try to connect, it won't work
@@ -125,12 +125,12 @@ var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 				Name:      "cedric-diggory-0",
 			}, serverPodHufflepuff)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "inline-cidr-as-peers-example",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			var mask string
 			if net.IsIPv4String(serverPodRavenclaw.Status.PodIP) {
 				mask = "/32"
@@ -138,23 +138,23 @@ var AdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 				mask = "/128"
 			}
 			// insert new rule at index0; append the rest of the rules in the inline-cidr-as-peers-example
-			newRule := []v1alpha1.AdminNetworkPolicyEgressRule{
+			newRule := []api.ClusterNetworkPolicyEgressRule{
 				{
 					Name:   "allow-egress-to-specific-podIPs",
 					Action: "Allow",
-					To: []v1alpha1.AdminNetworkPolicyEgressPeer{
+					To: []api.ClusterNetworkPolicyEgressPeer{
 						{
-							Networks: []v1alpha1.CIDR{
-								v1alpha1.CIDR(serverPodRavenclaw.Status.PodIP + mask),
-								v1alpha1.CIDR(serverPodHufflepuff.Status.PodIP + mask),
+							Networks: []api.CIDR{
+								api.CIDR(serverPodRavenclaw.Status.PodIP + mask),
+								api.CIDR(serverPodHufflepuff.Status.PodIP + mask),
 							},
 						},
 					},
 				},
 			}
 			mutate.Spec.Egress = append(newRule, mutate.Spec.Egress...)
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to luna-lovegood-0.IP and cedric-diggory-0.IP
 			// new egressRule at index0 should take effect
