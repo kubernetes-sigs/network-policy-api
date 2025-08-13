@@ -1,35 +1,30 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
-  name: ingress-sctp
+  name: default
 spec:
-  priority: 5
+  tier: Baseline
+  priority: 10
   subject:
     namespaces:
       matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
-  ingress:
-  - name: "allow-from-gryffindor-everything"
+  egress:
+  - name: "allow-to-gryffindor-everything"
     action: "Allow"
-    from:
+    to:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-gryffindor
-  - name: "deny-from-gryffindor-everything"
+  - name: "deny-to-gryffindor-everything"
     action: "Deny"
-    from:
+    to:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-gryffindor
-  - name: "pass-from-gryffindor-everything"
-    action: "Pass"
-    from:
-    - namespaces:
-        matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
-  - name: "deny-from-slytherin-at-port-9003"
+  - name: "deny-to-slytherin-at-port-9003"
     action: "Deny"
-    from:
+    to:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-slytherin
@@ -37,19 +32,9 @@ spec:
       - portNumber:
           protocol: SCTP
           port: 9003
-  - name: "pass-from-slytherin-at-port-9003"
-    action: "Pass"
-    from:
-    - namespaces:
-        matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-slytherin
-    ports:
-      - portNumber:
-          protocol: SCTP
-          port: 9003
-  - name: "allow-from-hufflepuff-at-port-9003"
+  - name: "allow-to-hufflepuff-at-port-9003"
     action: "Allow"
-    from:
+    to:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
@@ -57,9 +42,9 @@ spec:
       - portNumber:
           protocol: SCTP
           port: 9003
-  - name: "deny-from-hufflepuff-everything-else"
+  - name: "deny-to-hufflepuff-everything-else"
     action: "Deny"
-    from:
+    to:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-hufflepuff

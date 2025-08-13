@@ -26,24 +26,24 @@ import (
 	"k8s.io/utils/net"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		BaselineAdminNetworkPolicyEgressInlineCIDRPeers,
+		CNPBaselineTierEgressInlineCIDRPeers,
 	)
 }
 
-var BaselineAdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
-	ShortName:   "BaselineAdminNetworkPolicyEgressInlineCIDRPeers",
-	Description: "Tests support for egress traffic to CIDR peers using baseline admin network policy API based on a server and client model",
+var CNPBaselineTierEgressInlineCIDRPeers = suite.ConformanceTest{
+	ShortName:   "CNPBaselineTierEgressInlineCIDRPeers",
+	Description: "Tests support for egress traffic to CIDR peers using baseline cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportBaselineAdminNetworkPolicy,
+		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/standard-egress-inline-cidr-rules.yaml"},
+	Manifests: []string{"base/baseline_tier/standard-egress-inline-cidr-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 		defer cancel()
@@ -124,36 +124,36 @@ var BaselineAdminNetworkPolicyEgressInlineCIDRPeers = suite.ConformanceTest{
 				Name:      "cedric-diggory-0",
 			}, serverPodHufflepuff)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
+			cnp := &v1alpha2.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "default",
-			}, banp)
-			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
-			mutate := banp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the baseline cluster network policy")
+			mutate := cnp.DeepCopy()
 			var mask string
 			if net.IsIPv4String(serverPodRavenclaw.Status.PodIP) {
 				mask = "/32"
 			} else {
 				mask = "/128"
 			}
-			// insert new rule at index0; append the rest of the rules in the default BANP
-			newRule := []v1alpha1.BaselineAdminNetworkPolicyEgressRule{
+			// insert new rule at index0; append the rest of the rules in the default baseline CNP
+			newRule := []v1alpha2.ClusterNetworkPolicyEgressRule{
 				{
 					Name:   "allow-egress-to-specific-podIPs",
 					Action: "Allow",
-					To: []v1alpha1.BaselineAdminNetworkPolicyEgressPeer{
+					To: []v1alpha2.ClusterNetworkPolicyEgressPeer{
 						{
-							Networks: []v1alpha1.CIDR{
-								v1alpha1.CIDR(serverPodRavenclaw.Status.PodIP + mask),
-								v1alpha1.CIDR(serverPodHufflepuff.Status.PodIP + mask),
+							Networks: []v1alpha2.CIDR{
+								v1alpha2.CIDR(serverPodRavenclaw.Status.PodIP + mask),
+								v1alpha2.CIDR(serverPodHufflepuff.Status.PodIP + mask),
 							},
 						},
 					},
 				},
 			}
 			mutate.Spec.Egress = append(newRule, mutate.Spec.Egress...)
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
-			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the baseline cluster network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to luna-lovegood-0.IP and cedric-diggory-0.IP
 			// new egressRule at index0 should take effect
