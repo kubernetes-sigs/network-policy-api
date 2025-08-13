@@ -1,8 +1,9 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: priority-50-example
 spec:
+  tier: Admin
   priority: 50
   subject:
     pods:
@@ -35,11 +36,12 @@ spec:
           matchLabels:
             conformance-house: slytherin
 ---
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: old-priority-60-new-priority-40-example
 spec:
+  tier: Admin
   priority: 60 # will be updated to 40 in the tests thus taking higher precedence over the deny at priority 50
   subject:
     pods:
@@ -72,11 +74,13 @@ spec:
           matchLabels:
             conformance-house: slytherin
 ---
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: BaselineAdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: default
 spec:
+  tier: Baseline
+  priority: 10
   subject:
     pods:
       namespaceSelector:

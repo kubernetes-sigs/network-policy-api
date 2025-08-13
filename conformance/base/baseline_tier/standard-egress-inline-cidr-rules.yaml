@@ -1,17 +1,14 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
-  name: inline-cidr-as-peers-example
+  name: default
 spec:
-  priority: 85
+  tier: Baseline
+  priority: 10
   subject:
-    pods:
-      namespaceSelector:
-        matchLabels:
-          conformance-house: gryffindor
-      podSelector:
-        matchLabels:
-          conformance-house: gryffindor
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   egress:
   # CIDR rules that test allow to specific IPs is done within the test by updating the CR
   #- name: "allow-egress-to-specific-podIPs"

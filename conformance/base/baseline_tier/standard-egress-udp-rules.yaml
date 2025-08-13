@@ -1,12 +1,14 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: BaselineAdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: default
 spec:
+  tier: Baseline
+  priority: 10
   subject:
     namespaces:
       matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
   egress:
   - name: "allow-to-ravenclaw-everything"
     action: "Allow"
@@ -20,7 +22,7 @@ spec:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
-  - name: "deny-to-slytherin-at-port-80"
+  - name: "deny-to-slytherin-at-port-5353"
     action: "Deny"
     to:
     - namespaces:
@@ -28,21 +30,21 @@ spec:
           kubernetes.io/metadata.name: network-policy-conformance-slytherin
     ports:
       - portNumber:
-          protocol: TCP
-          port: 80
-  - name: "allow-to-hufflepuff-at-port-8080"
+          protocol: UDP
+          port: 5353
+  - name: "allow-to-gryffindor-at-port-53"
     action: "Allow"
     to:
     - namespaces:
         matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+          kubernetes.io/metadata.name: network-policy-conformance-gryffindor
     ports:
       - portNumber:
-          protocol: TCP
-          port: 8080
-  - name: "deny-to-hufflepuff-everything-else"
+          protocol: UDP
+          port: 53
+  - name: "deny-to-gryffindor-everything-else"
     action: "Deny"
     to:
     - namespaces:
         matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+          kubernetes.io/metadata.name: network-policy-conformance-gryffindor

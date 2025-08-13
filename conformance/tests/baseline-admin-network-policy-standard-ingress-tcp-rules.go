@@ -25,30 +25,30 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		BaselineAdminNetworkPolicyIngressTCP,
+		CNPBaselineTierIngressTCP,
 	)
 }
 
-var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
-	ShortName:   "BaselineAdminNetworkPolicyIngressTCP",
-	Description: "Tests support for ingress traffic (TCP protocol) using baseline admin network policy API based on a server and client model",
+var CNPBaselineTierIngressTCP = suite.ConformanceTest{
+	ShortName:   "CNPBaselineTierIngressTCP",
+	Description: "Tests support for ingress traffic (TCP protocol) using baseline cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportBaselineAdminNetworkPolicy,
+		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/standard-ingress-tcp-rules.yaml"},
+	Manifests: []string{"base/baseline_tier/standard-ingress-tcp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for TCP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 			// harry-potter-0 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -70,7 +70,7 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 		t.Run("Should support an 'allow-ingress' policy for TCP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 			// harry-potter-1 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -93,7 +93,7 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 		t.Run("Should support an 'deny-ingress' policy for TCP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 			// harry-potter-1 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -101,18 +101,18 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 				Name:      "harry-potter-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "default",
-			}, banp)
-			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
-			mutate := banp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the baseline cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index0 and index1
 			allowRule := mutate.Spec.Ingress[0]
 			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[1]
 			mutate.Spec.Ingress[1] = allowRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
-			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the baseline cluster network policy")
 			// luna-lovegood-0 is our client pod in ravenclaw namespace
 			// ensure ingress is DENIED from ravenclaw to gryffindor
 			// ingressRule at index0 will take precedence over ingressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -128,7 +128,7 @@ var BaselineAdminNetworkPolicyIngressTCP = suite.ConformanceTest{
 		t.Run("Should support a 'deny-ingress' policy for TCP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 			// harry-potter-0 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{

@@ -20,7 +20,7 @@ package v1alpha1
 // named conformance profile.
 type ProfileReport struct {
 	// Name indicates the name of the conformance profile
-	// (e.g. "AdminNetworkPolicy", "BaselineAdminNetworkPolicy")
+	// (e.g. "ClusterNetworkPolicy")
 	Name string `json:"name"`
 
 	// Standard indicates the standard support level which includes the set of tests
