@@ -25,30 +25,30 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyEgressTCP,
+		CNPAdminTierEgressTCP,
 	)
 }
 
-var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyEgressTCP",
-	Description: "Tests support for egress traffic (TCP protocol) using admin network policy API based on a server and client model",
+var CNPAdminTierEgressTCP = suite.ConformanceTest{
+	ShortName:   "CNPAdminTierEgressTCP",
+	Description: "Tests support for egress traffic (TCP protocol) using cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
+		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_network_policy/standard-egress-tcp-rules.yaml"},
+	Manifests: []string{"base/admin_tier/standard-egress-tcp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for TCP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-tcp` ANP
+			// This test uses `egress-tcp` admin CNP
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -70,7 +70,7 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 		t.Run("Should support an 'allow-egress' policy for TCP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-tcp` ANP
+			// This test uses `egress-tcp` admin CNP
 			// cedric-diggory-1 is our server pod in hufflepuff namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -93,7 +93,7 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 		t.Run("Should support an 'deny-egress' policy for TCP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-tcp` ANP
+			// This test uses `egress-tcp` admin CNP
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -101,18 +101,18 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 				Name:      "luna-lovegood-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-tcp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index0 and index1
 			allowRule := mutate.Spec.Egress[0]
 			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
 			mutate.Spec.Egress[1] = allowRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is DENIED to ravenclaw from gryffindor
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -128,7 +128,7 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 		t.Run("Should support a 'deny-egress' policy for TCP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-tcp` ANP
+			// This test uses `egress-tcp` admin CNP
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -151,7 +151,7 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 		t.Run("Should support an 'pass-egress' policy for TCP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-tcp` ANP
+			// This test uses `egress-tcp` admin CNP
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -159,18 +159,18 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 				Name:      "luna-lovegood-0",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-tcp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index0 and index2
 			denyRule := mutate.Spec.Egress[0]
 			mutate.Spec.Egress[0] = mutate.Spec.Egress[2]
 			mutate.Spec.Egress[2] = denyRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
 			// ensure egress is PASSED from gryffindor to ravenclaw
 			// egressRule at index0 will take precedence over egressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
@@ -186,7 +186,7 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 		t.Run("Should support a 'pass-egress' policy for TCP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-tcp` ANP
+			// This test uses `egress-tcp` admin CNP
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -194,18 +194,18 @@ var AdminNetworkPolicyEgressTCP = suite.ConformanceTest{
 				Name:      "draco-malfoy-0",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-tcp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index3 and index4
 			denyRule := mutate.Spec.Egress[3]
 			mutate.Spec.Egress[3] = mutate.Spec.Egress[4]
 			mutate.Spec.Egress[4] = denyRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress from gryffindor is PASSED to slytherin at port 80; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
