@@ -45,10 +45,10 @@ fi
 
 export GOMODCACHE GO111MODULE GOFLAGS GOPATH
 
-readonly API_VERSION=v1alpha1
+readonly APIS_PKG=sigs.k8s.io/network-policy-api
 readonly OUTPUT_PKG=sigs.k8s.io/network-policy-api/pkg/client
-readonly OUTPUT_DIR=${SCRIPT_ROOT}/pkg/client
-readonly API_DIR=${SCRIPT_ROOT}/apis/${API_VERSION}
+readonly OUTPUT_DIR=pkg/client
+readonly APIS_PATH=apis
 readonly CLIENTSET_NAME=versioned
 readonly CLIENTSET_PKG_NAME=clientset
 readonly APPLYCONFIG_PKG_NAME=applyconfiguration
@@ -58,45 +58,58 @@ readonly COMMON_FLAGS="${VERIFY_FLAG:-} --go-header-file ${SCRIPT_ROOT}/hack/boi
 echo "Generating CRDs"
 go run ./pkg/generator
 
-echo "Generating applyconfig at ${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}"
+INPUT_DIRS_SPACE=""
+INPUT_DIRS_CLIENTSET=""
+
+mapfile -t VERSIONS < <(find "${APIS_PATH}" -maxdepth 1 -type d -name "v*" -printf '%f\n' | LC_ALL=C sort -u)
+for VERSION in "${VERSIONS[@]}"; do
+  INPUT_DIRS_SPACE+="${APIS_PKG}/${APIS_PATH}/${VERSION} "
+  INPUT_DIRS_CLIENTSET+="${APIS_PATH}/${VERSION},"
+done
+
+INPUT_DIRS_SPACE="${INPUT_DIRS_SPACE%,}" # drop trailing space
+INPUT_DIRS_CLIENTSET="${INPUT_DIRS_CLIENTSET%,}" # drop trailing comma
+
+echo "Generating applyconfig at ${APIS_PKG}/${APPLYCONFIG_PKG_NAME}"
 go run k8s.io/code-generator/cmd/applyconfiguration-gen \
-"${API_DIR}" \
---output-pkg "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
---output-dir "${OUTPUT_DIR}/${APPLYCONFIG_PKG_NAME}" \
-${COMMON_FLAGS}
+  --output-pkg "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
+  --output-dir "${OUTPUT_DIR}/${APPLYCONFIG_PKG_NAME}" \
+  ${COMMON_FLAGS} \
+  ${INPUT_DIRS_SPACE}
 
 echo "Generating clientset at ${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}"
 go run k8s.io/code-generator/cmd/client-gen \
---clientset-name "${CLIENTSET_NAME}" \
---input-base "" \
---input "${API_DIR}" \
---output-dir "${OUTPUT_DIR}/${CLIENTSET_PKG_NAME}" \
---output-pkg "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}" \
---apply-configuration-package "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
-${COMMON_FLAGS}
+  --clientset-name "${CLIENTSET_NAME}" \
+  --input-base "${APIS_PKG}" \
+  --input "${INPUT_DIRS_CLIENTSET}" \
+  --output-dir "${OUTPUT_DIR}/${CLIENTSET_PKG_NAME}" \
+  --output-pkg "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}" \
+  --apply-configuration-package "${OUTPUT_PKG}/${APPLYCONFIG_PKG_NAME}" \
+  ${COMMON_FLAGS}
 
 echo "Generating listers at ${OUTPUT_PKG}/listers"
 go run k8s.io/code-generator/cmd/lister-gen \
-"${API_DIR}" \
---output-dir "${OUTPUT_DIR}/listers" \
---output-pkg "${OUTPUT_PKG}/listers" \
-${COMMON_FLAGS}
+  --output-dir "${OUTPUT_DIR}/listers" \
+  --output-pkg "${OUTPUT_PKG}/listers" \
+  ${COMMON_FLAGS} \
+  ${INPUT_DIRS_SPACE}
 
 echo "Generating informers at ${OUTPUT_PKG}/informers"
 go run k8s.io/code-generator/cmd/informer-gen \
---versioned-clientset-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}/${CLIENTSET_NAME}" \
---listers-package "${OUTPUT_DIR}/listers" \
---output-dir "${OUTPUT_DIR}/informers" \
---output-pkg "${OUTPUT_PKG}/informers" \
-${COMMON_FLAGS}
+  --versioned-clientset-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME}/${CLIENTSET_NAME}" \
+  --listers-package "${OUTPUT_PKG}/listers" \
+  --output-dir "${OUTPUT_DIR}/informers" \
+  --output-pkg "${OUTPUT_PKG}/informers" \
+  ${COMMON_FLAGS} \
+  ${INPUT_DIRS_SPACE}
 
-echo "Generating ${API_VERSION} register at ${API_DIR}"
+echo "Generating register"
 go run k8s.io/code-generator/cmd/register-gen \
-"${API_DIR}" \
---output-file "zz_generated.register.go" \
-${COMMON_FLAGS}
+  --output-file "zz_generated.register.go" \
+  ${COMMON_FLAGS} \
+  ${INPUT_DIRS_SPACE}
 
-echo "Generating ${API_VERSION} deepcopy at ${API_DIR}"
+echo "Generating deepcopy at ${APIS_PATH}"
 go run sigs.k8s.io/controller-tools/cmd/controller-gen \
-object:headerFile="${SCRIPT_ROOT}/hack/boilerplate.generatego.txt" \
-paths="${API_DIR}"
+  object:headerFile="${SCRIPT_ROOT}/hack/boilerplate.generatego.txt" \
+  paths="./${APIS_PATH}"
