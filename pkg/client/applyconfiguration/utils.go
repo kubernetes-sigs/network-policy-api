@@ -23,7 +23,9 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	testing "k8s.io/client-go/testing"
 	v1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	v1alpha2 "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	apisv1alpha1 "sigs.k8s.io/network-policy-api/pkg/client/applyconfiguration/apis/v1alpha1"
+	apisv1alpha2 "sigs.k8s.io/network-policy-api/pkg/client/applyconfiguration/apis/v1alpha2"
 	internal "sigs.k8s.io/network-policy-api/pkg/client/applyconfiguration/internal"
 )
 
@@ -68,6 +70,32 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apisv1alpha1.PortApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PortRange"):
 		return &apisv1alpha1.PortRangeApplyConfiguration{}
+
+		// Group=policy.networking.k8s.io, Version=v1alpha2
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicy"):
+		return &apisv1alpha2.ClusterNetworkPolicyApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyEgressPeer"):
+		return &apisv1alpha2.ClusterNetworkPolicyEgressPeerApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyEgressRule"):
+		return &apisv1alpha2.ClusterNetworkPolicyEgressRuleApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyIngressPeer"):
+		return &apisv1alpha2.ClusterNetworkPolicyIngressPeerApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyIngressRule"):
+		return &apisv1alpha2.ClusterNetworkPolicyIngressRuleApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyPort"):
+		return &apisv1alpha2.ClusterNetworkPolicyPortApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicySpec"):
+		return &apisv1alpha2.ClusterNetworkPolicySpecApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyStatus"):
+		return &apisv1alpha2.ClusterNetworkPolicyStatusApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicySubject"):
+		return &apisv1alpha2.ClusterNetworkPolicySubjectApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("NamespacedPod"):
+		return &apisv1alpha2.NamespacedPodApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("Port"):
+		return &apisv1alpha2.PortApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("PortRange"):
+		return &apisv1alpha2.PortRangeApplyConfiguration{}
 
 	}
 	return nil
