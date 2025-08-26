@@ -35,7 +35,7 @@ As multi-cluster architectures become more common, there is a growing need for a
 standardized way to manage traffic flow between services in different clusters.
 Today, this is handled by project-specific solutions, such as Cilium's
 `CiliumNetworkPolicy` or Calico's `GlobalNetworkPolicy`. This leads to a
-fragmented ecosystem where security policies are not portable and useßrs are
+fragmented ecosystem where security policies are not portable and users are
 locked into a specific project for multi-cluster functionality.
 
 This proposal aims to address this by introducing a simple, backward-compatible
