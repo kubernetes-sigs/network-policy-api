@@ -265,7 +265,7 @@ const (
 	ClusterNetworkPolicyRuleActionDeny ClusterNetworkPolicyRuleAction = "Deny"
 	// ClusterNetworkPolicyRuleActionPass indicates that matching traffic
 	// will jump to the next tier evaluation. That means that all the rules
-	// with lower priority at the same tier will be ignored,
+	// with lower precedence at the same tier will be ignored,
 	// but evaluation will continue at the next tier.
 	// For example, if an Admin tier CNP uses Pass action,
 	// NetworkPolicy evaluation will happen next.
@@ -381,7 +381,7 @@ type ClusterNetworkPolicyEgressPeer struct {
 	// DomainNames provides a way to specify domain names as peers.
 	//
 	// DomainNames is only supported for Allow rules. In order to control
-	// access, DomainNames Allow rules should be used with a lower priority
+	// access, DomainNames Allow rules should be used with a lower precedence
 	// egress deny -- this allows the admin to maintain an explicit "allowlist"
 	// of reachable domains.
 	//
