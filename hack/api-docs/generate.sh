@@ -25,8 +25,8 @@ GOPATH=${GOPATH:-$(go env GOPATH)}
 GOBIN=${GOBIN:-$(go env GOBIN)}
 GOBIN=${GOBIN:-${GOPATH}/bin}
 
-readonly HERE=$(cd $(dirname $0) && pwd)
-readonly REPO=$(cd ${HERE}/../.. && pwd)
+readonly HERE=$(cd "$(dirname $0)" && pwd)
+readonly REPO=$(cd "${HERE}/../.." && pwd)
 
 gendoc::build() {
     go install github.com/ahmetb/gen-crd-api-reference-docs
@@ -37,8 +37,8 @@ gendoc::exec() {
     local readonly confdir="${REPO}/hack/api-docs"
 
     ${GOBIN}/gen-crd-api-reference-docs \
-        -template-dir ${confdir} \
-        -config ${confdir}/config.json \
+        -template-dir "${confdir}" \
+        -config "${confdir}/config.json" \
         "$@"
 }
 
