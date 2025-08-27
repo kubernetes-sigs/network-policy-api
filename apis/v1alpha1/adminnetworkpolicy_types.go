@@ -56,16 +56,20 @@ type AdminNetworkPolicyStatus struct {
 
 // AdminNetworkPolicySpec defines the desired state of AdminNetworkPolicy.
 type AdminNetworkPolicySpec struct {
-	// Priority is a value from 0 to 1000. Policies with lower priority values have
-	// higher precedence, and are checked before policies with higher priority values.
-	// All AdminNetworkPolicy rules have higher precedence than NetworkPolicy or
-	// BaselineAdminNetworkPolicy rules.
-	// If two (or more) policies with the same priority could both match a connection,
-	// then the implementation can apply any of the matching policies to the
-	// connection, and there is no way for the user to reliably determine which one it
-	// will choose. Administrators must be careful about assigning the priorities for
-	// policies with rules that will match many connections, and ensure that policies
-	// have unique priority values in cases where ambiguity would be unacceptable.
+	// Priority is a value from 0 to 1000. Policies with lower
+	// numeric priority values have higher precedence, and are
+	// checked before policies with higher numeric priority
+	// values. All AdminNetworkPolicy rules have higher precedence
+	// than NetworkPolicy or BaselineAdminNetworkPolicy rules.
+	//
+	// If two (or more) policies with equal priority match the
+	// same traffic, then any one (and only one) of the policies
+	// will be applied to the traffic. There is no way for the
+	// user to reliably determine which policy will be applied.
+	//
+	// Administrators should use different priorities numbers if
+	// non-deterministic matching between overlapping policies is a
+	// problem.
 	//
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=1000
