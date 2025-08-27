@@ -197,7 +197,7 @@ spec:
                               DomainNames provides a way to specify domain names as peers.
 
                               DomainNames is only supported for Allow rules. In order to control
-                              access, DomainNames Allow rules should be used with a lower priority
+                              access, DomainNames Allow rules should be used with a lower precedence
                               egress deny -- this allows the admin to maintain an explicit "allowlist"
                               of reachable domains.
 
