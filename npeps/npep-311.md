@@ -102,7 +102,7 @@ ClusterId](https://github.com/kubernetes/enhancements/tree/master/keps/sig-multi
 
 ### Recommendation
 
-Each namespace within a cluster should be labeled with a key that identifies its
+Each namespace within a cluster should be labeled by the cluster administrator with a key that identifies its
 parent cluster. The recommended label is:
 
 `clusterset.k8s.io/cluster-name: <cluster-id>`
