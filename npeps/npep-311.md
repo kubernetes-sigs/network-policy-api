@@ -1,4 +1,4 @@
-# NPEP-311: NPEP template
+# NPEP-311: Best Practices for Multi-Cluster NetworkPolicy in a Flat Network 
 
 * Issue:
   [#311](https://github.com/kubernetes-sigs/network-policy-api/issues/311)
