@@ -26,6 +26,9 @@ changes to the API.
 
 ## Non-Goals
 
+* This proposal does not support multi-cluster setups where there are overlapping IPs between clusters (or more generally, any multi-cluster setup where traffic isn't freely routed between clusters).
+
+
 * This proposal does not introduce any changes to the Kubernetes Network Policy
   API specification or any extension based on labels and/or annotations.
 
