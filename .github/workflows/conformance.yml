@@ -76,9 +76,9 @@ jobs:
     - name: Install kube-network-policies
       run: |
         # install CRDs
-        /usr/local/bin/kubectl apply -f ./config/crd/experimental/policy.networking.k8s.io_clusternetworkpolicies.yaml
+        /usr/local/bin/kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/network-policy-api/8d10833b777d7ed588560fe4d446517219e79251/config/crd/experimental/policy.networking.k8s.io_clusternetworkpolicies.yaml
         # install kube-network-policies
-        /usr/local/bin/kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/kube-network-policies/v0.6.1/install-anp.yaml
+        /usr/local/bin/kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/kube-network-policies/e13ebef3765467da51d0a83435f804880f132a4e/install-cnp.yaml
 
     - name: Get Cluster status
       run: |
@@ -92,7 +92,7 @@ jobs:
     - name: Run tests
       run: |
         go mod download
-        go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=ClusterNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=0.6.1 --contact=antonio.ojea.garcia@gmail.com --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
+        go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=ClusterNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=0.9.1 --contact=https://github.com/kubernetes-sigs/kube-network-policies/issues/new --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
 
     - name: Upload Junit Reports
       if: always()
