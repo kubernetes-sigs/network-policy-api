@@ -1,9 +1,10 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
-  name: gress-rules
+  name: default
 spec:
-  priority: 15
+  tier: Baseline
+  priority: 10
   subject:
     namespaces:
       matchLabels:
@@ -17,12 +18,6 @@ spec:
           kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   - name: "deny-to-ravenclaw-everything"
     action: "Deny"
-    to:
-    - namespaces:
-        matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
-  - name: "pass-to-ravenclaw-everything"
-    action: "Pass"
     to:
     - namespaces:
         matchLabels:
@@ -43,23 +38,7 @@ spec:
       - portNumber:
           protocol: SCTP
           port: 9003
-  - name: "pass-to-slytherin-at-port-80-53-9003"
-    action: "Pass"
-    to:
-    - namespaces:
-        matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-slytherin
-    ports:
-      - portNumber:
-          protocol: TCP
-          port: 80
-      - portNumber:
-          protocol: UDP
-          port: 53
-      - portNumber:
-          protocol: SCTP
-          port: 9003
-  - name: "allow-to-hufflepuff-at-ports-8080-5353-9003"
+  - name: "allow-to-hufflepuff-at-ports-8080-5353"
     action: "Allow"
     to:
     - namespaces:
@@ -94,30 +73,8 @@ spec:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
-  - name: "pass-from-ravenclaw-everything"
-    action: "Pass"
-    from:
-    - namespaces:
-        matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   - name: "deny-from-slytherin-at-port-80-53-9003"
     action: "Deny"
-    from:
-    - namespaces:
-        matchLabels:
-          kubernetes.io/metadata.name: network-policy-conformance-slytherin
-    ports:
-      - portNumber:
-          protocol: TCP
-          port: 80
-      - portNumber:
-          protocol: UDP
-          port: 53
-      - portNumber:
-          protocol: SCTP
-          port: 9003
-  - name: "pass-from-slytherin-at-port-80-53-9003"
-    action: "Pass"
     from:
     - namespaces:
         matchLabels:

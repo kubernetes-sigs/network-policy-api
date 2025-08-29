@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	"sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/tests"
 	"sigs.k8s.io/network-policy-api/conformance/utils/flags"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
@@ -51,7 +51,10 @@ func TestConformance(t *testing.T) {
 		t.Fatalf("error when creating Kubernetes ClientSet: %v", err)
 	}
 
-	v1alpha1.Install(c.Scheme())
+	err = v1alpha2.Install(c.Scheme())
+	if err != nil {
+		t.Fatalf("Error installing v1alpha2 scheme: %v", err)
+	}
 
 	supportedFeatures := suite.ParseSupportedFeatures(*flags.SupportedFeatures)
 	exemptFeatures := suite.ParseSupportedFeatures(*flags.ExemptFeatures)
