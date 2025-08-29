@@ -78,7 +78,7 @@ jobs:
         # install CRDs
         /usr/local/bin/kubectl apply -f ./config/crd/experimental/policy.networking.k8s.io_clusternetworkpolicies.yaml
         # install kube-network-policies
-        /usr/local/bin/kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/kube-network-policies/v0.6.1/install-anp.yaml
+        /usr/local/bin/kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/kube-network-policies/e13ebef3765467da51d0a83435f804880f132a4e/install-cnp.yaml
 
     - name: Get Cluster status
       run: |
