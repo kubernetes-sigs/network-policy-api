@@ -61,7 +61,7 @@ type ClusterNetworkPolicySpec struct {
 	// The Admin tier takes precedence over all other policies. Policies
 	// defined in this tier are used to set cluster-wide security rules
 	// that cannot be overridden in the other tiers. If Admin tier has
-	// made a final decision (Allow or Deny) on a connection, then no
+	// made a final decision (Accept or Deny) on a connection, then no
 	// further evaluation is done.
 	//
 	// NetworkPolicy tier is the tier for the namespaced v1.NetworkPolicy.
@@ -72,7 +72,7 @@ type ClusterNetworkPolicySpec struct {
 	// v1.NetworkPolicy.
 	//
 	// Baseline tier is a cluster-wide policy that can be overridden by the
-	// v1.NetworkPolicy. If Baseline tier has made a final decision (Allow or
+	// v1.NetworkPolicy. If Baseline tier has made a final decision (Accept or
 	// Deny) on a connection, then no further evaluation is done.
 	//
 	// If a given connection wasn't allowed or denied by any of the tiers,
@@ -172,14 +172,25 @@ type ClusterNetworkPolicyIngressRule struct {
 	// +kubebuilder:validation:MaxLength=100
 	Name string `json:"name,omitempty"`
 
-	// Action specifies the effect this rule will have on matching traffic.
-	// Currently the following actions are supported:
-	// Allow: Accepts the selected traffic. No further ClusterNetworkPolicy/
-	// NetworkPolicy rules will be processed for it.
-	// Deny: Drops the selected traffic. No further ClusterNetworkPolicy/
-	// NetworkPolicy rules will be processed for it.
-	// Pass: Skips all further ClusterNetworkPolicy rules in the current tier
-	// for the selected traffic, and passes execution to the next tier.
+	// Action specifies the effect this rule will have on matching
+	// traffic. Currently the following actions are supported:
+	//
+	// - Accept: Accepts the selected traffic, allowing it into
+	//   the destination. No further ClusterNetworkPolicy or
+	//   NetworkPolicy rules will be processed.
+	//
+	//   Note: while Accept ensures traffic is accepted by
+	//   Kubernetes network policy, it is still possible that the
+	//   packet is blocked in other ways: custom nftable rules,
+	//   high-layers e.g. service mesh.
+	//
+	// - Deny: Drops the selected traffic. No further
+	//   ClusterNetworkPolicy or NetworkPolicy rules will be
+	//   processed.
+	//
+	// - Pass: Skips all further ClusterNetworkPolicy rules in the
+	//   current tier for the selected traffic, and passes
+	//   evaluation to the next tier.
 	Action ClusterNetworkPolicyRuleAction `json:"action"`
 
 	// From is the list of sources whose traffic this rule applies to.
@@ -218,14 +229,20 @@ type ClusterNetworkPolicyEgressRule struct {
 	// +kubebuilder:validation:MaxLength=100
 	Name string `json:"name,omitempty"`
 
-	// Action specifies the effect this rule will have on matching traffic.
-	// Currently the following actions are supported:
-	// Allow: Accepts the selected traffic. No further ClusterNetworkPolicy/
-	// NetworkPolicy rules will be processed for it.
-	// Deny: Drops the selected traffic. No further ClusterNetworkPolicy/
-	// NetworkPolicy rules will be processed for it.
-	// Pass: Skips all further ClusterNetworkPolicy rules in the current tier
-	// for the selected traffic, and passes execution to the next tier.
+	// Action specifies the effect this rule will have on matching
+	// traffic.  Currently the following actions are supported:
+	//
+	// - Accept: Accepts the selected traffic, allowing it to
+	//   egress. No further ClusterNetworkPolicy or NetworkPolicy
+	//   rules will be processed.
+	//
+	// - Deny: Drops the selected traffic. No further
+	//   ClusterNetworkPolicy or NetworkPolicy rules will be
+	//   processed.
+	//
+	// - Pass: Skips all further ClusterNetworkPolicy rules in the
+	//   current tier for the selected traffic, and passes
+	//   evaluation to the next tier.
 	Action ClusterNetworkPolicyRuleAction `json:"action"`
 
 	// To is the List of destinations whose traffic this rule applies to.
@@ -251,14 +268,14 @@ type ClusterNetworkPolicyEgressRule struct {
 // action type.
 //
 // +enum
-// +kubebuilder:validation:Enum={"Allow", "Deny", "Pass"}
+// +kubebuilder:validation:Enum={"Accept", "Deny", "Pass"}
 type ClusterNetworkPolicyRuleAction string
 
 const (
-	// ClusterNetworkPolicyRuleActionAllow indicates that matching traffic
-	// will be allowed and no further policy evaluation will be done.
-	// This is a final decision.
-	ClusterNetworkPolicyRuleActionAllow ClusterNetworkPolicyRuleAction = "Allow"
+	// ClusterNetworkPolicyRuleActionAccept indicates that
+	// matching traffic will be accepted and no further policy
+	// evaluation will be done. This is a final decision.
+	ClusterNetworkPolicyRuleActionAccept ClusterNetworkPolicyRuleAction = "Accept"
 	// ClusterNetworkPolicyRuleActionDeny indicates that matching traffic
 	// will be denied and no further policy evaluation will be done.
 	// This is a final decision.
@@ -279,7 +296,7 @@ const (
 // set then it can infer that the deployed CRD is of an incompatible version
 // with an unknown field.  In that case it should fail closed.
 //
-// For "Allow" rules, "fail closed" means: "treat the rule as matching no
+// For "Accept" rules, "fail closed" means: "treat the rule as matching no
 // traffic". For "Deny" and "Pass" rules, "fail closed" means: "treat the rule
 // as a 'Deny all' rule".
 //
@@ -331,7 +348,7 @@ type ClusterNetworkPolicyPort struct {
 // set then it can infer that the deployed CRD is of an incompatible version
 // with an unknown field.  In that case it should fail closed.
 //
-// For "Allow" rules, "fail closed" means: "treat the rule as matching no
+// For "Accept" rules, "fail closed" means: "treat the rule as matching no
 // traffic". For "Deny" and "Pass" rules, "fail closed" means: "treat the rule
 // as a 'Deny all' rule".
 //
@@ -363,7 +380,7 @@ type ClusterNetworkPolicyEgressPeer struct {
 	// This is intended for representing entities that live outside the cluster,
 	// which can't be selected by pods, namespaces and nodes peers, but note
 	// that cluster-internal traffic will be checked against the rule as
-	// well. So if you Allow or Deny traffic to `"0.0.0.0/0"`, that will allow
+	// well. So if you Accept or Deny traffic to `"0.0.0.0/0"`, that will allow
 	// or deny all IPv4 pod-to-pod traffic as well. If you don't want that,
 	// add a rule that Passes all pod traffic before the Networks rule.
 	//
@@ -380,8 +397,8 @@ type ClusterNetworkPolicyEgressPeer struct {
 
 	// DomainNames provides a way to specify domain names as peers.
 	//
-	// DomainNames is only supported for Allow rules. In order to control
-	// access, DomainNames Allow rules should be used with a lower precedence
+	// DomainNames is only supported for Accept rules. In order to control
+	// access, DomainNames Accept rules should be used with a lower precedence
 	// egress deny -- this allows the admin to maintain an explicit "allowlist"
 	// of reachable domains.
 	//
