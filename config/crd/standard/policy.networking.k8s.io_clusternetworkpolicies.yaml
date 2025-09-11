@@ -677,7 +677,7 @@ spec:
                 type: array
               priority:
                 description: |-
-                  Priority is a value from 0 to 1000 indicating the precedence of
+                  Priority is a value from 0 to 500 indicating the precedence of
                   the policy within its tier. Policies with lower priority values have
                   higher precedence, and are checked before policies with higher priority
                   values in the same tier. All Admin tier rules have higher precedence than
@@ -690,7 +690,7 @@ spec:
                   match many connections, and ensure that policies have unique priority
                   values in cases where ambiguity would be unacceptable.
                 format: int32
-                maximum: 1000
+                maximum: 500
                 minimum: 0
                 type: integer
               subject:
