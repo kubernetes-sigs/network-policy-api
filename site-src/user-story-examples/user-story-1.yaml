@@ -1,8 +1,9 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: cluster-wide-deny-example
 spec:
+  tier: Admin
   priority: 10
   subject:
     namespaces:
@@ -12,5 +13,5 @@ spec:
     - action: Deny
       from:
       - namespaces:
-         namespaceSelector: {}
+          matchLabels: {} # Match all namespaces.
       name: select-all-deny-all

@@ -1,26 +1,27 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: cluster-wide-allow-example
 spec:
+  tier: Admin
   priority: 30
   subject:
     namespaces: {}
   ingress:
-    - action: Allow
+    - action: Accept
+      name: allow-monitoring-ns-ingress
       from:
       - namespaces:
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: monitoring-ns
+          matchLabels:
+            kubernetes.io/metadata.name: monitoring-ns
   egress:
-    - action: Allow
-      to:
-      - pods:
-          namespaces:
-            namespaceSelector:
-              matchlabels:
-                kubernetes.io/metadata.name: kube-system
-          podSelector:
-            matchlabels:
-              app: kube-dns
+  - action: Accept
+    name: allow-kube-dns-egress
+    to:
+    - pods:
+        namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: kube-system
+        podSelector:
+          matchLabels:
+            app: kube-dns
