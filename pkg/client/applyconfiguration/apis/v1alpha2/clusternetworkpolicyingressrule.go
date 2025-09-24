@@ -25,10 +25,10 @@ import (
 // ClusterNetworkPolicyIngressRuleApplyConfiguration represents a declarative configuration of the ClusterNetworkPolicyIngressRule type for use
 // with apply.
 type ClusterNetworkPolicyIngressRuleApplyConfiguration struct {
-	Name   *string                                             `json:"name,omitempty"`
-	Action *apisv1alpha2.ClusterNetworkPolicyRuleAction        `json:"action,omitempty"`
-	From   []ClusterNetworkPolicyIngressPeerApplyConfiguration `json:"from,omitempty"`
-	Ports  *[]ClusterNetworkPolicyPortApplyConfiguration       `json:"ports,omitempty"`
+	Name      *string                                             `json:"name,omitempty"`
+	Action    *apisv1alpha2.ClusterNetworkPolicyRuleAction        `json:"action,omitempty"`
+	From      []ClusterNetworkPolicyIngressPeerApplyConfiguration `json:"from,omitempty"`
+	Protocols *[]ClusterNetworkPolicyProtocolApplyConfiguration   `json:"protocols,omitempty"`
 }
 
 // ClusterNetworkPolicyIngressRuleApplyConfiguration constructs a declarative configuration of the ClusterNetworkPolicyIngressRule type for use with
@@ -66,22 +66,22 @@ func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) WithFrom(values ...*
 	return b
 }
 
-func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) ensureClusterNetworkPolicyPortApplyConfigurationExists() {
-	if b.Ports == nil {
-		b.Ports = &[]ClusterNetworkPolicyPortApplyConfiguration{}
+func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) ensureClusterNetworkPolicyProtocolApplyConfigurationExists() {
+	if b.Protocols == nil {
+		b.Protocols = &[]ClusterNetworkPolicyProtocolApplyConfiguration{}
 	}
 }
 
-// WithPorts adds the given value to the Ports field in the declarative configuration
+// WithProtocols adds the given value to the Protocols field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Ports field.
-func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) WithPorts(values ...*ClusterNetworkPolicyPortApplyConfiguration) *ClusterNetworkPolicyIngressRuleApplyConfiguration {
-	b.ensureClusterNetworkPolicyPortApplyConfigurationExists()
+// If called multiple times, values provided by each call will be appended to the Protocols field.
+func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) WithProtocols(values ...*ClusterNetworkPolicyProtocolApplyConfiguration) *ClusterNetworkPolicyIngressRuleApplyConfiguration {
+	b.ensureClusterNetworkPolicyProtocolApplyConfigurationExists()
 	for i := range values {
 		if values[i] == nil {
-			panic("nil value passed to WithPorts")
+			panic("nil value passed to WithProtocols")
 		}
-		*b.Ports = append(*b.Ports, *values[i])
+		*b.Protocols = append(*b.Protocols, *values[i])
 	}
 	return b
 }
