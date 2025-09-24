@@ -34,7 +34,14 @@ readonly GOPATH
 readonly MIN_REQUIRED_GO_VER="1.19"
 
 function go_version_matches {
-  go version | perl -ne "exit 1 unless m{go version go([0-9]+.[0-9]+)}; exit 1 if (\$1 < ${MIN_REQUIRED_GO_VER})"
+  go version | awk -v min_ver="${MIN_REQUIRED_GO_VER}" '{
+  if (match($0, /go[0-9]+\.[0-9]+/)) {
+    # Extract just the number part, e.g., "1.22"
+    ver = substr($0, RSTART + 2, RLENGTH - 2);
+    if (ver >= min_ver) { exit 0; }
+  }
+  exit 1;
+}'
   return $?
 }
 
