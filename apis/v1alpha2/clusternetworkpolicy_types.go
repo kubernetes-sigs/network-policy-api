@@ -469,7 +469,7 @@ type PortRange struct {
 
 // CIDR is an IP address range in CIDR notation
 // (for example, "10.0.0.0/8" or "fd00::/8").
-// +kubebuilder:validation:XValidation:rule="isCIDR(self)",message="Invalid CIDR format provided"
+// +kubebuilder:validation:XValidation:rule="isCIDR(self) && cidr(self) == cidr(self).masked()",message="Invalid CIDR format provided"
 // +kubebuilder:validation:MaxLength=43
 type CIDR string
 
