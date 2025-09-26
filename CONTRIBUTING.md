@@ -31,15 +31,16 @@ The site documentation is written in Markdown and compiled with
 1.  Install mkdocs and required plugins:
 
     ```
-    pip install mkdocs mkdocs-material mkdocs-awesome-pages-plugin mkdocs-macros-plugin
+    pip install mkdocs mkdocs-material mkdocs-awesome-pages-plugin mkdocs-macros-plugin mike
     ```
 
-2.  To build the docs, run `make docs`.
+2.  To build the docs, run `make docs`
 3.  To deploy the docs locally, run `make local-docs`
 
 ## Mentorship
 
 - [Mentoring Initiatives](https://git.k8s.io/community/mentoring) - We have a diverse set of mentorship programs available that are always looking for volunteers!
+
 ## Contact Information
 
 - [Slack](https://kubernetes.slack.com/messages/sig-network)
