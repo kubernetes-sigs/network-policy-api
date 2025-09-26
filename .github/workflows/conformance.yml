@@ -13,9 +13,10 @@ on:
 env:
   GO_VERSION: "1.24"
   K8S_VERSION: "v1.33.0"
-  KIND_VERSION: "v0.27.0"
+  KIND_VERSION: "v0.30.0"
   IMAGE_NAME: registry.k8s.io/networking/kube-network-policies
   KIND_CLUSTER_NAME: kind
+  NPAPI_VERSION: "v1alpha1"
 
 permissions: write-all
 
@@ -70,16 +71,36 @@ jobs:
         - role: worker
         - role: worker
         EOF
+        # newer kind version ship a kindnet version that implements network policies.
+        # we need to downgrade it to a version that does not support network policies
+        # to be able to avoid conflicts with kube-network-policies
+        kubectl -n kube-system set image ds kindnet kindnet-cni=docker.io/kindest/kindnetd:v20230809-80a64d96
         # dump the kubeconfig for later
         /usr/local/bin/kind get kubeconfig --name ${{ env.KIND_CLUSTER_NAME}} > _artifacts/kubeconfig.conf
 
-    - name: Install kube-network-policies
+    - name: Install network policy APIs
       run: |
-        # install CRDs
-        /usr/local/bin/kubectl apply -f ./config/crd/experimental/policy.networking.k8s.io_adminnetworkpolicies.yaml
-        /usr/local/bin/kubectl apply -f ./config/crd/experimental/policy.networking.k8s.io_baselineadminnetworkpolicies.yaml
-        # install kube-network-policies
-        /usr/local/bin/kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/kube-network-policies/v0.6.1/install-anp.yaml
+        /usr/local/bin/kubectl apply -f ./config/crd/standard/policy.networking.k8s.io_adminnetworkpolicies.yaml
+        /usr/local/bin/kubectl apply -f ./config/crd/standard/policy.networking.k8s.io_baselineadminnetworkpolicies.yaml
+
+    - name: Install kube-network-policies from main
+      run: |
+        TEMP_DIR=$(mktemp -d)
+        cleanup() { rm -rf "${TEMP_DIR}"; }
+        trap cleanup EXIT INT TERM
+        (
+          cd $TEMP_DIR
+          # Clone the repo
+          git clone --depth 1 https://github.com/kubernetes-sigs/kube-network-policies.git
+          cd kube-network-policies/
+          # Build the image with the network policy API support
+          REGISTRY="registry.k8s.io/networking" IMAGE_NAME="kube-network-policies" TAG="test" make image-build-npa-${{ env.NPAPI_VERSION }}
+          # Preload the image in the kind cluster
+          /usr/local/bin/kind load docker-image registry.k8s.io/networking/kube-network-policies:test-npa-${{ env.NPAPI_VERSION }} --name ${{ env.KIND_CLUSTER_NAME}}
+          # Install kube-network-policies with the image built from main
+          sed -i s#registry.k8s.io/networking/kube-network-policies.*#registry.k8s.io/networking/kube-network-policies:test-npa-${{ env.NPAPI_VERSION }}# install-anp.yaml
+          /usr/local/bin/kubectl apply -f ./install-anp.yaml
+        )
 
     - name: Get Cluster status
       run: |
@@ -93,7 +114,8 @@ jobs:
     - name: Run tests
       run: |
         go mod download
-        go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=0.6.1 --contact=antonio.ojea.garcia@gmail.com --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
+        REPO_VERSION=$(git describe --always --dirty)
+        go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=${REPO_VERSION} --contact=antonio.ojea.garcia@gmail.com --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
 
     - name: Upload Junit Reports
       if: always()
