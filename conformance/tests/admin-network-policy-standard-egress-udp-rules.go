@@ -25,30 +25,30 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyEgressUDP,
+		CNPAdminTierEgressUDP,
 	)
 }
 
-var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyEgressUDP",
-	Description: "Tests support for egress traffic (UDP protocol) using admin network policy API based on a server and client model",
+var CNPAdminTierEgressUDP = suite.ConformanceTest{
+	ShortName:   "CNPAdminTierEgressUDP",
+	Description: "Tests support for egress traffic (UDP protocol) using cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
+		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_network_policy/standard-egress-udp-rules.yaml"},
+	Manifests: []string{"base/admin_tier/standard-egress-udp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-udp` ANP
+			// This test uses `egress-udp` admin CNP
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -71,7 +71,7 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 		t.Run("Should support an 'allow-egress' policy for UDP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-udp` ANP
+			// This test uses `egress-udp` admin CNP
 			// harry-potter-1 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -94,7 +94,7 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 		t.Run("Should support an 'deny-egress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-udp` ANP
+			// This test uses `egress-udp` admin CNP
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -102,18 +102,18 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Name:      "luna-lovegood-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-udp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index0 and index1
 			allowRule := mutate.Spec.Egress[0]
 			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
 			mutate.Spec.Egress[1] = allowRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is DENIED to ravenclaw to hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -129,7 +129,7 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 		t.Run("Should support a 'deny-egress' policy for UDP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-udp` ANP
+			// This test uses `egress-udp` admin CNP
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -152,7 +152,7 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 		t.Run("Should support an 'pass-egress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-udp` ANP
+			// This test uses `egress-udp` admin CNP
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -160,18 +160,18 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Name:      "luna-lovegood-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-udp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index0 and index2
 			denyRule := mutate.Spec.Egress[0]
 			mutate.Spec.Egress[0] = mutate.Spec.Egress[2]
 			mutate.Spec.Egress[2] = denyRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress is PASSED to ravenclaw from hufflepuff
 			// egressRule at index0 will take precedence over egressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
@@ -187,7 +187,7 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 		t.Run("Should support a 'pass-egress' policy for UDP protocol at the specified port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `egress-udp` ANP
+			// This test uses `egress-udp` admin CNP
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -195,18 +195,18 @@ var AdminNetworkPolicyEgressUDP = suite.ConformanceTest{
 				Name:      "draco-malfoy-0",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "egress-udp",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index3 and index4
 			denyRule := mutate.Spec.Egress[3]
 			mutate.Spec.Egress[3] = mutate.Spec.Egress[4]
 			mutate.Spec.Egress[4] = denyRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure egress to slytherin is PASSED from hufflepuff at port 5353; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
