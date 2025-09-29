@@ -15,7 +15,7 @@ spec:
           conformance-house: gryffindor
   egress:
   - name: "allow-egress-to-36363-on-nodes"
-    action: "Allow"
+    action: "Accept"
     to:
     - nodes:
         matchLabels:

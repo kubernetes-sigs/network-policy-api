@@ -11,7 +11,7 @@ spec:
           kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   egress:
   - name: "allow-to-gryffindor-everything"
-    action: "Allow"
+    action: "Accept"
     to:
     - namespaces:
         matchLabels:
@@ -33,7 +33,7 @@ spec:
           protocol: SCTP
           port: 9003
   - name: "allow-to-hufflepuff-at-port-9003"
-    action: "Allow"
+    action: "Accept"
     to:
     - namespaces:
         matchLabels:

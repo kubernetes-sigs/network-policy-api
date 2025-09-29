@@ -107,7 +107,7 @@ var CNPAdminTierEgressInlineCIDRPeers = suite.ConformanceTest{
 		})
 		// To test allow CIDR rule, insert the following rule at index0
 		//- name: "allow-egress-to-specific-podIPs"
-		//  action: "Allow"
+		//  action: "Accept"
 		//  to:
 		//  - networks:
 		//	  - luna-lovegood-0.IP
@@ -141,7 +141,7 @@ var CNPAdminTierEgressInlineCIDRPeers = suite.ConformanceTest{
 			newRule := []api.ClusterNetworkPolicyEgressRule{
 				{
 					Name:   "allow-egress-to-specific-podIPs",
-					Action: "Allow",
+					Action: "Accept",
 					To: []api.ClusterNetworkPolicyEgressPeer{
 						{
 							Networks: []api.CIDR{
