@@ -11,7 +11,7 @@ spec:
           kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
   egress:
   - name: "allow-to-ravenclaw-everything"
-    action: "Allow"
+    action: "Accept"
     to:
     - namespaces:
         matchLabels:
@@ -33,7 +33,7 @@ spec:
           protocol: UDP
           port: 5353
   - name: "allow-to-gryffindor-at-port-53"
-    action: "Allow"
+    action: "Accept"
     to:
     - namespaces:
         matchLabels:

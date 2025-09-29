@@ -11,7 +11,7 @@ spec:
         kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   egress:
   - name: "allow-egress-to-36363-on-nodes"
-    action: "Allow"
+    action: "Accept"
     to:
     - nodes:
         matchLabels:

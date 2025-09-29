@@ -91,7 +91,7 @@ spec:
           conformance-house: gryffindor
   ingress:
   - name: "allow-all-ingress-from-slytherin"
-    action: "Allow"
+    action: "Accept"
     from:
     - pods:
         namespaceSelector:
@@ -102,7 +102,7 @@ spec:
             conformance-house: slytherin
   egress:
   - name: "allow-all-egress-to-slytherin"
-    action: "Allow"
+    action: "Accept"
     to:
     - pods:
         namespaceSelector:
