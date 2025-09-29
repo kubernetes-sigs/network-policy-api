@@ -16,7 +16,7 @@ env:
   KIND_VERSION: "v0.30.0"
   IMAGE_NAME: registry.k8s.io/networking/kube-network-policies
   KIND_CLUSTER_NAME: kind
-  NPAPI_VERSION: "v1alpha1"
+  NPAPI_VERSION: "v1alpha2"
 
 permissions: write-all
 
@@ -80,8 +80,7 @@ jobs:
 
     - name: Install network policy APIs
       run: |
-        /usr/local/bin/kubectl apply -f ./config/crd/standard/policy.networking.k8s.io_adminnetworkpolicies.yaml
-        /usr/local/bin/kubectl apply -f ./config/crd/standard/policy.networking.k8s.io_baselineadminnetworkpolicies.yaml
+        /usr/local/bin/kubectl apply -f ./config/crd/standard/policy.networking.k8s.io_clusternetworkpolicies.yaml
 
     - name: Install kube-network-policies from main
       run: |
@@ -98,8 +97,8 @@ jobs:
           # Preload the image in the kind cluster
           /usr/local/bin/kind load docker-image registry.k8s.io/networking/kube-network-policies:test-npa-${{ env.NPAPI_VERSION }} --name ${{ env.KIND_CLUSTER_NAME}}
           # Install kube-network-policies with the image built from main
-          sed -i s#registry.k8s.io/networking/kube-network-policies.*#registry.k8s.io/networking/kube-network-policies:test-npa-${{ env.NPAPI_VERSION }}# install-anp.yaml
-          /usr/local/bin/kubectl apply -f ./install-anp.yaml
+          sed -i s#registry.k8s.io/networking/kube-network-policies.*#registry.k8s.io/networking/kube-network-policies:test-npa-${{ env.NPAPI_VERSION }}# install-cnp.yaml
+          /usr/local/bin/kubectl apply -f ./install-cnp.yaml
         )
 
     - name: Get Cluster status
@@ -115,7 +114,7 @@ jobs:
       run: |
         go mod download
         REPO_VERSION=$(git describe --always --dirty)
-        go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=${REPO_VERSION} --contact=antonio.ojea.garcia@gmail.com --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
+        go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=ClusterNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=${REPO_VERSION} --contact=https://github.com/kubernetes-sigs/kube-network-policies/issues/new --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
 
     - name: Upload Junit Reports
       if: always()

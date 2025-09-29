@@ -1,15 +1,17 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: BaselineAdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: default
 spec:
+  tier: Baseline
+  priority: 10
   subject:
     namespaces:
       matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
   ingress:
   - name: "allow-from-ravenclaw-everything"
-    action: "Allow"
+    action: "Accept"
     from:
     - namespaces:
         matchLabels:
@@ -31,7 +33,7 @@ spec:
           protocol: UDP
           port: 5353
   - name: "allow-from-gryffindor-at-port-53"
-    action: "Allow"
+    action: "Accept"
     from:
     - namespaces:
         matchLabels:

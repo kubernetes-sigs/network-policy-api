@@ -1,21 +1,29 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: BaselineAdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
-  name: default
+  name: ingress-tcp
 spec:
+  tier: Admin
+  priority: 3
   subject:
     namespaces:
       matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   ingress:
   - name: "allow-from-ravenclaw-everything"
-    action: "Allow"
+    action: "Accept"
     from:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
   - name: "deny-from-ravenclaw-everything"
     action: "Deny"
+    from:
+    - namespaces:
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-ravenclaw
+  - name: "pass-from-ravenclaw-everything"
+    action: "Pass"
     from:
     - namespaces:
         matchLabels:
@@ -30,8 +38,18 @@ spec:
       - portNumber:
           protocol: TCP
           port: 80
+  - name: "pass-from-slytherin-at-port-80"
+    action: "Pass"
+    from:
+    - namespaces:
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
+    ports:
+      - portNumber:
+          protocol: TCP
+          port: 80
   - name: "allow-from-hufflepuff-at-port-80"
-    action: "Allow"
+    action: "Accept"
     from:
     - namespaces:
         matchLabels:

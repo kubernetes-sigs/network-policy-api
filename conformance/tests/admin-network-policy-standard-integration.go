@@ -26,31 +26,30 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyIntegration,
+		CNPAdminTierIntegration,
 	)
 }
 
-var AdminNetworkPolicyIntegration = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyIntegration",
-	Description: "Tests integration support for gress traffic between ANP, NP and BANP using PASS action based on a server and client model",
+var CNPAdminTierIntegration = suite.ConformanceTest{
+	ShortName:   "CNPAdminTierIntegration",
+	Description: "Tests integration support for gress traffic between admin CNP, NP and baseline CNP using PASS action based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
-		suite.SupportBaselineAdminNetworkPolicy,
+		suite.SupportClusterNetworkPolicy,
 	},
 	Manifests: []string{"base/api_integration/standard-anp-np-banp.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
-		t.Run("Should Deny traffic from slytherin to gryffindor respecting ANP", func(t *testing.T) {
+		t.Run("Should Deny traffic from slytherin to gryffindor respecting admin CNP", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass-example` ANP from api_integration/standard-anp-np-banp.yaml
+			// This test uses `pass-example` admin CNP from api_integration/standard-anp-np-banp.yaml
 			// harry-potter-0 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -70,10 +69,10 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			assert.True(t, success)
 		})
 
-		t.Run("Should Deny traffic to slytherin from gryffindor respecting ANP", func(t *testing.T) {
+		t.Run("Should Deny traffic to slytherin from gryffindor respecting admin CNP", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass-example` ANP from api_integration/standard-anp-np-banp.yaml
+			// This test uses `pass-example` admin CNP from api_integration/standard-anp-np-banp.yaml
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -93,21 +92,21 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			assert.True(t, success)
 		})
 
-		t.Run("Should support a 'pass-ingress' policy for ANP and respect the match for network policy", func(t *testing.T) {
+		t.Run("Should support a 'pass-ingress' policy for admin CNP and respect the match for network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass example` ANP from api_integration/standard-anp-np-banp.yaml
+			// This test uses `pass example` admin CNP from api_integration/standard-anp-np-banp.yaml
 			// and alters the ingress rule action to "pass"
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Name: "pass-example",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// change ingress rule from "deny" to "pass"
-			mutate.Spec.Ingress[0].Action = v1alpha1.AdminNetworkPolicyRuleActionPass
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			mutate.Spec.Ingress[0].Action = api.ClusterNetworkPolicyRuleActionPass
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err = s.Client.Get(ctx, client.ObjectKey{
@@ -127,21 +126,21 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			assert.True(t, success)
 		})
 
-		t.Run("Should support a 'pass-egress' policy for ANP and respect the match for network policy", func(t *testing.T) {
+		t.Run("Should support a 'pass-egress' policy for admin CNP and respect the match for network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `pass example` ANP from api_integration/standard-anp-np-banp.yaml
+			// This test uses `pass example` admin CNP from api_integration/standard-anp-np-banp.yaml
 			// and alters the egress rule action to "pass"
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Name: "pass-example",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// change egress rule from "deny" to "pass"
-			mutate.Spec.Egress[0].Action = v1alpha1.AdminNetworkPolicyRuleActionPass
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			mutate.Spec.Egress[0].Action = api.ClusterNetworkPolicyRuleActionPass
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			serverPod := &v1.Pod{}
 			err = s.Client.Get(ctx, client.ObjectKey{
@@ -161,17 +160,17 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			assert.True(t, success)
 		})
 
-		t.Run("Should support a 'pass-ingress' policy for ANP and respect the match for baseline admin network policy", func(t *testing.T) {
+		t.Run("Should support a 'pass-ingress' policy for admin CNP and respect the match for baseline cluster network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP from api_integration/standard-anp-np-banp.yaml
+			// This test uses `default` baseline CNP from api_integration/standard-anp-np-banp.yaml
 			np := &networkingv1.NetworkPolicy{}
 			err := s.Client.Get(ctx, client.ObjectKey{
 				Namespace: "network-policy-conformance-gryffindor",
 				Name:      "allow-gress-from-to-slytherin-to-gryffindor",
 			}, np)
 			require.NoErrorf(t, err, "unable to fetch the network policy")
-			// delete network policy so that BANP takes effect
+			// delete network policy so that baseline CNP takes effect
 			err = s.Client.Delete(ctx, np)
 			require.NoErrorf(t, err, "unable to delete the network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
@@ -182,7 +181,7 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			}, clientPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// draco-malfoy-0 is our client pod in slytherin namespace
-			// ensure ingress is PASSED to gryffindor from slytherin - the baseline admin network policy DENY should take effect
+			// ensure ingress is PASSED to gryffindor from slytherin - the baseline cluster network policy DENY should take effect
 			// inressRule at index0 will take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-0", "tcp",
 				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
@@ -193,10 +192,10 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			assert.True(t, success)
 		})
 
-		t.Run("Should support a 'pass-egress' policy for ANP and respect the match for baseline admin network policy", func(t *testing.T) {
+		t.Run("Should support a 'pass-egress' policy for admin CNP and respect the match for baseline cluster network policy", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP from api_integration/standard-anp-np-banp.yaml
+			// This test uses `default` baseline CNP from api_integration/standard-anp-np-banp.yaml
 			// draco-malfoy-0 is our server pod in slytherin namespace
 			clientPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -205,7 +204,7 @@ var AdminNetworkPolicyIntegration = suite.ConformanceTest{
 			}, clientPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
 			// harry-potter-0 is our client pod in gryffindor namespace
-			// ensure ingress is PASSED to gryffindor from slytherin - the underlying baseline admin network policy DENY should take effect
+			// ensure ingress is PASSED to gryffindor from slytherin - the underlying baseline cluster network policy DENY should take effect
 			// egressRule at index0 will take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
 				clientPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
