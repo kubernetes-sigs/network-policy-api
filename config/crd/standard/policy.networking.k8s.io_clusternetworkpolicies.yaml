@@ -5,7 +5,6 @@ metadata:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/network-policy-api/pull/300
     policy.networking.k8s.io/bundle-version: v0.1.7
     policy.networking.k8s.io/channel: standard
-  creationTimestamp: null
   name: clusternetworkpolicies.policy.networking.k8s.io
 spec:
   group: policy.networking.k8s.io
