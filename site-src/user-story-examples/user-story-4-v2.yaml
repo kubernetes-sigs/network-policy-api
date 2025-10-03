@@ -1,8 +1,9 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: tenant-creation-example
 spec:
+  tier: Admin
   priority: 50
   subject:
     namespaces:
@@ -15,5 +16,4 @@ spec:
           # See https://network-policy-api.sigs.k8s.io/npeps/npep-122/ for more details.
     - action: Deny   # Deny everything else other than same tenant traffic
       from:
-      - namespaces:
-          namespaceSelector: {}
+      - namespaces: {}
