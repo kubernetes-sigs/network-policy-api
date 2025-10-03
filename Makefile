@@ -39,29 +39,33 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: generate
-generate:
+generate: ## Generate the code from the API definitions.
 	./hack/update-codegen.sh
 
 all: generate fmt vet ## Runs all the development targets
 
 .PHONY: verify
-verify:
+verify: ## Verify the code.
 	hack/verify-all.sh -v
 
-crd-e2e:
+crd-e2e: ## Run the CRD e2e tests.
 	hack/crd-e2e.sh -v
 
 .PHONY: conformance
-conformance:
-	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformance -args ${CONFORMANCE_FLAGS}
+conformance: ## Run the conformance tests.
+	go test ${GO_TEST_FLAGS} -v ./conformance \
+		-run TestConformance -args ${CONFORMANCE_FLAGS}
 
 .PHONY: conformance-profiles
-conformance-profiles:
-	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformanceProfiles -args ${CONFORMANCE_FLAGS}
+conformance-profiles: ## Run the conformance profiles.
+	go test ${GO_TEST_FLAGS} -v ./conformance \
+		-run TestConformanceProfiles -args ${CONFORMANCE_FLAGS}
 
 .PHONY: conformance-profiles-default
-conformance-profiles-default:
-	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy
+conformance-profiles-default: ## Run the default conformance profile.
+	go test ${GO_TEST_FLAGS} -v ./conformance \
+		-run TestConformanceProfiles -args \
+		--conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy
 
 ##@ Deployment
 install: generate ## Install standard CRDs into the K8s cluster specified in ~/.kube/config.
@@ -85,6 +89,6 @@ docs:
 local-docs:
 	mkdocs serve
 
-.PHONY: build-install-yaml
+.PHONY: build-install-yaml ## Build the install YAML.
 build-install-yaml:
 	./hack/build-install-yaml.sh
