@@ -64,10 +64,10 @@ nav:
       - Template: npeps/npep-95.md
       - Provisional:
         - npeps/npep-122.md
-      # - Implementable:
+      - Implementable:
+        - npeps/npep-133-fqdn-egress-selector.md
       - Experimental:
         - npeps/npep-126-egress-traffic-control.md
-        - npeps/npep-133-fqdn-egress-selector.md
       - Standard:
         - npeps/npep-137-conformance-profiles.md
         # - Declined:
