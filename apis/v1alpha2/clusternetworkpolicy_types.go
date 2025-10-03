@@ -80,7 +80,7 @@ type ClusterNetworkPolicySpec struct {
 	// all pods can communicate with each other.
 	Tier Tier `json:"tier"`
 
-	// Priority is a value from 0 to 1000 indicating the precedence of
+	// Priority is a value from 0 to 500 indicating the precedence of
 	// the policy within its tier. Policies with lower priority values have
 	// higher precedence, and are checked before policies with higher priority
 	// values in the same tier. All Admin tier rules have higher precedence than
@@ -94,7 +94,7 @@ type ClusterNetworkPolicySpec struct {
 	// values in cases where ambiguity would be unacceptable.
 	//
 	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=1000
+	// +kubebuilder:validation:Maximum=500
 	Priority int32 `json:"priority"`
 
 	// Subject defines the pods to which this ClusterNetworkPolicy applies.
