@@ -110,7 +110,7 @@ type ClusterNetworkPolicySpec struct {
 	// CNPs with no ingress rules do not affect ingress traffic.
 	//
 	// +optional
-	// +kubebuilder:validation:MaxItems=100
+	// +kubebuilder:validation:MaxItems=25
 	Ingress []ClusterNetworkPolicyIngressRule `json:"ingress,omitempty"`
 
 	// Egress is the list of Egress rules to be applied to the selected pods.
@@ -123,7 +123,7 @@ type ClusterNetworkPolicySpec struct {
 	// CNPs with no egress rules do not affect egress traffic.
 	//
 	// +optional
-	// +kubebuilder:validation:MaxItems=100
+	// +kubebuilder:validation:MaxItems=25
 	Egress []ClusterNetworkPolicyEgressRule `json:"egress,omitempty"`
 }
 
@@ -199,7 +199,7 @@ type ClusterNetworkPolicyIngressRule struct {
 	// This field must be defined and contain at least one item.
 	//
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=100
+	// +kubebuilder:validation:MaxItems=25
 	From []ClusterNetworkPolicyIngressPeer `json:"from"`
 
 	// Ports allows for matching traffic based on port and protocols.
@@ -210,7 +210,7 @@ type ClusterNetworkPolicyIngressRule struct {
 	//
 	// +optional
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=100
+	// +kubebuilder:validation:MaxItems=25
 	Ports *[]ClusterNetworkPolicyPort `json:"ports,omitempty"`
 }
 
@@ -251,7 +251,7 @@ type ClusterNetworkPolicyEgressRule struct {
 	// This field must be defined and contain at least one item.
 	//
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=100
+	// +kubebuilder:validation:MaxItems=25
 	To []ClusterNetworkPolicyEgressPeer `json:"to"`
 
 	// Ports allows for matching traffic based on port and protocols.
@@ -260,7 +260,7 @@ type ClusterNetworkPolicyEgressRule struct {
 	//
 	// +optional
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=100
+	// +kubebuilder:validation:MaxItems=25
 	Ports *[]ClusterNetworkPolicyPort `json:"ports,omitempty"`
 }
 
