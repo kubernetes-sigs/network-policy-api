@@ -38,6 +38,11 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
+.PHONY: test
+test: ## Run go test
+	go test ./apis/...
+	go test ./pkg/...
+
 .PHONY: generate
 generate: ## Generate the code from the API definitions.
 	./hack/update-codegen.sh
@@ -92,3 +97,7 @@ local-docs:
 .PHONY: build-install-yaml ## Build the install YAML.
 build-install-yaml:
 	./hack/build-install-yaml.sh
+
+.PHONY: crdtest # use go to check build freshness
+crdtest: ## Build the crdtest executable
+	go test -c ./pkg/crdtest -o crdtest

@@ -1,0 +1,17 @@
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: invalid-ingress-action
+spec:
+  tier: Admin
+  priority: 10
+  subject:
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: sensitive-ns
+  ingress:
+    - action: Invalid
+      from:
+      - namespaces:
+         namespaceSelector: {}
+      name: select-all-deny-all
