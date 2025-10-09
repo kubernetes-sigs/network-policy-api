@@ -32,16 +32,13 @@ type SupportedFeature string
 
 const (
 	// This option indicates support for ANP (standard conformance).
-	SupportAdminNetworkPolicy SupportedFeature = "AdminNetworkPolicy"
-	// This option indicates support for BANP (standard conformance).
-	SupportBaselineAdminNetworkPolicy SupportedFeature = "BaselineAdminNetworkPolicy"
+	SupportClusterNetworkPolicy SupportedFeature = "ClusterNetworkPolicy"
 )
 
 // StandardFeatures are the features that are required to be conformant with
 // the Core API features (e.g. all fields in the API except for NamedPorts).
 var StandardFeatures = sets.New(
-	SupportAdminNetworkPolicy,
-	SupportBaselineAdminNetworkPolicy,
+	SupportClusterNetworkPolicy,
 )
 
 // -----------------------------------------------------------------------------
@@ -49,21 +46,17 @@ var StandardFeatures = sets.New(
 // -----------------------------------------------------------------------------
 
 const (
-	// This option indicates AdminNetworkPolicy's NamedPorts, EgressNodePeers
+	// This option indicates ClusterNetworkPolicy's NamedPorts, EgressNodePeers
 	// fall under the extended test conformance.
-	SupportAdminNetworkPolicyNamedPorts              SupportedFeature = "AdminNetworkPolicyNamedPorts"
-	SupportAdminNetworkPolicyEgressNodePeers         SupportedFeature = "AdminNetworkPolicyEgressNodePeers"
-	SupportBaselineAdminNetworkPolicyNamedPorts      SupportedFeature = "BaselineAdminNetworkPolicyNamedPorts"
-	SupportBaselineAdminNetworkPolicyEgressNodePeers SupportedFeature = "BaselineAdminNetworkPolicyEgressNodePeers"
+	SupportClusterNetworkPolicyNamedPorts      SupportedFeature = "ClusterNetworkPolicyNamedPorts"
+	SupportClusterNetworkPolicyEgressNodePeers SupportedFeature = "ClusterNetworkPolicyEgressNodePeers"
 )
 
 // ExperimentalFeatures are newer, unstable features that are not part of the standard channel.
 // If implementations want to use these features, they can use the experimental CR to leverage them.
 var ExperimentalFeatures = sets.New(
-	SupportAdminNetworkPolicyNamedPorts,
-	SupportAdminNetworkPolicyEgressNodePeers,
-	SupportBaselineAdminNetworkPolicyNamedPorts,
-	SupportBaselineAdminNetworkPolicyEgressNodePeers,
+	SupportClusterNetworkPolicyNamedPorts,
+	SupportClusterNetworkPolicyEgressNodePeers,
 ).Insert(StandardFeatures.UnsortedList()...)
 
 // -----------------------------------------------------------------------------

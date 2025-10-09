@@ -121,7 +121,7 @@ func New(s Options) *ConformanceTestSuite {
 func (suite *ConformanceTestSuite) Setup(t *testing.T) {
 	suite.Applier.FS = suite.FS
 
-	if suite.SupportedFeatures.Has(SupportAdminNetworkPolicy) {
+	if suite.SupportedFeatures.Has(SupportClusterNetworkPolicy) {
 		t.Logf("Test Setup: Applying base manifests")
 		suite.Applier.MustApplyWithCleanup(t, suite.Client, suite.TimeoutConfig, suite.BaseManifests, suite.Cleanup)
 

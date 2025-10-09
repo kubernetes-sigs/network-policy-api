@@ -25,31 +25,31 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		BaselineAdminNetworkPolicyIngressNamedPort,
+		CNPBaselineTierIngressNamedPort,
 	)
 }
 
-var BaselineAdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
-	ShortName:   "BaselineAdminNetworkPolicyIngressNamedPort",
-	Description: "Tests support for ingress traffic on a named port using baseline admin network policy API based on a server and client model",
+var CNPBaselineTierIngressNamedPort = suite.ConformanceTest{
+	ShortName:   "CNPBaselineTierIngressNamedPort",
+	Description: "Tests support for ingress traffic on a named port using baseline cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportBaselineAdminNetworkPolicy,
-		suite.SupportBaselineAdminNetworkPolicyNamedPorts,
+		suite.SupportClusterNetworkPolicy,
+		suite.SupportClusterNetworkPolicyNamedPorts,
 	},
-	Manifests: []string{"base/baseline_admin_network_policy/standard-ingress-tcp-rules.yaml"},
+	Manifests: []string{"base/baseline_tier/standard-ingress-tcp-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for named port", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `default` BANP
+			// This test uses `default` baseline CNP
 			// harry-potter-1 is our server pod in gryffindor namespace
 			serverPod := &v1.Pod{}
 			err := s.Client.Get(ctx, client.ObjectKey{
@@ -57,23 +57,23 @@ var BaselineAdminNetworkPolicyIngressNamedPort = suite.ConformanceTest{
 				Name:      "harry-potter-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			banp := &v1alpha1.BaselineAdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "default",
-			}, banp)
-			require.NoErrorf(t, err, "unable to fetch the baseline admin network policy")
-			mutate := banp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the baseline cluster network policy")
+			mutate := cnp.DeepCopy()
 			namedPortRule := mutate.Spec.Ingress[3]
 			webPort := "web"
 			// rewrite the tcp port 80 rule as named port rule
-			namedPortRule.Ports = &[]v1alpha1.AdminNetworkPolicyPort{
+			namedPortRule.Ports = &[]api.ClusterNetworkPolicyPort{
 				{
 					NamedPort: &webPort,
 				},
 			}
 			mutate.Spec.Ingress[3] = namedPortRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(banp))
-			require.NoErrorf(t, err, "unable to patch the baseline admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the baseline cluster network policy")
 			// cedric-diggory-0 is our client pod in hufflepuff namespace
 			// ensure ingress is ALLOWED from hufflepuff to gryffindor at at the web port, which is defined as TCP at port 80 in pod spec
 			// ingressRule at index3 should take effect

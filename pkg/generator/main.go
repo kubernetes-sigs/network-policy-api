@@ -37,9 +37,7 @@ const (
 )
 
 var standardKinds = map[string]bool{
-	"AdminNetworkPolicy":         true,
-	"BaselineAdminNetworkPolicy": true,
-	"ClusterNetworkPolicy":       true,
+	"ClusterNetworkPolicy": true,
 }
 
 // This generation code is largely copied from
@@ -47,7 +45,6 @@ var standardKinds = map[string]bool{
 func main() {
 	roots, err := loader.LoadRoots(
 		"k8s.io/apimachinery/pkg/runtime/schema", // Needed to parse generated register functions.
-		"sigs.k8s.io/network-policy-api/apis/v1alpha1",
 		"sigs.k8s.io/network-policy-api/apis/v1alpha2",
 	)
 	if err != nil {

@@ -1,8 +1,9 @@
-apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
 metadata:
   name: gress-rules
 spec:
+  tier: Admin
   priority: 15
   subject:
     namespaces:
@@ -10,7 +11,7 @@ spec:
           kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   egress:
   - name: "allow-to-ravenclaw-everything"
-    action: "Allow"
+    action: "Accept"
     to:
     - namespaces:
         matchLabels:
@@ -60,7 +61,7 @@ spec:
           protocol: SCTP
           port: 9003
   - name: "allow-to-hufflepuff-at-ports-8080-5353-9003"
-    action: "Allow"
+    action: "Accept"
     to:
     - namespaces:
         matchLabels:
@@ -83,7 +84,7 @@ spec:
           kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
   ingress:
   - name: "allow-from-ravenclaw-everything"
-    action: "Allow"
+    action: "Accept"
     from:
     - namespaces:
         matchLabels:
@@ -133,7 +134,7 @@ spec:
           protocol: SCTP
           port: 9003
   - name: "allow-from-hufflepuff-at-port-80-5353-9003"
-    action: "Allow"
+    action: "Accept"
     from:
     - namespaces:
         matchLabels:

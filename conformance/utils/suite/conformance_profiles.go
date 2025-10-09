@@ -39,13 +39,9 @@ type ConformanceProfile struct {
 type ConformanceProfileName string
 
 const (
-	// ANPConformanceProfileName indicates the name of the conformance profile
-	// which covers AdminNetworkPolicy core API
-	ANPConformanceProfileName ConformanceProfileName = "AdminNetworkPolicy"
-
-	// BANPConformanceProfileName indicates the name of the conformance profile
-	// which covers BaselineAdminNetworkPolicy core API
-	BANPConformanceProfileName ConformanceProfileName = "BaselineAdminNetworkPolicy"
+	// CNPConformanceProfileName indicates the name of the conformance profile
+	// which covers ClusterNetworkPolicy core API
+	CNPConformanceProfileName ConformanceProfileName = "ClusterNetworkPolicy"
 )
 
 // -----------------------------------------------------------------------------
@@ -53,27 +49,15 @@ const (
 // -----------------------------------------------------------------------------
 
 var (
-	// ANPConformanceProfile is a ConformanceProfile that covers testing ANP API
-	ANPConformanceProfile = ConformanceProfile{
-		Name: ANPConformanceProfileName,
+	// CNPConformanceProfile is a ConformanceProfile that covers testing CNP API
+	CNPConformanceProfile = ConformanceProfile{
+		Name: CNPConformanceProfileName,
 		StandardFeatures: sets.New(
-			SupportAdminNetworkPolicy,
+			SupportClusterNetworkPolicy,
 		),
 		ExperimentalFeatures: sets.New(
-			SupportAdminNetworkPolicyNamedPorts,
-			SupportAdminNetworkPolicyEgressNodePeers,
-		),
-	}
-
-	// BANPConformanceProfile is a ConformanceProfile that covers testing BANP API
-	BANPConformanceProfile = ConformanceProfile{
-		Name: BANPConformanceProfileName,
-		StandardFeatures: sets.New(
-			SupportBaselineAdminNetworkPolicy,
-		),
-		ExperimentalFeatures: sets.New(
-			SupportBaselineAdminNetworkPolicyNamedPorts,
-			SupportBaselineAdminNetworkPolicyEgressNodePeers,
+			SupportClusterNetworkPolicyNamedPorts,
+			SupportClusterNetworkPolicyEgressNodePeers,
 		),
 	}
 )
@@ -85,8 +69,7 @@ var (
 // conformanceProfileMap maps short human-readable names to their respective
 // ConformanceProfiles.
 var conformanceProfileMap = map[ConformanceProfileName]ConformanceProfile{
-	ANPConformanceProfileName:  ANPConformanceProfile,
-	BANPConformanceProfileName: BANPConformanceProfile,
+	CNPConformanceProfileName: CNPConformanceProfile,
 }
 
 // getConformanceProfileForName retrieves a known ConformanceProfile by it's simple

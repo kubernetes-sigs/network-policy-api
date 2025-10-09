@@ -25,30 +25,30 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"sigs.k8s.io/network-policy-api/apis/v1alpha1"
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
 
 func init() {
 	ConformanceTests = append(ConformanceTests,
-		AdminNetworkPolicyGress,
+		CNPAdminTierGress,
 	)
 }
 
-var AdminNetworkPolicyGress = suite.ConformanceTest{
-	ShortName:   "AdminNetworkPolicyGress",
-	Description: "Tests support for combined ingress and egress traffic rules in the admin network policy API based on a server and client model",
+var CNPAdminTierGress = suite.ConformanceTest{
+	ShortName:   "CNPAdminTierGress",
+	Description: "Tests support for combined ingress and egress traffic rules in the cluster network policy API based on a server and client model",
 	Features: []suite.SupportedFeature{
-		suite.SupportAdminNetworkPolicy,
+		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_network_policy/standard-gress-rules-combined.yaml"},
+	Manifests: []string{"base/admin_tier/standard-gress-rules-combined.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-gress' policy across different protocols", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `gress-rules` ANP
+			// This test uses `gress-rules` admin CNP
 
 			/* First; let's test egress works! */
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
@@ -95,7 +95,7 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 		t.Run("Should support an 'allow-gress' policy across different protocols at the specified ports", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `gress-rules` ANP
+			// This test uses `gress-rules` admin CNP
 
 			/* First; let's test egress works! */
 			// cedric-diggory-1 is our server pod in hufflepuff namespace
@@ -178,7 +178,7 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 		t.Run("Should support an 'deny-gress' policy across different protocols", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `gress-rules` ANP
+			// This test uses `gress-rules` admin CNP
 
 			/* First; let's test egress works! */
 			// luna-lovegood-1 is our server pod in ravenclaw namespace
@@ -188,12 +188,12 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 				Name:      "luna-lovegood-1",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "gress-rules",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index0 and index1 for both ingress and egress
 			allowOutRule := mutate.Spec.Egress[0]
 			mutate.Spec.Egress[0] = mutate.Spec.Egress[1]
@@ -201,8 +201,8 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 			allowInRule := mutate.Spec.Ingress[0]
 			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[1]
 			mutate.Spec.Ingress[1] = allowInRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-x is our client pod in gryffindor namespace
 			// ensure egress is DENIED to ravenclaw from gryffindor
 			// egressRule at index0 will take precedence over egressRule at index1; thus DENY takes precedence over ALLOW since rules are ordered
@@ -240,7 +240,7 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 		t.Run("Should support a 'deny-gress' policy across different protocols at the specified ports", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `gress-rules` ANP
+			// This test uses `gress-rules` admin CNP
 
 			/* First; let's test egress works! */
 			// draco-malfoy-0 is our server pod in slytherin namespace
@@ -323,7 +323,7 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 		t.Run("Should support an 'pass-gress' policy across different protocols", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `gress-rules` ANP
+			// This test uses `gress-rules` admin CNP
 
 			/* First; let's test egress works! */
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
@@ -333,12 +333,12 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 				Name:      "luna-lovegood-0",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "gress-rules",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index0 and index2 for both ingress and egress
 			denyOutRule := mutate.Spec.Egress[0]
 			mutate.Spec.Egress[0] = mutate.Spec.Egress[2]
@@ -346,8 +346,8 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 			denyInRule := mutate.Spec.Ingress[0]
 			mutate.Spec.Ingress[0] = mutate.Spec.Ingress[2]
 			mutate.Spec.Ingress[2] = denyInRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our server pod in gryffindor namespace
 			// ensure egress is PASSED from gryffindor to ravenclaw
 			// egressRule at index0 will take precedence over egressRule at index1&index2; thus PASS takes precedence over ALLOW/DENY since rules are ordered
@@ -393,7 +393,7 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 		t.Run("Should support a 'pass-gress' policy across different protocols at the specified ports", func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
 			defer cancel()
-			// This test uses `gress-rules` ANP
+			// This test uses `gress-rules` admin CNP
 
 			/* First; let's test egress works! */
 			// draco-malfoy-0 is our server pod in slytherin namespace
@@ -403,12 +403,12 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 				Name:      "draco-malfoy-0",
 			}, serverPod)
 			require.NoErrorf(t, err, "unable to fetch the server pod")
-			anp := &v1alpha1.AdminNetworkPolicy{}
+			cnp := &api.ClusterNetworkPolicy{}
 			err = s.Client.Get(ctx, client.ObjectKey{
 				Name: "gress-rules",
-			}, anp)
-			require.NoErrorf(t, err, "unable to fetch the admin network policy")
-			mutate := anp.DeepCopy()
+			}, cnp)
+			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			mutate := cnp.DeepCopy()
 			// swap rules at index3 and index4
 			denyToRule := mutate.Spec.Egress[3]
 			mutate.Spec.Egress[3] = mutate.Spec.Egress[4]
@@ -416,8 +416,8 @@ var AdminNetworkPolicyGress = suite.ConformanceTest{
 			denyInRule := mutate.Spec.Ingress[3]
 			mutate.Spec.Ingress[3] = mutate.Spec.Ingress[4]
 			mutate.Spec.Ingress[4] = denyInRule
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(anp))
-			require.NoErrorf(t, err, "unable to patch the admin network policy")
+			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
+			require.NoErrorf(t, err, "unable to patch the cluster network policy")
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress from gryffindor is PASSED to slytherin at port 80; egressRule at index3 should take effect
 			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
