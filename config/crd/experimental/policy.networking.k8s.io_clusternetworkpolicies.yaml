@@ -173,7 +173,7 @@ spec:
                             - message: Start port must be less than End port
                               rule: self.start < self.end
                         type: object
-                      maxItems: 100
+                      maxItems: 25
                       minItems: 1
                       type: array
                     to:
@@ -473,7 +473,7 @@ spec:
                             - podSelector
                             type: object
                         type: object
-                      maxItems: 100
+                      maxItems: 25
                       minItems: 1
                       type: array
                   required:
@@ -486,7 +486,7 @@ spec:
                     rule: '!(self.to.exists(peer, has(peer.networks) || has(peer.nodes)
                       || has(peer.domainNames)) && has(self.ports) && self.ports.exists(port,
                       has(port.namedPort)))'
-                maxItems: 100
+                maxItems: 25
                 type: array
               ingress:
                 description: |-
@@ -708,7 +708,7 @@ spec:
                             - podSelector
                             type: object
                         type: object
-                      maxItems: 100
+                      maxItems: 25
                       minItems: 1
                       type: array
                     name:
@@ -796,14 +796,14 @@ spec:
                             - message: Start port must be less than End port
                               rule: self.start < self.end
                         type: object
-                      maxItems: 100
+                      maxItems: 25
                       minItems: 1
                       type: array
                   required:
                   - action
                   - from
                   type: object
-                maxItems: 100
+                maxItems: 25
                 type: array
               priority:
                 description: |-

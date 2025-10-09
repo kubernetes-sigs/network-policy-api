@@ -165,7 +165,7 @@ spec:
                             - message: Start port must be less than End port
                               rule: self.start < self.end
                         type: object
-                      maxItems: 100
+                      maxItems: 25
                       minItems: 1
                       type: array
                     to:
@@ -373,14 +373,14 @@ spec:
                             - podSelector
                             type: object
                         type: object
-                      maxItems: 100
+                      maxItems: 25
                       minItems: 1
                       type: array
                   required:
                   - action
                   - to
                   type: object
-                maxItems: 100
+                maxItems: 25
                 type: array
               ingress:
                 description: |-
@@ -602,7 +602,7 @@ spec:
                             - podSelector
                             type: object
                         type: object
-                      maxItems: 100
+                      maxItems: 25
                       minItems: 1
                       type: array
                     name:
@@ -682,14 +682,14 @@ spec:
                             - message: Start port must be less than End port
                               rule: self.start < self.end
                         type: object
-                      maxItems: 100
+                      maxItems: 25
                       minItems: 1
                       type: array
                   required:
                   - action
                   - from
                   type: object
-                maxItems: 100
+                maxItems: 25
                 type: array
               priority:
                 description: |-
