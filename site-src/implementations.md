@@ -6,11 +6,17 @@ Network Policy API resources and provides status and resource references for the
 Implementors of Network Policy API resources are encouraged to update this document with status information about their
 implementations, the versions they cover, and documentation to help users get started.
 
-## AdminNetworkPolicy and BaseLineAdminNetworkPolicy
+## ClusterNetworkPolicy
 
-Updated: 11-14-2024
+Updated: 13-Oct-2025
 
 - [Kube-network-policies](https://github.com/kubernetes-sigs/kube-network-policies)
+
+## AdminNetworkPolicy and BaseLineAdminNetworkPolicy (v1alpha1)
+
+Updated: 14-Nov-2024
+
+- [Kube-network-policies](https://github.com/kubernetes-sigs/kube-network-policies/tree/v0.8.1)
 - [OVN-Kubernetes CNI](https://github.com/ovn-org/ovn-kubernetes/) (Has implemented standard fields of the API + Nodes/Networks in Experimental)
 - [Antrea CNI](https://github.com/antrea-io/antrea/) (Has implemented standard fields of the API)
 - [KubeOVN CNI](https://github.com/kubeovn/kube-ovn) (Has implemented standard fields of the API)
