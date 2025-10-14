@@ -3,7 +3,7 @@
 The following contains example yamls for all of the resources which makeup the
 Network Policy API.
 
-## Sample AdminNetworkPolicy and BaseLineAdminNetworkPolicy Resources
+## Sample Resources
 
 These examples will start with the object yaml defintions used to implement the
 [core use cases](../user-stories.md). Please feel
