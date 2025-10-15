@@ -102,12 +102,12 @@ func (in *ClusterNetworkPolicyEgressRule) DeepCopyInto(out *ClusterNetworkPolicy
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.Ports != nil {
-		in, out := &in.Ports, &out.Ports
-		*out = new([]ClusterNetworkPolicyPort)
+	if in.Protocols != nil {
+		in, out := &in.Protocols, &out.Protocols
+		*out = new([]ClusterNetworkPolicyProtocol)
 		if **in != nil {
 			in, out := *in, *out
-			*out = make([]ClusterNetworkPolicyPort, len(*in))
+			*out = make([]ClusterNetworkPolicyProtocol, len(*in))
 			for i := range *in {
 				(*in)[i].DeepCopyInto(&(*out)[i])
 			}
