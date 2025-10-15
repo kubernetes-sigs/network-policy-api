@@ -257,14 +257,14 @@ type ClusterNetworkPolicyEgressRule struct {
 	// +kubebuilder:validation:MaxItems=25
 	To []ClusterNetworkPolicyEgressPeer `json:"to"`
 
-	// Ports allows for matching traffic based on port and protocols.
-	// This field is a list of destination ports for the outgoing egress traffic.
-	// If Ports is not set then the rule does not filter traffic via port.
+	// Protocols allows for matching traffic based on port and protocols. This
+	// field is a list of destination protocol/ports for the outgoing egress
+	// traffic. If this field is not set then the rule does not filter traffic
+	// via protocol/port. This field must contain at least one item if set.
 	//
-	// +optional
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=25
-	Ports *[]ClusterNetworkPolicyPort `json:"ports,omitempty"`
+	// +optional +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=100
+	Protocols *[]ClusterNetworkPolicyProtocol `json:"protocols,omitempty"`
 }
 
 // ClusterNetworkPolicyRuleAction string describes the ClusterNetworkPolicy
