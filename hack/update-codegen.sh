@@ -195,5 +195,5 @@ if [ "$run_deepcopy" = true ]; then
   echo "Generating deepcopy at ${APIS_PATH}"
   go run sigs.k8s.io/controller-tools/cmd/controller-gen \
     object:headerFile="${SCRIPT_ROOT}/hack/boilerplate.generatego.txt" \
-    paths="./${APIS_PATH}"
+    paths="./${APIS_PATH}/..."
 fi
