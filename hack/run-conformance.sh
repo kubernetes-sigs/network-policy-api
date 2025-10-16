@@ -18,13 +18,58 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-KUBECTL=$(which kubectl)
-KIND=$(which kind)
+usage() {
+  cat <<EOF
+Usage: $0 [commands]
+
+Commands:
+
+  enable_ipv4_and_ipv6_forwarding
+  setup_environment
+  create_cluster
+  install_apis
+  install_np_impl
+  get_cluster_status
+  run_tests
+  export_logs
+
+  all (run all steps)
+
+Example:
+
+  # Run the conformance test locally. Skip some of the github
+  # action steps.
+  ARTIFACTS_DIR=/tmp TMP_DIR=/tmp \\
+    $0 create_cluster \\
+      install_kube_network_policices_from_main \\
+      install_apis \\
+      run_tests
+
+EOF
+}
+
+if [[ "$#" -eq 0 ]]; then
+  usage
+  exit 1
+fi
+
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+  esac
+done
+
+# Use pre-installed kubectl and kind if not running setup_environment.
+KUBECTL=$(which kubectl || echo "not-found")
+KIND=$(which kind || echo "not-found")
 
 echo "[RUN] found KUBECTL=${KUBECTL}"
 echo "[RUN] found KIND=${KIND}"
 
-# These values will be overridden by the github workflow vars.
+# These values can be overriden by external vars.
 IP_FAMILY="${IP_FAMILY:-ipv4}"
 GO_VERSION="${GO_VERSION:-1.24}"
 K8S_VERSION="${K8S_VERSION:-v1.33.0}"
@@ -32,18 +77,28 @@ KIND_VERSION="${KIND_VERSION:-v0.30.0}"
 IMAGE_NAME="${IMAGE_NAME:-registry.k8s.io/networking/kube-network-policies}"
 KIND_CLUSTER_NAME="${KIND_CLUSTER_NAME:-kind}"
 NPAPI_VERSION="${NPAPI_VERSION:-v1alpha2}"
+ARTIFACTS_DIR="${ARTIFACTS_DIR:-./_artifacts}"
 
 CLEANUP_ON_EXIT="${CLEANUP_ON_EXIT:-true}"
-TMP_DIR=$(mktemp -d)
+CLEANUP_CLUSTER="false"
+if [[ -v TMP_DIR ]]; then
+  CLEANUP_ON_EXIT="false"
+else
+  TMP_DIR=$(mktemp -d)
+fi
 echo "[RUN] Using TMP_DIR='${TMP_DIR}'"
 
 cleanup() {
+  if [[ ${CLEANUP_CLUSTER} = "true" ]]; then
+    echo "[RUN] Stopping Kind cluster if it exists"
+    ${KIND} delete cluster --name "${KIND_CLUSTER_NAME}" || true
+  fi
   if [[ ${CLEANUP_ON_EXIT} != "true" ]]; then
     echo "[RUN] Warning: not cleaning up TMP_DIR (${TMP_DIR})"
-    return
+  else
+    echo "[RUN] Removing TMP_DIR ${TMP_DIR})"
+    rm -rf "${TMP_DIR}"
   fi
-  echo "[RUN] Removing TMP_DIR ${TMP_DIR})"
-  rm -rf "${TMP_DIR}"
 }
 trap cleanup EXIT INT TERM
 
@@ -69,18 +124,19 @@ setup_environment() {
 
   echo "[RUN] using KUBECTL=${KUBECTL}"
   echo "[RUN] using KIND=${KIND}"
+
+  if [[ ! -d "${ARTIFACTS_DIR}" ]]; then
+    mkdir -p "${ARTIFACTS_DIR}"
+  fi
+  echo "[RUN] using ARTIFACTS_DIR=${ARTIFACTS_DIR}"
 }
 
-create_multinode_cluster() {
-  echo "[RUN] Creating multi node cluster"
-  # output_dir
-  mkdir -p _artifacts
-  # create cluster
-  cat <<EOF | ${KIND} create cluster \
-    --name "${KIND_CLUSTER_NAME}" \
-    --image kindest/node:"${K8S_VERSION}"  \
-    -v7 --wait 1m --retain --config=-
-# Kind cluster configuration.
+create_cluster() {
+  echo "[RUN] Creating cluster"
+
+  CLEANUP_CLUSTER=true
+
+  local kind_cfg="# Kind cluster configuration.
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
@@ -89,21 +145,30 @@ nodes:
 - role: control-plane
 - role: worker
 - role: worker
-EOF
+"
+  echo "${kind_cfg}"
+  echo "${kind_cfg}" | ${KIND} create cluster \
+    --name "${KIND_CLUSTER_NAME}" \
+    --image kindest/node:"${K8S_VERSION}"  \
+    -v7 --wait 1m --retain --config=-
+
+
   # newer kind version ship a kindnet version that implements network policies.
   # we need to downgrade it to a version that does not support network policies
   # to be able to avoid conflicts with kube-network-policies
-  ${KUBECTL} -n kube-system set image ds kindnet kindnet-cni=docker.io/kindest/kindnetd:v20230809-80a64d96
-  # dump the kubeconfig for later
-  ${KIND} get kubeconfig --name "${KIND_CLUSTER_NAME}" > _artifacts/kubeconfig.conf
+  local kindnetd_image="docker.io/kindest/kindnetd:v20230809-80a64d96"
+  ${KUBECTL} -n kube-system set image ds kindnet kindnet-cni="${kindnetd_image}"
+
+  # dump the kubeconfig
+  ${KIND} get kubeconfig --name "${KIND_CLUSTER_NAME}" > "${ARTIFACTS_DIR}/kubeconfig.conf"
 }
 
-install_network_policy_apis() {
+install_apis() {
   echo "[RUN] Installing network policy APIs"
   ${KUBECTL} apply -f ./config/crd/standard/policy.networking.k8s.io_clusternetworkpolicies.yaml
 }
 
-install_kube_network_policies_from_main() {
+install_np_impl() {
   echo "[RUN] Installing kube-network-policies from main"
   ( # Subshell to preserve cwd.
     cd "$TMP_DIR"
@@ -159,58 +224,22 @@ run_tests() {
 
 export_logs() {
   echo "[RUN] Exporting logs"
-  ${KIND} export logs --name "${KIND_CLUSTER_NAME}" -v7 ./_artifacts/logs
-}
-
-usage() {
-  cat <<EOF
-Usage: $0 [commands]
-
-Commands:
-
-  enable_ipv4_and_ipv6_forwarding
-  setup_environment
-  create_multinode_cluster
-  install_network_policy_apis
-  install_kube_network_policies_from_main
-  get_cluster_status
-  run_tests
-  export_logs
-
-  all (run all steps)
-
-Example:
-
-  # Run a couple of steps manually.
-  $0 setup_environment run_tests export_logs
-
-EOF
-
+  ${KIND} export logs --name "${KIND_CLUSTER_NAME}" -v7 "${ARTIFACTS_DIR}/logs"
 }
 
 all() {
   enable_ipv4_and_ipv6_forwarding
   setup_environment
-  create_multinode_cluster
-  install_network_policy_apis
-  install_kube_network_policies_from_main
+  create_cluster
+  install_apis
+  install_np_impl
   get_cluster_status
   run_tests
   export_logs
 }
 
-if [[ "$#" -eq 0 ]]; then
-  usage
-  exit 1
-fi
-
-# Handle special arguments.
 for arg in "$@"; do
   case "$arg" in
-    -h|--help)
-      usage
-      exit 0
-      ;;
     all)
       all
       exit 0
@@ -227,14 +256,14 @@ for arg in "$@"; do
     setup_environment)
       setup_environment
       ;;
-    create_multinode_cluster)
-      create_multinode_cluster
+    create_cluster)
+      create_cluster
       ;;
-    install_network_policy_apis)
-      install_network_policy_apis
+    install_apis)
+      install_apis
       ;;
-    install_kube_network_policies_from_main)
-      install_kube_network_policies_from_main
+    install_np_impl)
+      install_np_impl
       ;;
     get_cluster_status)
       get_cluster_status
