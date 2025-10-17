@@ -105,35 +105,19 @@ spec:
                         If Ports is not set then the rule does not filter traffic via port.
                       items:
                         description: |-
-                          ClusterNetworkPolicyPort describes how to select destination network ports.
-                          Exactly one field must be set.
+                          ClusterNetworkPolicyPort describes how to match by port. This can
+                          only be used with protocols that use port numbers (e.g. TCP, UDP).
+
+                          Exactly one of the fields in this struct must be set.
                         maxProperties: 1
                         minProperties: 1
                         properties:
-                          portNumber:
-                            description: Port selects a destination port based on
-                              protocol and port number.
-                            properties:
-                              port:
-                                description: Number defines a network port value.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                              protocol:
-                                default: TCP
-                                description: |-
-                                  Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-                                  match. If not specified, this field defaults to TCP.
-                                type: string
-                            required:
-                            - port
-                            - protocol
-                            type: object
-                          portRange:
-                            description: |-
-                              PortRange selects a destination port range based on protocol and
-                              start and end port numbers.
+                          number:
+                            description: Port selects the port by number.
+                            format: int32
+                            type: integer
+                          range:
+                            description: PortRange selects the port by range.
                             properties:
                               end:
                                 description: |-
@@ -143,12 +127,6 @@ spec:
                                 maximum: 65535
                                 minimum: 1
                                 type: integer
-                              protocol:
-                                default: TCP
-                                description: |-
-                                  Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-                                  match. If not specified, this field defaults to TCP.
-                                type: string
                               start:
                                 description: |-
                                   Start defines a network port that is the start of a port range, the Start
@@ -613,76 +591,67 @@ spec:
                         for any applied AdminNetworkPolicies.
                       maxLength: 100
                       type: string
-                    ports:
+                    protocols:
                       description: |-
-                        Ports allows for matching traffic based on port and protocols.
-                        This field is a list of ports which should be matched on
-                        the pods selected for this policy i.e the subject of the policy.
-                        So it matches on the destination port for the ingress traffic.
-                        If Ports is not set then the rule does not filter traffic via port.
+                        Protocols this rule matches. This rule matches if any of
+                        the elements in the list match the incoming traffic.
+
+                        This field must contain at least one item.
                       items:
                         description: |-
-                          ClusterNetworkPolicyPort describes how to select destination network ports.
-                          Exactly one field must be set.
-                        maxProperties: 1
-                        minProperties: 1
+                          ClusterNetworkPolicyProtocol describes how to select traffic by
+                          protocol-specific attributes.
                         properties:
-                          portNumber:
-                            description: Port selects a destination port based on
-                              protocol and port number.
+                          port:
+                            description: Specific port to match against.
+                            maxProperties: 1
+                            minProperties: 1
                             properties:
-                              port:
-                                description: Number defines a network port value.
+                              number:
+                                description: Port selects the port by number.
                                 format: int32
-                                maximum: 65535
-                                minimum: 1
                                 type: integer
-                              protocol:
-                                default: TCP
-                                description: |-
-                                  Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-                                  match. If not specified, this field defaults to TCP.
-                                type: string
-                            required:
-                            - port
-                            - protocol
+                              range:
+                                description: PortRange selects the port by range.
+                                properties:
+                                  end:
+                                    description: |-
+                                      End defines a network port that is the end of a port range, the End value
+                                      must be greater than Start.
+                                    format: int32
+                                    maximum: 65535
+                                    minimum: 1
+                                    type: integer
+                                  start:
+                                    description: |-
+                                      Start defines a network port that is the start of a port range, the Start
+                                      value must be less than End.
+                                    format: int32
+                                    maximum: 65535
+                                    minimum: 1
+                                    type: integer
+                                required:
+                                - end
+                                - start
+                                type: object
+                                x-kubernetes-validations:
+                                - message: Start port must be less than End port
+                                  rule: self.start < self.end
                             type: object
-                          portRange:
+                          protocol:
+                            default: TCP
                             description: |-
-                              PortRange selects a destination port range based on protocol and
-                              start and end port numbers.
-                            properties:
-                              end:
-                                description: |-
-                                  End defines a network port that is the end of a port range, the End value
-                                  must be greater than Start.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                              protocol:
-                                default: TCP
-                                description: |-
-                                  Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-                                  match. If not specified, this field defaults to TCP.
-                                type: string
-                              start:
-                                description: |-
-                                  Start defines a network port that is the start of a port range, the Start
-                                  value must be less than End.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                            required:
-                            - end
-                            - start
-                            type: object
-                            x-kubernetes-validations:
-                            - message: Start port must be less than End port
-                              rule: self.start < self.end
+                              Protocol is the network protocol (TCP, UDP, or SCTP) which
+                              traffic must match. If not specified, this field defaults
+                              to TCP.
+                            type: string
                         type: object
-                      maxItems: 25
+                        x-kubernetes-validations:
+                        - message: port must be specified for protocols that support
+                            ports
+                          rule: '!(self.protocol in [''TCP'', ''UDP'', ''SCTP''])
+                            || has(self.port)'
+                      maxItems: 100
                       minItems: 1
                       type: array
                   required:

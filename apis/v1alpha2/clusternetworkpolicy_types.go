@@ -202,16 +202,15 @@ type ClusterNetworkPolicyIngressRule struct {
 	// +kubebuilder:validation:MaxItems=25
 	From []ClusterNetworkPolicyIngressPeer `json:"from"`
 
-	// Ports allows for matching traffic based on port and protocols.
-	// This field is a list of ports which should be matched on
-	// the pods selected for this policy i.e the subject of the policy.
-	// So it matches on the destination port for the ingress traffic.
-	// If Ports is not set then the rule does not filter traffic via port.
+	// Protocols this rule matches. This rule matches if any of
+	// the elements in the list match the incoming traffic.
+	//
+	// This field must contain at least one item.
 	//
 	// +optional
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=25
-	Ports *[]ClusterNetworkPolicyPort `json:"ports,omitempty"`
+	// +kubebuilder:validation:MaxItems=100
+	Protocols *[]ClusterNetworkPolicyProtocol `json:"protocols,omitempty"`
 }
 
 // ClusterNetworkPolicyEgressRule describes an action to take on a particular
@@ -316,29 +315,49 @@ type ClusterNetworkPolicyIngressPeer struct {
 	Pods *NamespacedPod `json:"pods,omitempty"`
 }
 
-// ClusterNetworkPolicyPort describes how to select destination network ports.
-// Exactly one field must be set.
+// ClusterNetworkPolicyProtocol describes how to select traffic by
+// protocol-specific attributes.
+//
+// +kubebuilder:validation:XValidation:rule="!(self.protocol in ['TCP', 'UDP', 'SCTP']) || has(self.port)",message="port must be specified for protocols that support ports"
+type ClusterNetworkPolicyProtocol struct {
+	// Protocol is the network protocol (TCP, UDP, or SCTP) which
+	// traffic must match. If not specified, this field defaults
+	// to TCP.
+	//
+	// +kubebuilder:default=TCP
+	Protocol corev1.Protocol `json:"protocol,omitempty"`
+
+	// Specific port to match against.
+	//
+	// +optional
+	Port *ClusterNetworkPolicyPort `json:"port,omitempty"`
+}
+
+// ClusterNetworkPolicyPort describes how to match by port. This can
+// only be used with protocols that use port numbers (e.g. TCP, UDP).
+//
+// Exactly one of the fields in this struct must be set.
+//
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
 type ClusterNetworkPolicyPort struct {
-	// Port selects a destination port based on protocol and port number.
+	// Port selects the port by number.
 	//
 	// +optional
-	PortNumber *Port `json:"portNumber,omitempty"`
+	Number *int32 `json:"number,omitempty"`
 
-	// PortRange selects a destination port range based on protocol and
-	// start and end port numbers.
+	// PortRange selects the port by range.
 	//
 	// +optional
-	PortRange *PortRange `json:"portRange,omitempty"`
+	Range *PortRange `json:"range,omitempty"`
 
-	// NamedPort selects a destination port on a pod based on the ContainerPort
-	// name. You can't use this in a rule with Nodes or Networks peers,
-	// because they do not have named ports.
+	// NamedPort selects a destination port on a pod based on the
+	// ContainerPort name. You can't use this in a rule with Nodes
+	// or Networks peers, because they do not have named ports.
 	//
 	// <network-policy-api:experimental>
 	// +optional
-	NamedPort *string `json:"namedPort,omitempty"`
+	Name *string `json:"name,omitempty"`
 }
 
 // ClusterNetworkPolicyEgressPeer defines a peer to allow traffic to.
@@ -424,32 +443,13 @@ type NamespacedPod struct {
 	PodSelector metav1.LabelSelector `json:"podSelector"`
 }
 
-type Port struct {
-	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-	// match. If not specified, this field defaults to TCP.
-	// +kubebuilder:default=TCP
-	//
-	Protocol corev1.Protocol `json:"protocol"`
-
-	// Number defines a network port value.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	//
-	Port int32 `json:"port"`
-}
-
 // PortRange defines an inclusive range of ports from the assigned
 // Start value to End value.
 // +kubebuilder:validation:XValidation:rule="self.start < self.end", message="Start port must be less than End port"
 type PortRange struct {
-	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-	// match. If not specified, this field defaults to TCP.
-	// +kubebuilder:default=TCP
-	//
-	Protocol corev1.Protocol `json:"protocol,omitempty"`
-
 	// Start defines a network port that is the start of a port range, the Start
 	// value must be less than End.
+	//
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
 	//
@@ -457,6 +457,7 @@ type PortRange struct {
 
 	// End defines a network port that is the end of a port range, the End value
 	// must be greater than Start.
+	//
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
 	//
