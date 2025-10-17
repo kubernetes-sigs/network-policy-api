@@ -223,14 +223,14 @@ func (in *ClusterNetworkPolicyPort) DeepCopyInto(out *ClusterNetworkPolicyPort) 
 		*out = new(Port)
 		**out = **in
 	}
-	if in.NamedPort != nil {
-		in, out := &in.NamedPort, &out.NamedPort
-		*out = new(string)
-		**out = **in
-	}
 	if in.PortRange != nil {
 		in, out := &in.PortRange, &out.PortRange
 		*out = new(PortRange)
+		**out = **in
+	}
+	if in.NamedPort != nil {
+		in, out := &in.NamedPort, &out.NamedPort
+		*out = new(string)
 		**out = **in
 	}
 }
