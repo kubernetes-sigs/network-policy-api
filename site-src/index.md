@@ -19,7 +19,12 @@ multiple K8s CRD resources geared towards different users and use cases.
 
 ### Active (APIs undergoing active development)
 
-- [AdminNetworkPolicy](api-overview.md#the-adminnetworkpolicy-resource) and [BaselineAdminNetworkPolicy](api-overview.md#the-baselineadminnetworkpolicy-resource)
+- [ClusterNetworkPolicy](api-overview.md#the-clusternetworkpolicy-resource)
+
+### Previous (APIs that have evolved to the next stage and are no longer actively developed)
+
+- [AdminNetworkPolicy](https://network-policy-api.sigs.k8s.io/reference/spec/#policy.networking.k8s.io%2fv1alpha1.AdminNetworkPolicy) and 
+[BaselineAdminNetworkPolicy](https://network-policy-api.sigs.k8s.io/reference/spec/#policy.networking.k8s.io%2fv1alpha1.BaselineAdminNetworkPolicy)
 
 ### Future (Possible APIs to be created in the future)
 
@@ -30,6 +35,7 @@ multiple K8s CRD resources geared towards different users and use cases.
 - [Kubecon NA 2022 Contributors Summit](https://youtu.be/00nVssi2oPA)
 - [Kubecon NA 2022 SIG Network Deep Dive](https://www.youtube.com/watch?v=qn9bM5Cwvg0&t=752s)
 - [Kubecon EU 2023 SIG Network Deep Dive](https://www.youtube.com/watch?v=0uPEFcWn-_o)
+- [Kubecon EU 2025 SIG Network Intro and Updates](https://www.youtube.com/watch?v=lBOdQHNNgEU)
 
 ## Community, discussion, contribution, and support
 Learn how to engage with the Kubernetes community on the [community page](http://kubernetes.io/community/).
