@@ -101,7 +101,9 @@ type ClusterNetworkPolicySpec struct {
 	Subject ClusterNetworkPolicySubject `json:"subject"`
 
 	// Ingress is the list of Ingress rules to be applied to the selected pods.
-	// A total of 100 rules will be allowed in each CNP instance.
+	//
+	// A maximum of 25 rules is allowed in this block.
+	//
 	// The relative precedence of ingress rules within a single CNP object
 	// (all of which share the priority) will be determined by the order
 	// in which the rule is written.
@@ -114,7 +116,9 @@ type ClusterNetworkPolicySpec struct {
 	Ingress []ClusterNetworkPolicyIngressRule `json:"ingress,omitempty"`
 
 	// Egress is the list of Egress rules to be applied to the selected pods.
-	// A total of 100 rules will be allowed in each CNP instance.
+	//
+	// A maximum of 25 rules is allowed in this block.
+	//
 	// The relative precedence of egress rules within a single CNP object
 	// (all of which share the priority) will be determined by the order
 	// in which the rule is written.
