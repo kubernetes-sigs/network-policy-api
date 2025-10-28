@@ -1,4 +1,4 @@
-# NPEP-95: NPEP template
+# NPEP-248: Add explicit match all traffic option to peers
 
 * Issue: [#248](AdminNetworkPolicy Core can't express allow/deny all)
 * Status: Provisional
