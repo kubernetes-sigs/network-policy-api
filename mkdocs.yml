@@ -17,6 +17,7 @@ theme:
     - search.highlight
     - navigation.tabs
     - navigation.top
+    - content.code.copy
 edit_uri: edit/master/site-src/
 plugins:
   - search

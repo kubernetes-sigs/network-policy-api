@@ -8,11 +8,19 @@ doc for details on the supportability matrix.
 
 **2. Install the Network Policy API CRDs**
 
-The following commands will install the latest release version of the `AdminNetworkPolicy` and
-`BaselineAdminNetworkPolicy` CRDs in your K8s cluster:
+We don't have a released version of the `ClusterNetworkPolicy` API yet, but you can try out
+the latest version from the `main` branch by applying the following manifest:
 
 ```bash
-kubectl apply -f https://github.com/kubernetes-sigs/network-policy-api/releases/download/v0.1.1/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/network-policy-api/refs/heads/main/config/crd/standard/policy.networking.k8s.io_clusternetworkpolicies.yaml
+```
+
+The latest released version of the `AdminNetworkPolicy` and `BaselineAdminNetworkPolicy` is `v0.1.7`.
+Use the following command to install it in your cluster:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/network-policy-api/refs/tags/v0.1.7/config/crd/standard/policy.networking.k8s.io_adminnetworkpolicies.yaml \
+-f https://raw.githubusercontent.com/kubernetes-sigs/network-policy-api/refs/tags/v0.1.7/config/crd/standard/policy.networking.k8s.io_baselineadminnetworkpolicies.yaml
 ```
 
 **3. Try out one of the sample yamls for specific user stories**
