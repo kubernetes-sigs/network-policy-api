@@ -20,7 +20,6 @@ limitations under the License.
 package v1alpha2
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -43,8 +42,19 @@ type ClusterNetworkPolicy struct {
 	Spec ClusterNetworkPolicySpec `json:"spec"`
 
 	// Status is the status to be reported by the implementation.
+	//
 	// +optional
 	Status ClusterNetworkPolicyStatus `json:"status,omitempty"`
+}
+
+// ClusterNetworkPolicyList contains a list of ClusterNetworkPolicy
+//
+// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type ClusterNetworkPolicyList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ClusterNetworkPolicy `json:"items"`
 }
 
 // ClusterNetworkPolicySpec defines the desired state of ClusterNetworkPolicy.
@@ -152,6 +162,7 @@ type ClusterNetworkPolicyStatus struct {
 // ClusterNetworkPolicySubject defines what resources the policy applies to.
 // Exactly one field must be set.
 // Note that host-networked pods are not included in subject selection.
+//
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
 type ClusterNetworkPolicySubject struct {
@@ -170,7 +181,7 @@ type ClusterNetworkPolicyIngressRule struct {
 	// Name is an identifier for this rule, that may be no more than
 	// 100 characters in length. This field should be used by the implementation
 	// to help improve observability, readability and error-reporting
-	// for any applied AdminNetworkPolicies.
+	// for any applied policies.
 	//
 	// +optional
 	// +kubebuilder:validation:MaxLength=100
@@ -206,28 +217,27 @@ type ClusterNetworkPolicyIngressRule struct {
 	// +kubebuilder:validation:MaxItems=25
 	From []ClusterNetworkPolicyIngressPeer `json:"from"`
 
-	// Ports allows for matching traffic based on port and protocols.
-	// This field is a list of ports which should be matched on
-	// the pods selected for this policy i.e the subject of the policy.
-	// So it matches on the destination port for the ingress traffic.
-	// If Ports is not set then the rule does not filter traffic via port.
+	// Protocols allows for more fine-grain matching of traffic on
+	// protocol-specific attributes such as the port. If this field is empty,
+	// then the rule will match all traffic.
 	//
 	// +optional
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=25
-	Ports *[]ClusterNetworkPolicyPort `json:"ports,omitempty"`
+	Protocols []ClusterNetworkPolicyProtocol `json:"protocols,omitempty"`
 }
 
 // ClusterNetworkPolicyEgressRule describes an action to take on a particular
 // set of traffic originating from pods selected by a ClusterNetworkPolicy's
 // Subject field.
+//
 // <network-policy-api:experimental:validation>
-// +kubebuilder:validation:XValidation:rule="!(self.to.exists(peer, has(peer.networks) || has(peer.nodes) || has(peer.domainNames)) && has(self.ports) && self.ports.exists(port, has(port.namedPort)))",message="networks/nodes/domainNames peer cannot be set with namedPorts since there are no namedPorts for networks/nodes/domainNames"
+// +kubebuilder:validation:XValidation:rule="!(self.to.exists(peer, has(peer.networks) || has(peer.nodes) || has(peer.domainNames)) && has(self.protocols) && self.protocols.exists(port, has(protocols.namedPort)))",message="networks/nodes/domainNames peer cannot be set with namedPorts since there are no namedPorts for networks/nodes/domainNames"
 type ClusterNetworkPolicyEgressRule struct {
 	// Name is an identifier for this rule, that may be no more than
 	// 100 characters in length. This field should be used by the implementation
 	// to help improve observability, readability and error-reporting
-	// for any applied AdminNetworkPolicies.
+	// for any applied policies.
 	//
 	// +optional
 	// +kubebuilder:validation:MaxLength=100
@@ -249,23 +259,23 @@ type ClusterNetworkPolicyEgressRule struct {
 	//   evaluation to the next tier.
 	Action ClusterNetworkPolicyRuleAction `json:"action"`
 
-	// To is the List of destinations whose traffic this rule applies to.
-	// If any element matches the destination of outgoing
-	// traffic then the specified action is applied.
-	// This field must be defined and contain at least one item.
+	// To is the list of destinations whose traffic this rule applies to. If any
+	// element matches the destination of outgoing traffic then the specified
+	// action is applied. This field must be defined and contain at least one
+	// item.
 	//
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=25
 	To []ClusterNetworkPolicyEgressPeer `json:"to"`
 
-	// Ports allows for matching traffic based on port and protocols.
-	// This field is a list of destination ports for the outgoing egress traffic.
-	// If Ports is not set then the rule does not filter traffic via port.
+	// Protocols allows for more fine-grain matching of traffic on
+	// protocol-specific attributes such as the port. If this field is empty,
+	// then this rule will match all traffic.
 	//
 	// +optional
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=25
-	Ports *[]ClusterNetworkPolicyPort `json:"ports,omitempty"`
+	Protocols []ClusterNetworkPolicyProtocol `json:"protocols,omitempty"`
 }
 
 // ClusterNetworkPolicyRuleAction string describes the ClusterNetworkPolicy
@@ -320,31 +330,6 @@ type ClusterNetworkPolicyIngressPeer struct {
 	Pods *NamespacedPod `json:"pods,omitempty"`
 }
 
-// ClusterNetworkPolicyPort describes how to select destination network ports.
-// Exactly one field must be set.
-// +kubebuilder:validation:MaxProperties=1
-// +kubebuilder:validation:MinProperties=1
-type ClusterNetworkPolicyPort struct {
-	// Port selects a destination port based on protocol and port number.
-	//
-	// +optional
-	PortNumber *Port `json:"portNumber,omitempty"`
-
-	// PortRange selects a destination port range based on protocol and
-	// start and end port numbers.
-	//
-	// +optional
-	PortRange *PortRange `json:"portRange,omitempty"`
-
-	// NamedPort selects a destination port on a pod based on the ContainerPort
-	// name. You can't use this in a rule with Nodes or Networks peers,
-	// because they do not have named ports.
-	//
-	// <network-policy-api:experimental>
-	// +optional
-	NamedPort *string `json:"namedPort,omitempty"`
-}
-
 // ClusterNetworkPolicyEgressPeer defines a peer to allow traffic to.
 //
 // Exactly one of the fields must be set for a given peer and this is enforced
@@ -378,6 +363,7 @@ type ClusterNetworkPolicyEgressPeer struct {
 	// semantics; if present but empty, it selects all Nodes.
 	//
 	// <network-policy-api:experimental>
+	//
 	// +optional
 	Nodes *metav1.LabelSelector `json:"nodes,omitempty"`
 	// Networks defines a way to select peers via CIDR blocks.
@@ -391,7 +377,7 @@ type ClusterNetworkPolicyEgressPeer struct {
 	// Each item in Networks should be provided in the CIDR format and should be
 	// IPv4 or IPv6, for example "10.0.0.0/8" or "fd00::/8".
 	//
-	// Networks can have upto 25 CIDRs specified.
+	// Networks can have up to 25 CIDRs specified.
 	//
 	// +optional
 	// +listType=set
@@ -409,11 +395,82 @@ type ClusterNetworkPolicyEgressPeer struct {
 	// DomainNames can have up to 25 domain names specified in one rule.
 	//
 	// <network-policy-api:experimental>
+	//
 	// +optional
 	// +listType=set
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=25
 	DomainNames []DomainName `json:"domainNames,omitempty"`
+}
+
+// ClusterNetworkPolicyProtocol describes additional protocol-specific match rules.
+// Exactly one field must be set.
+//
+// +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:MinProperties=1
+type ClusterNetworkPolicyProtocol struct {
+	// TCP specific protocol matches.
+	TCP *ClusterNetworkPolicyProtocolTCP `json:"tcp,omitempty"`
+
+	// UDP specific protocol matches.
+	UDP *ClusterNetworkPolicyProtocolUDP `json:"udp,omitempty"`
+
+	// DestinationNamedPort selects a destination port on a pod based on the
+	// ContainerPort name. You can't use this in a rule that targets resources
+	// without named ports (e.g. Nodes or Networks).
+	DestinationNamedPort *ClusterNetworkPolicyProtocolNamedPort `json:"destinationNamedPort,omitempty"`
+}
+
+// ClusterNetworkPolicyProtocolTCP are TCP attributes to be matched.
+type ClusterNetworkPolicyProtocolTCP struct {
+	DestinationPort *Port `json:"destinationPort"`
+}
+
+// ClusterNetworkPolicyProtocolUDP are UDP attributes to be matched.
+type ClusterNetworkPolicyProtocolUDP struct {
+	DestinationPort *Port `json:"destinationPort"`
+}
+
+// ClusterNetworkPolicyProtocolNamedPort selects a port on a pod based on name.
+//
+// +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:MinProperties=1
+type ClusterNetworkPolicyProtocolNamedPort struct {
+	Name *string `json:"name,omitempty"`
+}
+
+// Port matches on port number.
+//
+// +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:MinProperties=1
+type Port struct {
+	// Number defines a network port value.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	Number *int32 `json:"number,omitempty"`
+
+	// Range defines a continguous range of ports.
+	Range *PortRange `json:"range,omitempty"`
+}
+
+// PortRange defines an inclusive range of ports from the assigned
+// Start value to End value.
+//
+// +kubebuilder:validation:XValidation:rule="self.start < self.end", message="Start port must be less than End port"
+type PortRange struct {
+	// Start defines a network port that is the start of a port range, the Start
+	// value must be less than End.
+	//
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	Start int32 `json:"start,omitempty"`
+
+	// End defines a network port that is the end of a port range, the End value
+	// must be greater than Start.
+	//
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	End int32 `json:"end,omitempty"`
 }
 
 // NamespacedPod allows the user to select a given set of pod(s) in
@@ -428,47 +485,9 @@ type NamespacedPod struct {
 	PodSelector metav1.LabelSelector `json:"podSelector"`
 }
 
-type Port struct {
-	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-	// match. If not specified, this field defaults to TCP.
-	// +kubebuilder:default=TCP
-	//
-	Protocol corev1.Protocol `json:"protocol"`
-
-	// Number defines a network port value.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	//
-	Port int32 `json:"port"`
-}
-
-// PortRange defines an inclusive range of ports from the assigned
-// Start value to End value.
-// +kubebuilder:validation:XValidation:rule="self.start < self.end", message="Start port must be less than End port"
-type PortRange struct {
-	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-	// match. If not specified, this field defaults to TCP.
-	// +kubebuilder:default=TCP
-	//
-	Protocol corev1.Protocol `json:"protocol,omitempty"`
-
-	// Start defines a network port that is the start of a port range, the Start
-	// value must be less than End.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	//
-	Start int32 `json:"start"`
-
-	// End defines a network port that is the end of a port range, the End value
-	// must be greater than Start.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	//
-	End int32 `json:"end"`
-}
-
 // CIDR is an IP address range in CIDR notation
 // (for example, "10.0.0.0/8" or "fd00::/8").
+//
 // +kubebuilder:validation:XValidation:rule="isCIDR(self)",message="Invalid CIDR format provided"
 // +kubebuilder:validation:MaxLength=43
 type CIDR string
@@ -494,12 +513,3 @@ type CIDR string
 //
 // +kubebuilder:validation:Pattern=`^(\*\.)?([a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.)+[a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.?$`
 type DomainName string
-
-// ClusterNetworkPolicyList contains a list of ClusterNetworkPolicy
-// +kubebuilder:object:root=true
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ClusterNetworkPolicyList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ClusterNetworkPolicy `json:"items"`
-}
