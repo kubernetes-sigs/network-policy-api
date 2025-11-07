@@ -25,10 +25,10 @@ import (
 // ClusterNetworkPolicyIngressRuleApplyConfiguration represents a declarative configuration of the ClusterNetworkPolicyIngressRule type for use
 // with apply.
 type ClusterNetworkPolicyIngressRuleApplyConfiguration struct {
-	Name   *string                                             `json:"name,omitempty"`
-	Action *apisv1alpha2.ClusterNetworkPolicyRuleAction        `json:"action,omitempty"`
-	From   []ClusterNetworkPolicyIngressPeerApplyConfiguration `json:"from,omitempty"`
-	Ports  *[]ClusterNetworkPolicyPortApplyConfiguration       `json:"ports,omitempty"`
+	Name      *string                                             `json:"name,omitempty"`
+	Action    *apisv1alpha2.ClusterNetworkPolicyRuleAction        `json:"action,omitempty"`
+	From      []ClusterNetworkPolicyIngressPeerApplyConfiguration `json:"from,omitempty"`
+	Protocols *ClusterNetworkPolicyProtocolsApplyConfiguration    `json:"protocols,omitempty"`
 }
 
 // ClusterNetworkPolicyIngressRuleApplyConfiguration constructs a declarative configuration of the ClusterNetworkPolicyIngressRule type for use with
@@ -66,22 +66,10 @@ func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) WithFrom(values ...*
 	return b
 }
 
-func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) ensureClusterNetworkPolicyPortApplyConfigurationExists() {
-	if b.Ports == nil {
-		b.Ports = &[]ClusterNetworkPolicyPortApplyConfiguration{}
-	}
-}
-
-// WithPorts adds the given value to the Ports field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Ports field.
-func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) WithPorts(values ...*ClusterNetworkPolicyPortApplyConfiguration) *ClusterNetworkPolicyIngressRuleApplyConfiguration {
-	b.ensureClusterNetworkPolicyPortApplyConfigurationExists()
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithPorts")
-		}
-		*b.Ports = append(*b.Ports, *values[i])
-	}
+// WithProtocols sets the Protocols field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Protocols field is set to the value of the last call.
+func (b *ClusterNetworkPolicyIngressRuleApplyConfiguration) WithProtocols(value *ClusterNetworkPolicyProtocolsApplyConfiguration) *ClusterNetworkPolicyIngressRuleApplyConfiguration {
+	b.Protocols = value
 	return b
 }
