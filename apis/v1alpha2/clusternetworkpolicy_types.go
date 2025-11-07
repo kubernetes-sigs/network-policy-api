@@ -20,7 +20,6 @@ limitations under the License.
 package v1alpha2
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -206,16 +205,14 @@ type ClusterNetworkPolicyIngressRule struct {
 	// +kubebuilder:validation:MaxItems=25
 	From []ClusterNetworkPolicyIngressPeer `json:"from"`
 
-	// Ports allows for matching traffic based on port and protocols.
-	// This field is a list of ports which should be matched on
-	// the pods selected for this policy i.e the subject of the policy.
-	// So it matches on the destination port for the ingress traffic.
-	// If Ports is not set then the rule does not filter traffic via port.
+	// Match allows for more fine-grain matching of traffic on protocol-specific
+	// attributes such as the port. If match is empty, then the rule will match
+	// all traffic.
 	//
 	// +optional
-	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MinItems=0
 	// +kubebuilder:validation:MaxItems=25
-	Ports *[]ClusterNetworkPolicyPort `json:"ports,omitempty"`
+	Match []ClusterNetworkPolicyMatch `json:"match,omitempty"`
 }
 
 // ClusterNetworkPolicyEgressRule describes an action to take on a particular
@@ -258,14 +255,14 @@ type ClusterNetworkPolicyEgressRule struct {
 	// +kubebuilder:validation:MaxItems=25
 	To []ClusterNetworkPolicyEgressPeer `json:"to"`
 
-	// Ports allows for matching traffic based on port and protocols.
-	// This field is a list of destination ports for the outgoing egress traffic.
-	// If Ports is not set then the rule does not filter traffic via port.
+	// Match allows for more fine-grain matching of traffic on protocol-specific
+	// attributes such as the port. If match is empty, then this rule will match
+	// all traffic.
 	//
 	// +optional
-	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MinItems=0
 	// +kubebuilder:validation:MaxItems=25
-	Ports *[]ClusterNetworkPolicyPort `json:"ports,omitempty"`
+	Match []ClusterNetworkPolicyMatch `json:"match,omitempty"`
 }
 
 // ClusterNetworkPolicyRuleAction string describes the ClusterNetworkPolicy
@@ -320,29 +317,56 @@ type ClusterNetworkPolicyIngressPeer struct {
 	Pods *NamespacedPod `json:"pods,omitempty"`
 }
 
-// ClusterNetworkPolicyPort describes how to select destination network ports.
+// ClusterNetworkPolicyMatch describes additional protocol-specific match rules.
 // Exactly one field must be set.
+//
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
-type ClusterNetworkPolicyPort struct {
-	// Port selects a destination port based on protocol and port number.
-	//
-	// +optional
-	PortNumber *Port `json:"portNumber,omitempty"`
-
-	// PortRange selects a destination port range based on protocol and
-	// start and end port numbers.
-	//
-	// +optional
-	PortRange *PortRange `json:"portRange,omitempty"`
-
+type ClusterNetworkPolicyMatch struct {
+	// TCP specific protocol matches.
+	TCP []ClusterNetworkPolicyMatchTCP `json:"tcp,omitempty"`
+	// UDP specific protocol matches.
+	UDP []ClusterNetworkPolicyMatchUDP `json:"udp,omitempty"`
+	// ICMP specific protocol matches.
+	ICMP []ClusterNetworkPolicyMatchICMP `json:"icmp,omitempty"`
 	// NamedPort selects a destination port on a pod based on the ContainerPort
-	// name. You can't use this in a rule with Nodes or Networks peers,
-	// because they do not have named ports.
-	//
-	// <network-policy-api:experimental>
-	// +optional
+	// name. You can't use this in a rule with Nodes or Networks peers, because
+	// they do not have named ports.
 	NamedPort *string `json:"namedPort,omitempty"`
+}
+
+// ClusterNetworkPolicyMatchTCP are TCP attributes to be matched.
+type ClusterNetworkPolicyMatchTCP struct {
+	Port *ClusterNetworkPolicyMatchPort
+}
+
+// ClusterNetworkPolicyMatchUDP are UDP attributes to be matched.
+type ClusterNetworkPolicyMatchUDP struct {
+	Port *ClusterNetworkPolicyMatchPort
+}
+
+// ClusterNetworkPolicyMatchICMP is a placeholder to illustrate what it looks
+// like to another protocol
+//
+// TODO: This is just an example.
+type ClusterNetworkPolicyMatchICMP struct {
+	Type *int32 `json:"type,omitempty"`
+	Code *int32 `json:"code,omitempty"`
+}
+
+// ClusterNetworkPolicyMatchPort matches on port number.
+//
+// +kubebuilder:validation:MaxProperties=1
+// +kubebuilder:validation:MinProperties=1
+type ClusterNetworkPolicyMatchPort struct {
+	Number *int32                              `json:"number,omitempty"`
+	Range  *ClusterNetworkPolicyMatchPortRange `json:"portRange,omitempty"`
+}
+
+// ClusterNetworkPolicyMatchTCP are TCP attributes to be matched.
+type ClusterNetworkPolicyMatchPortRange struct {
+	Start int32 `json:"start,omitempty"`
+	End   int32 `json:"end,omitempty"`
 }
 
 // ClusterNetworkPolicyEgressPeer defines a peer to allow traffic to.
@@ -426,45 +450,6 @@ type NamespacedPod struct {
 	// PodSelector is used to explicitly select pods within a namespace;
 	// if empty, it selects all Pods.
 	PodSelector metav1.LabelSelector `json:"podSelector"`
-}
-
-type Port struct {
-	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-	// match. If not specified, this field defaults to TCP.
-	// +kubebuilder:default=TCP
-	//
-	Protocol corev1.Protocol `json:"protocol"`
-
-	// Number defines a network port value.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	//
-	Port int32 `json:"port"`
-}
-
-// PortRange defines an inclusive range of ports from the assigned
-// Start value to End value.
-// +kubebuilder:validation:XValidation:rule="self.start < self.end", message="Start port must be less than End port"
-type PortRange struct {
-	// Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-	// match. If not specified, this field defaults to TCP.
-	// +kubebuilder:default=TCP
-	//
-	Protocol corev1.Protocol `json:"protocol,omitempty"`
-
-	// Start defines a network port that is the start of a port range, the Start
-	// value must be less than End.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	//
-	Start int32 `json:"start"`
-
-	// End defines a network port that is the end of a port range, the End value
-	// must be greater than Start.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	//
-	End int32 `json:"end"`
 }
 
 // CIDR is an IP address range in CIDR notation

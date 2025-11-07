@@ -92,6 +92,57 @@ spec:
                       - Deny
                       - Pass
                       type: string
+                    match:
+                      description: |-
+                        Match allows for more fine-grain matching of traffic on protocol-specific
+                        attributes such as the port. If match is empty, then this rule will match
+                        all traffic.
+                      items:
+                        description: |-
+                          ClusterNetworkPolicyMatch describes additional protocol-specific match rules.
+                          Exactly one field must be set.
+                        maxProperties: 1
+                        minProperties: 1
+                        properties:
+                          icmp:
+                            description: ICMP specific protocol matches.
+                            items:
+                              description: |
+                                ClusterNetworkPolicyMatchICMP is a placeholder to illustrate what it looks
+                                like to another protocol
+                              properties:
+                                code:
+                                  format: int32
+                                  type: integer
+                                type:
+                                  format: int32
+                                  type: integer
+                              type: object
+                            type: array
+                          namedPort:
+                            description: |-
+                              NamedPort selects a destination port on a pod based on the ContainerPort
+                              name. You can't use this in a rule with Nodes or Networks peers, because
+                              they do not have named ports.
+                            type: string
+                          tcp:
+                            description: TCP specific protocol matches.
+                            items:
+                              description: ClusterNetworkPolicyMatchTCP are TCP attributes
+                                to be matched.
+                              type: object
+                            type: array
+                          udp:
+                            description: UDP specific protocol matches.
+                            items:
+                              description: ClusterNetworkPolicyMatchUDP are UDP attributes
+                                to be matched.
+                              type: object
+                            type: array
+                        type: object
+                      maxItems: 25
+                      minItems: 0
+                      type: array
                     name:
                       description: |-
                         Name is an identifier for this rule, that may be no more than
@@ -100,76 +151,6 @@ spec:
                         for any applied AdminNetworkPolicies.
                       maxLength: 100
                       type: string
-                    ports:
-                      description: |-
-                        Ports allows for matching traffic based on port and protocols.
-                        This field is a list of destination ports for the outgoing egress traffic.
-                        If Ports is not set then the rule does not filter traffic via port.
-                      items:
-                        description: |-
-                          ClusterNetworkPolicyPort describes how to select destination network ports.
-                          Exactly one field must be set.
-                        maxProperties: 1
-                        minProperties: 1
-                        properties:
-                          portNumber:
-                            description: Port selects a destination port based on
-                              protocol and port number.
-                            properties:
-                              port:
-                                description: Number defines a network port value.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                              protocol:
-                                default: TCP
-                                description: |-
-                                  Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-                                  match. If not specified, this field defaults to TCP.
-                                type: string
-                            required:
-                            - port
-                            - protocol
-                            type: object
-                          portRange:
-                            description: |-
-                              PortRange selects a destination port range based on protocol and
-                              start and end port numbers.
-                            properties:
-                              end:
-                                description: |-
-                                  End defines a network port that is the end of a port range, the End value
-                                  must be greater than Start.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                              protocol:
-                                default: TCP
-                                description: |-
-                                  Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-                                  match. If not specified, this field defaults to TCP.
-                                type: string
-                              start:
-                                description: |-
-                                  Start defines a network port that is the start of a port range, the Start
-                                  value must be less than End.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                            required:
-                            - end
-                            - start
-                            type: object
-                            x-kubernetes-validations:
-                            - message: Start port must be less than End port
-                              rule: self.start < self.end
-                        type: object
-                      maxItems: 25
-                      minItems: 1
-                      type: array
                     to:
                       description: |-
                         To is the List of destinations whose traffic this rule applies to.
@@ -609,6 +590,57 @@ spec:
                       maxItems: 25
                       minItems: 1
                       type: array
+                    match:
+                      description: |-
+                        Match allows for more fine-grain matching of traffic on protocol-specific
+                        attributes such as the port. If match is empty, then the rule will match
+                        all traffic.
+                      items:
+                        description: |-
+                          ClusterNetworkPolicyMatch describes additional protocol-specific match rules.
+                          Exactly one field must be set.
+                        maxProperties: 1
+                        minProperties: 1
+                        properties:
+                          icmp:
+                            description: ICMP specific protocol matches.
+                            items:
+                              description: |
+                                ClusterNetworkPolicyMatchICMP is a placeholder to illustrate what it looks
+                                like to another protocol
+                              properties:
+                                code:
+                                  format: int32
+                                  type: integer
+                                type:
+                                  format: int32
+                                  type: integer
+                              type: object
+                            type: array
+                          namedPort:
+                            description: |-
+                              NamedPort selects a destination port on a pod based on the ContainerPort
+                              name. You can't use this in a rule with Nodes or Networks peers, because
+                              they do not have named ports.
+                            type: string
+                          tcp:
+                            description: TCP specific protocol matches.
+                            items:
+                              description: ClusterNetworkPolicyMatchTCP are TCP attributes
+                                to be matched.
+                              type: object
+                            type: array
+                          udp:
+                            description: UDP specific protocol matches.
+                            items:
+                              description: ClusterNetworkPolicyMatchUDP are UDP attributes
+                                to be matched.
+                              type: object
+                            type: array
+                        type: object
+                      maxItems: 25
+                      minItems: 0
+                      type: array
                     name:
                       description: |-
                         Name is an identifier for this rule, that may be no more than
@@ -617,78 +649,6 @@ spec:
                         for any applied AdminNetworkPolicies.
                       maxLength: 100
                       type: string
-                    ports:
-                      description: |-
-                        Ports allows for matching traffic based on port and protocols.
-                        This field is a list of ports which should be matched on
-                        the pods selected for this policy i.e the subject of the policy.
-                        So it matches on the destination port for the ingress traffic.
-                        If Ports is not set then the rule does not filter traffic via port.
-                      items:
-                        description: |-
-                          ClusterNetworkPolicyPort describes how to select destination network ports.
-                          Exactly one field must be set.
-                        maxProperties: 1
-                        minProperties: 1
-                        properties:
-                          portNumber:
-                            description: Port selects a destination port based on
-                              protocol and port number.
-                            properties:
-                              port:
-                                description: Number defines a network port value.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                              protocol:
-                                default: TCP
-                                description: |-
-                                  Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-                                  match. If not specified, this field defaults to TCP.
-                                type: string
-                            required:
-                            - port
-                            - protocol
-                            type: object
-                          portRange:
-                            description: |-
-                              PortRange selects a destination port range based on protocol and
-                              start and end port numbers.
-                            properties:
-                              end:
-                                description: |-
-                                  End defines a network port that is the end of a port range, the End value
-                                  must be greater than Start.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                              protocol:
-                                default: TCP
-                                description: |-
-                                  Protocol is the network protocol (TCP, UDP, or SCTP) which traffic must
-                                  match. If not specified, this field defaults to TCP.
-                                type: string
-                              start:
-                                description: |-
-                                  Start defines a network port that is the start of a port range, the Start
-                                  value must be less than End.
-                                format: int32
-                                maximum: 65535
-                                minimum: 1
-                                type: integer
-                            required:
-                            - end
-                            - start
-                            type: object
-                            x-kubernetes-validations:
-                            - message: Start port must be less than End port
-                              rule: self.start < self.end
-                        type: object
-                      maxItems: 25
-                      minItems: 1
-                      type: array
                   required:
                   - action
                   - from

@@ -28,7 +28,7 @@ type ClusterNetworkPolicyEgressRuleApplyConfiguration struct {
 	Name   *string                                            `json:"name,omitempty"`
 	Action *apisv1alpha2.ClusterNetworkPolicyRuleAction       `json:"action,omitempty"`
 	To     []ClusterNetworkPolicyEgressPeerApplyConfiguration `json:"to,omitempty"`
-	Ports  *[]ClusterNetworkPolicyPortApplyConfiguration      `json:"ports,omitempty"`
+	Match  []ClusterNetworkPolicyMatchApplyConfiguration      `json:"match,omitempty"`
 }
 
 // ClusterNetworkPolicyEgressRuleApplyConfiguration constructs a declarative configuration of the ClusterNetworkPolicyEgressRule type for use with
@@ -66,22 +66,15 @@ func (b *ClusterNetworkPolicyEgressRuleApplyConfiguration) WithTo(values ...*Clu
 	return b
 }
 
-func (b *ClusterNetworkPolicyEgressRuleApplyConfiguration) ensureClusterNetworkPolicyPortApplyConfigurationExists() {
-	if b.Ports == nil {
-		b.Ports = &[]ClusterNetworkPolicyPortApplyConfiguration{}
-	}
-}
-
-// WithPorts adds the given value to the Ports field in the declarative configuration
+// WithMatch adds the given value to the Match field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Ports field.
-func (b *ClusterNetworkPolicyEgressRuleApplyConfiguration) WithPorts(values ...*ClusterNetworkPolicyPortApplyConfiguration) *ClusterNetworkPolicyEgressRuleApplyConfiguration {
-	b.ensureClusterNetworkPolicyPortApplyConfigurationExists()
+// If called multiple times, values provided by each call will be appended to the Match field.
+func (b *ClusterNetworkPolicyEgressRuleApplyConfiguration) WithMatch(values ...*ClusterNetworkPolicyMatchApplyConfiguration) *ClusterNetworkPolicyEgressRuleApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
-			panic("nil value passed to WithPorts")
+			panic("nil value passed to WithMatch")
 		}
-		*b.Ports = append(*b.Ports, *values[i])
+		b.Match = append(b.Match, *values[i])
 	}
 	return b
 }

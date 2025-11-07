@@ -60,7 +60,7 @@ var CNPAdminTierIngressNamedPort = suite.ConformanceTest{
 			dnsPortRule := mutate.DeepCopy().Spec.Ingress[5]
 			dnsPort := "dns"
 			// rewrite the udp port 53 rule as named port rule
-			dnsPortRule.Ports = &[]api.ClusterNetworkPolicyPort{
+			dnsPortRule.Match = []api.ClusterNetworkPolicyMatch{
 				{
 					NamedPort: &dnsPort,
 				},
