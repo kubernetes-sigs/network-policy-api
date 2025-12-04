@@ -31,20 +31,25 @@ import (
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 )
 
+const hostNetworkPortsAmount = 8
+
 // ConformanceTestSuite defines the test suite used to run network-policy API
 // conformance tests.
 type ConformanceTestSuite struct {
-	Client            client.Client
-	ClientSet         k8sclient.Interface
-	KubeConfig        rest.Config
-	Debug             bool
-	Cleanup           bool
-	BaseManifests     string
-	Applier           kubernetes.Applier
-	SupportedFeatures sets.Set[SupportedFeature]
-	TimeoutConfig     config.TimeoutConfig
-	SkipTests         sets.Set[string]
-	FS                embed.FS
+	Client                    client.Client
+	ClientSet                 k8sclient.Interface
+	KubeConfig                rest.Config
+	Debug                     bool
+	Cleanup                   bool
+	BaseManifests             string
+	HostNetworkPortRangeStart int
+	HostNetworkPortRangeEnd   int
+	HostNetworkPorts          []int
+	Applier                   kubernetes.Applier
+	SupportedFeatures         sets.Set[SupportedFeature]
+	TimeoutConfig             config.TimeoutConfig
+	SkipTests                 sets.Set[string]
+	FS                        embed.FS
 }
 
 // Options can be used to initialize a ConformanceTestSuite.
@@ -55,6 +60,11 @@ type Options struct {
 	Debug           bool
 	BaseManifests   string
 	NamespaceLabels map[string]string
+	// HostNetworkPortRangeStart and HostNetworkPortRangeEnd allows using a custom port range for host-networked pods.
+	// This is useful to avoid port conflicts on different clusters. The range is inclusive of both ends.
+	// Currently we use hostNetworkPortsAmount ports, but the amount of used ports can be increased in the future.
+	HostNetworkPortRangeStart int
+	HostNetworkPortRangeEnd   int
 
 	// CleanupBaseResources indicates whether or not the base test
 	// resources such as Namespaces should be cleaned up after the run.
@@ -93,12 +103,14 @@ func New(s Options) *ConformanceTestSuite {
 	}
 
 	suite := &ConformanceTestSuite{
-		Client:        s.Client,
-		ClientSet:     s.ClientSet,
-		KubeConfig:    s.KubeConfig,
-		Debug:         s.Debug,
-		Cleanup:       s.CleanupBaseResources,
-		BaseManifests: s.BaseManifests,
+		Client:                    s.Client,
+		ClientSet:                 s.ClientSet,
+		KubeConfig:                s.KubeConfig,
+		Debug:                     s.Debug,
+		Cleanup:                   s.CleanupBaseResources,
+		BaseManifests:             s.BaseManifests,
+		HostNetworkPortRangeStart: s.HostNetworkPortRangeStart,
+		HostNetworkPortRangeEnd:   s.HostNetworkPortRangeEnd,
 		Applier: kubernetes.Applier{
 			NamespaceLabels: s.NamespaceLabels,
 		},
@@ -120,6 +132,26 @@ func New(s Options) *ConformanceTestSuite {
 // in the cluster. It also ensures that all relevant resources are ready.
 func (suite *ConformanceTestSuite) Setup(t *testing.T) {
 	suite.Applier.FS = suite.FS
+
+	if suite.HostNetworkPortRangeStart != 0 && suite.HostNetworkPortRangeEnd == 0 ||
+		suite.HostNetworkPortRangeStart == 0 && suite.HostNetworkPortRangeEnd != 0 {
+		t.Fatalf("both HostNetworkPortRangeStart and HostNetworkPortRangeEnd must be set or unset together")
+	}
+	if suite.HostNetworkPortRangeStart == 0 {
+		suite.HostNetworkPortRangeStart = 34345
+	}
+	if suite.HostNetworkPortRangeEnd == 0 {
+		suite.HostNetworkPortRangeEnd = suite.HostNetworkPortRangeStart + hostNetworkPortsAmount - 1
+	}
+	if suite.HostNetworkPortRangeEnd-suite.HostNetworkPortRangeStart+1 < hostNetworkPortsAmount {
+		t.Fatalf("the provided host network port range is too small: need at least %d ports", hostNetworkPortsAmount)
+	}
+	portRange := make([]int, 0, hostNetworkPortsAmount)
+	for port := suite.HostNetworkPortRangeStart; port <= suite.HostNetworkPortRangeEnd; port++ {
+		portRange = append(portRange, port)
+	}
+	suite.HostNetworkPorts = portRange
+	suite.Applier.HostNetworkPorts = portRange
 
 	if suite.SupportedFeatures.Has(SupportClusterNetworkPolicy) {
 		t.Logf("Test Setup: Applying base manifests")
