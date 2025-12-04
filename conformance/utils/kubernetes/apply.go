@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/stretchr/testify/require"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,10 +41,16 @@ import (
 // Applier prepares manifests depending on the available options and applies
 // them to the Kubernetes cluster.
 type Applier struct {
-	NamespaceLabels map[string]string
+	NamespaceLabels  map[string]string
+	HostNetworkPorts []int
 
 	// FS is the filesystem to use when reading manifests.
 	FS embed.FS
+}
+
+// TemplateData structure passed to the template to generate dynamic manifests.
+type TemplateData struct {
+	HostNetworkPorts []int
 }
 
 // prepareNamespace adjusts the Namespace labels.
@@ -64,6 +71,19 @@ func prepareNamespace(t *testing.T, uObj *unstructured.Unstructured, namespaceLa
 		err = unstructured.SetNestedStringMap(uObj.Object, labels, "metadata", "labels")
 	}
 	require.NoErrorf(t, err, "error setting labels on Namespace %s", uObj.GetName())
+}
+
+func applyTemplate(t *testing.T, file string, hostNetworkPorts []int) *bytes.Buffer {
+	data := TemplateData{HostNetworkPorts: hostNetworkPorts}
+
+	tmpl, err := template.New("tmp").Parse(file)
+	require.NoErrorf(t, err, "error parsing template %v", err)
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	require.NoErrorf(t, err, "error executing template: %v", err)
+
+	return &buf
 }
 
 // prepareResources uses the options from an Applier to tweak resources given by
@@ -100,7 +120,9 @@ func (a Applier) MustApplyWithCleanup(t *testing.T, c client.Client, timeoutConf
 	data, err := getContentsFromPathOrURL(a.FS, location, timeoutConfig)
 	require.NoError(t, err)
 
-	decoder := yaml.NewYAMLOrJSONDecoder(data, 4096)
+	// apply template to manifests first to insert dynamic values
+	newData := applyTemplate(t, data.String(), a.HostNetworkPorts)
+	decoder := yaml.NewYAMLOrJSONDecoder(newData, 4096)
 
 	resources, err := a.prepareResources(t, decoder)
 	if err != nil {

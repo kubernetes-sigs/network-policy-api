@@ -8,7 +8,7 @@ spec:
       matchLabels:
         kubernetes.io/metadata.name: network-policy-conformance-gryffindor
   egress:
-  - name: "allow-egress-to-36363-on-nodes"
+  - name: "allow-egress-to-{{ index .HostNetworkPorts 0 }}-on-nodes"
     action: "Allow"
     to:
     - nodes:
@@ -17,8 +17,8 @@ spec:
     ports:
       - portRange:
           protocol: TCP
-          start: 36363
-          end: 36364
+          start: {{ index .HostNetworkPorts 0 }}
+          end: {{ index .HostNetworkPorts 1 }}
   - name: "deny-egress-to-nodes-and-internet"
     action: "Deny"
     to:
