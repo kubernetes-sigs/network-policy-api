@@ -14,7 +14,7 @@ spec:
         matchLabels:
           conformance-house: gryffindor
   egress:
-  - name: "allow-egress-to-36363-on-nodes"
+  - name: "allow-egress-to-{{ index .HostNetworkPorts 0 }}-on-nodes"
     action: "Accept"
     to:
     - nodes:
@@ -23,8 +23,8 @@ spec:
     ports:
       - portNumber:
           protocol: TCP
-          port: 36363
-  - name: "pass-egress-to-5353-on-nodes"
+          port: {{ index .HostNetworkPorts 0 }}
+  - name: "pass-egress-to-{{ index .HostNetworkPorts 2 }}-on-nodes"
     action: "Pass"
     to:
     - nodes:
@@ -33,7 +33,7 @@ spec:
     ports:
       - portNumber:
           protocol: UDP
-          port: 34345
+          port: {{ index .HostNetworkPorts 2 }}
   - name: "deny-egress-to-slytherin-and-nodes-and-internet"
     action: "Deny"
     to:
