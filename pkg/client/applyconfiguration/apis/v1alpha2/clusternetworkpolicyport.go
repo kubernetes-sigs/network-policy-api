@@ -21,9 +21,9 @@ package v1alpha2
 // ClusterNetworkPolicyPortApplyConfiguration represents a declarative configuration of the ClusterNetworkPolicyPort type for use
 // with apply.
 type ClusterNetworkPolicyPortApplyConfiguration struct {
-	PortNumber *PortApplyConfiguration      `json:"portNumber,omitempty"`
-	PortRange  *PortRangeApplyConfiguration `json:"portRange,omitempty"`
-	NamedPort  *string                      `json:"namedPort,omitempty"`
+	Number *int32                       `json:"number,omitempty"`
+	Range  *PortRangeApplyConfiguration `json:"range,omitempty"`
+	Name   *string                      `json:"name,omitempty"`
 }
 
 // ClusterNetworkPolicyPortApplyConfiguration constructs a declarative configuration of the ClusterNetworkPolicyPort type for use with
@@ -32,26 +32,26 @@ func ClusterNetworkPolicyPort() *ClusterNetworkPolicyPortApplyConfiguration {
 	return &ClusterNetworkPolicyPortApplyConfiguration{}
 }
 
-// WithPortNumber sets the PortNumber field in the declarative configuration to the given value
+// WithNumber sets the Number field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the PortNumber field is set to the value of the last call.
-func (b *ClusterNetworkPolicyPortApplyConfiguration) WithPortNumber(value *PortApplyConfiguration) *ClusterNetworkPolicyPortApplyConfiguration {
-	b.PortNumber = value
+// If called multiple times, the Number field is set to the value of the last call.
+func (b *ClusterNetworkPolicyPortApplyConfiguration) WithNumber(value int32) *ClusterNetworkPolicyPortApplyConfiguration {
+	b.Number = &value
 	return b
 }
 
-// WithPortRange sets the PortRange field in the declarative configuration to the given value
+// WithRange sets the Range field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the PortRange field is set to the value of the last call.
-func (b *ClusterNetworkPolicyPortApplyConfiguration) WithPortRange(value *PortRangeApplyConfiguration) *ClusterNetworkPolicyPortApplyConfiguration {
-	b.PortRange = value
+// If called multiple times, the Range field is set to the value of the last call.
+func (b *ClusterNetworkPolicyPortApplyConfiguration) WithRange(value *PortRangeApplyConfiguration) *ClusterNetworkPolicyPortApplyConfiguration {
+	b.Range = value
 	return b
 }
 
-// WithNamedPort sets the NamedPort field in the declarative configuration to the given value
+// WithName sets the Name field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the NamedPort field is set to the value of the last call.
-func (b *ClusterNetworkPolicyPortApplyConfiguration) WithNamedPort(value string) *ClusterNetworkPolicyPortApplyConfiguration {
-	b.NamedPort = &value
+// If called multiple times, the Name field is set to the value of the last call.
+func (b *ClusterNetworkPolicyPortApplyConfiguration) WithName(value string) *ClusterNetworkPolicyPortApplyConfiguration {
+	b.Name = &value
 	return b
 }
