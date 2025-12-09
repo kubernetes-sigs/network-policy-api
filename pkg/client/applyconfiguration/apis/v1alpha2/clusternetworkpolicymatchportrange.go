@@ -18,36 +18,23 @@ limitations under the License.
 
 package v1alpha2
 
-import (
-	v1 "k8s.io/api/core/v1"
-)
-
-// PortRangeApplyConfiguration represents a declarative configuration of the PortRange type for use
+// ClusterNetworkPolicyMatchPortRangeApplyConfiguration represents a declarative configuration of the ClusterNetworkPolicyMatchPortRange type for use
 // with apply.
-type PortRangeApplyConfiguration struct {
-	Protocol *v1.Protocol `json:"protocol,omitempty"`
-	Start    *int32       `json:"start,omitempty"`
-	End      *int32       `json:"end,omitempty"`
+type ClusterNetworkPolicyMatchPortRangeApplyConfiguration struct {
+	Start *int32 `json:"start,omitempty"`
+	End   *int32 `json:"end,omitempty"`
 }
 
-// PortRangeApplyConfiguration constructs a declarative configuration of the PortRange type for use with
+// ClusterNetworkPolicyMatchPortRangeApplyConfiguration constructs a declarative configuration of the ClusterNetworkPolicyMatchPortRange type for use with
 // apply.
-func PortRange() *PortRangeApplyConfiguration {
-	return &PortRangeApplyConfiguration{}
-}
-
-// WithProtocol sets the Protocol field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Protocol field is set to the value of the last call.
-func (b *PortRangeApplyConfiguration) WithProtocol(value v1.Protocol) *PortRangeApplyConfiguration {
-	b.Protocol = &value
-	return b
+func ClusterNetworkPolicyMatchPortRange() *ClusterNetworkPolicyMatchPortRangeApplyConfiguration {
+	return &ClusterNetworkPolicyMatchPortRangeApplyConfiguration{}
 }
 
 // WithStart sets the Start field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Start field is set to the value of the last call.
-func (b *PortRangeApplyConfiguration) WithStart(value int32) *PortRangeApplyConfiguration {
+func (b *ClusterNetworkPolicyMatchPortRangeApplyConfiguration) WithStart(value int32) *ClusterNetworkPolicyMatchPortRangeApplyConfiguration {
 	b.Start = &value
 	return b
 }
@@ -55,7 +42,7 @@ func (b *PortRangeApplyConfiguration) WithStart(value int32) *PortRangeApplyConf
 // WithEnd sets the End field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the End field is set to the value of the last call.
-func (b *PortRangeApplyConfiguration) WithEnd(value int32) *PortRangeApplyConfiguration {
+func (b *ClusterNetworkPolicyMatchPortRangeApplyConfiguration) WithEnd(value int32) *ClusterNetworkPolicyMatchPortRangeApplyConfiguration {
 	b.End = &value
 	return b
 }

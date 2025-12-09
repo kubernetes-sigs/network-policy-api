@@ -90,7 +90,7 @@ type BaselineAdminNetworkPolicySpec struct {
 // set of traffic destined for pods selected by a BaselineAdminNetworkPolicy's
 // Subject field.
 type BaselineAdminNetworkPolicyIngressRule struct {
-	// Name is an identifier for this rule, that may be no more than 100 characters
+	// Name is an identifier for this rule, that may be no more than 100 charactersp
 	// in length. This field should be used by the implementation to help
 	// improve observability, readability and error-reporting for any applied
 	// BaselineAdminNetworkPolicies.

@@ -82,8 +82,18 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apisv1alpha2.ClusterNetworkPolicyIngressPeerApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyIngressRule"):
 		return &apisv1alpha2.ClusterNetworkPolicyIngressRuleApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyMatchPortRange"):
+		return &apisv1alpha2.ClusterNetworkPolicyMatchPortRangeApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyMatchTCP"):
+		return &apisv1alpha2.ClusterNetworkPolicyMatchTCPApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyMatchUDP"):
+		return &apisv1alpha2.ClusterNetworkPolicyMatchUDPApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyNamedPort"):
+		return &apisv1alpha2.ClusterNetworkPolicyNamedPortApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyPort"):
 		return &apisv1alpha2.ClusterNetworkPolicyPortApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyProtocols"):
+		return &apisv1alpha2.ClusterNetworkPolicyProtocolsApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicySpec"):
 		return &apisv1alpha2.ClusterNetworkPolicySpecApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyStatus"):
@@ -92,10 +102,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apisv1alpha2.ClusterNetworkPolicySubjectApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("NamespacedPod"):
 		return &apisv1alpha2.NamespacedPodApplyConfiguration{}
-	case v1alpha2.SchemeGroupVersion.WithKind("Port"):
-		return &apisv1alpha2.PortApplyConfiguration{}
-	case v1alpha2.SchemeGroupVersion.WithKind("PortRange"):
-		return &apisv1alpha2.PortRangeApplyConfiguration{}
 
 	}
 	return nil
