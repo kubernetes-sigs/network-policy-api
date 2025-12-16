@@ -261,7 +261,7 @@ spec:
                               type: string
                               x-kubernetes-validations:
                               - message: Invalid CIDR format provided
-                                rule: isCIDR(self)
+                                rule: isCIDR(self) && cidr(self) == cidr(self).masked()
                             maxItems: 25
                             minItems: 1
                             type: array
