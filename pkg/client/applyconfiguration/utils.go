@@ -82,8 +82,14 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apisv1alpha2.ClusterNetworkPolicyIngressPeerApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyIngressRule"):
 		return &apisv1alpha2.ClusterNetworkPolicyIngressRuleApplyConfiguration{}
-	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyPort"):
-		return &apisv1alpha2.ClusterNetworkPolicyPortApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyProtocol"):
+		return &apisv1alpha2.ClusterNetworkPolicyProtocolApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyProtocolSCTP"):
+		return &apisv1alpha2.ClusterNetworkPolicyProtocolSCTPApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyProtocolTCP"):
+		return &apisv1alpha2.ClusterNetworkPolicyProtocolTCPApplyConfiguration{}
+	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyProtocolUDP"):
+		return &apisv1alpha2.ClusterNetworkPolicyProtocolUDPApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicySpec"):
 		return &apisv1alpha2.ClusterNetworkPolicySpecApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("ClusterNetworkPolicyStatus"):
