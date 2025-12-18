@@ -18,15 +18,11 @@ limitations under the License.
 
 package v1alpha2
 
-import (
-	v1 "k8s.io/api/core/v1"
-)
-
 // PortApplyConfiguration represents a declarative configuration of the Port type for use
 // with apply.
 type PortApplyConfiguration struct {
-	Protocol *v1.Protocol `json:"protocol,omitempty"`
-	Port     *int32       `json:"port,omitempty"`
+	Number *int32                       `json:"number,omitempty"`
+	Range  *PortRangeApplyConfiguration `json:"range,omitempty"`
 }
 
 // PortApplyConfiguration constructs a declarative configuration of the Port type for use with
@@ -35,18 +31,18 @@ func Port() *PortApplyConfiguration {
 	return &PortApplyConfiguration{}
 }
 
-// WithProtocol sets the Protocol field in the declarative configuration to the given value
+// WithNumber sets the Number field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Protocol field is set to the value of the last call.
-func (b *PortApplyConfiguration) WithProtocol(value v1.Protocol) *PortApplyConfiguration {
-	b.Protocol = &value
+// If called multiple times, the Number field is set to the value of the last call.
+func (b *PortApplyConfiguration) WithNumber(value int32) *PortApplyConfiguration {
+	b.Number = &value
 	return b
 }
 
-// WithPort sets the Port field in the declarative configuration to the given value
+// WithRange sets the Range field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Port field is set to the value of the last call.
-func (b *PortApplyConfiguration) WithPort(value int32) *PortApplyConfiguration {
-	b.Port = &value
+// If called multiple times, the Range field is set to the value of the last call.
+func (b *PortApplyConfiguration) WithRange(value *PortRangeApplyConfiguration) *PortApplyConfiguration {
+	b.Range = value
 	return b
 }
