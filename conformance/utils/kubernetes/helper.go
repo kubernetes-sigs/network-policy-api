@@ -9,9 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8sclient "k8s.io/client-go/kubernetes"
@@ -20,6 +22,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/config"
 )
 
@@ -60,9 +63,17 @@ func RunCommandFromPod(client k8sclient.Interface, kubeConfig *rest.Config, podN
 	return stdoutB.String(), stderrB.String(), nil
 }
 
-// PokeServer is a utility function that checks if the connection from the provided clientPod in clientNamespace towards the targetHost:targetPort
+func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Config, clientNamespace, clientPod, protocol, targetHost string, targetPort int32, timeoutConfig config.TimeoutConfig, shouldConnect bool) {
+	require.Eventually(t, func() bool {
+		return doPokeServer(t, client, kubeConfig, clientNamespace, clientPod, protocol, targetHost, targetPort, timeoutConfig.RequestTimeout, shouldConnect)
+	}, timeoutConfig.PokeTimeout, timeoutConfig.PokeInterval)
+	success := doPokeServer(t, client, kubeConfig, clientNamespace, clientPod, protocol, targetHost, targetPort, timeoutConfig.RequestTimeout, shouldConnect)
+	assert.True(t, success)
+}
+
+// doPokeServer is a utility function that checks if the connection from the provided clientPod in clientNamespace towards the targetHost:targetPort
 // using the provided protocol can be established or not and returns the result based on if the expectation is shouldConnect or !shouldConnect
-func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Config, clientNamespace, clientPod, protocol, targetHost string, targetPort int32, timeout time.Duration, shouldConnect bool) bool {
+func doPokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Config, clientNamespace, clientPod, protocol, targetHost string, targetPort int32, timeout time.Duration, shouldConnect bool) bool {
 	t.Helper()
 	timeoutArg := fmt.Sprintf("--timeout=%v", timeout)
 	protocolArg := fmt.Sprintf("--protocol=%s", protocol)
@@ -128,4 +139,34 @@ func NamespacesMustBeReady(t *testing.T, c client.Client, timeoutConfig config.T
 		return true, nil
 	})
 	require.NoErrorf(t, waitErr, "error waiting for %s namespaces to be ready", strings.Join(namespaces, ", "))
+}
+
+func GetPod(t *testing.T, c client.Client, namespace string, name string, timeout time.Duration) *v1.Pod {
+	pod := &v1.Pod{}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := c.Get(ctx, client.ObjectKey{
+		Namespace: namespace,
+		Name:      name,
+	}, pod)
+	require.NoErrorf(t, err, "unable to fetch %s/%s", namespace, name)
+	return pod
+}
+
+func GetClusterNetworkPolicy(t *testing.T, c client.Client, name string, timeout time.Duration) *api.ClusterNetworkPolicy {
+	cnp := &api.ClusterNetworkPolicy{}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := c.Get(ctx, client.ObjectKey{
+		Name: name,
+	}, cnp)
+	require.NoErrorf(t, err, "unable to fetch the cluster network policy %s", name)
+	return cnp
+}
+
+func PatchClusterNetworkPolicy(t *testing.T, c client.Client, from *api.ClusterNetworkPolicy, to *api.ClusterNetworkPolicy, timeout time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := c.Patch(ctx, to, client.MergeFrom(from))
+	require.NoErrorf(t, err, "unable to patch the cluster network policy %s", from.Name)
 }
