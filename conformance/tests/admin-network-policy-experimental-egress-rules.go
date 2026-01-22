@@ -69,9 +69,7 @@ var CNPAdminTierEgressNamedPort = suite.ConformanceTest{
 			// replace the tcp port 8080 rule as named port rule which translate to tcp port 80 instead
 			namedPortRule.Protocols = []api.ClusterNetworkPolicyProtocol{
 				{
-					DestinationNamedPort: &api.ClusterNetworkPolicyProtocolNamedPort{
-						Name: &webPort,
-					},
+					DestinationNamedPort: webPort,
 				},
 			}
 			mutate.Spec.Egress[5] = namedPortRule

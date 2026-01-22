@@ -68,9 +68,7 @@ var CNPBaselineTierIngressNamedPort = suite.ConformanceTest{
 			// rewrite the tcp port 80 rule as named port rule
 			namedPortRule.Protocols = []api.ClusterNetworkPolicyProtocol{
 				{
-					DestinationNamedPort: &api.ClusterNetworkPolicyProtocolNamedPort{
-						Name: &webPort,
-					},
+					DestinationNamedPort: webPort,
 				},
 			}
 			mutate.Spec.Ingress[3] = namedPortRule
