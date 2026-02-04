@@ -67,9 +67,9 @@ var CNPBaselineTierEgressNamedPort = suite.ConformanceTest{
 			dnsPortRule := mutate.Spec.Egress[3]
 			dnsPort := "dns"
 			// rewrite the udp port 53 rule as named port rule
-			dnsPortRule.Ports = &[]api.ClusterNetworkPolicyPort{
+			dnsPortRule.Protocols = []api.ClusterNetworkPolicyProtocol{
 				{
-					NamedPort: &dnsPort,
+					DestinationNamedPort: dnsPort,
 				},
 			}
 			mutate.Spec.Egress[3] = dnsPortRule
