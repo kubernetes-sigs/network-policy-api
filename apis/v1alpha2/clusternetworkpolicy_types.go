@@ -496,7 +496,7 @@ type Port struct {
 	// +kubebuilder:validation:Maximum=65535
 	Number int32 `json:"number,omitempty"`
 
-	// Range defines a continguous range of ports.
+	// Range defines a contiguous range of ports.
 	//
 	// +optional
 	Range *PortRange `json:"range,omitempty"`
