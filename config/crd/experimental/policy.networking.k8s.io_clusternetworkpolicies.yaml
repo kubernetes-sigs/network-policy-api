@@ -136,7 +136,7 @@ spec:
                                     minimum: 1
                                     type: integer
                                   range:
-                                    description: Range defines a continguous range
+                                    description: Range defines a contiguous range
                                       of ports.
                                     properties:
                                       end:
@@ -180,7 +180,7 @@ spec:
                                     minimum: 1
                                     type: integer
                                   range:
-                                    description: Range defines a continguous range
+                                    description: Range defines a contiguous range
                                       of ports.
                                     properties:
                                       end:
@@ -224,7 +224,7 @@ spec:
                                     minimum: 1
                                     type: integer
                                   range:
-                                    description: Range defines a continguous range
+                                    description: Range defines a contiguous range
                                       of ports.
                                     properties:
                                       end:
@@ -834,7 +834,7 @@ spec:
                                     minimum: 1
                                     type: integer
                                   range:
-                                    description: Range defines a continguous range
+                                    description: Range defines a contiguous range
                                       of ports.
                                     properties:
                                       end:
@@ -878,7 +878,7 @@ spec:
                                     minimum: 1
                                     type: integer
                                   range:
-                                    description: Range defines a continguous range
+                                    description: Range defines a contiguous range
                                       of ports.
                                     properties:
                                       end:
@@ -922,7 +922,7 @@ spec:
                                     minimum: 1
                                     type: integer
                                   range:
-                                    description: Range defines a continguous range
+                                    description: Range defines a contiguous range
                                       of ports.
                                     properties:
                                       end:
