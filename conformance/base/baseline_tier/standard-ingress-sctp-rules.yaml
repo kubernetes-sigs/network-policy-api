@@ -28,20 +28,20 @@ spec:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-slytherin
-    ports:
-      - portNumber:
-          protocol: SCTP
-          port: 9003
+    protocols:
+      - sctp:
+          destinationPort:
+            number: 9003
   - name: "allow-from-hufflepuff-at-port-9003"
     action: "Accept"
     from:
     - namespaces:
         matchLabels:
           kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
-    ports:
-      - portNumber:
-          protocol: SCTP
-          port: 9003
+    protocols:
+      - sctp:
+          destinationPort:
+            number: 9003
   - name: "deny-from-hufflepuff-everything-else"
     action: "Deny"
     from:
