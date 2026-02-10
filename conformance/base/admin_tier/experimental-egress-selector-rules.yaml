@@ -20,20 +20,20 @@ spec:
     - nodes:
         matchLabels:
           kubernetes.io/os: linux
-    ports:
-      - portNumber:
-          protocol: TCP
-          port: {{ index .HostNetworkPorts 0 }}
+    protocols:
+      - tcp:
+          destinationPort:
+            number: {{ index .HostNetworkPorts 0 }}
   - name: "pass-egress-to-{{ index .HostNetworkPorts 2 }}-on-nodes"
     action: "Pass"
     to:
     - nodes:
         matchLabels:
           kubernetes.io/os: linux
-    ports:
-      - portNumber:
-          protocol: UDP
-          port: {{ index .HostNetworkPorts 2 }}
+    protocols:
+      - udp:
+          destinationPort:
+            number: {{ index .HostNetworkPorts 2 }}
   - name: "deny-egress-to-slytherin-and-nodes-and-internet"
     action: "Deny"
     to:
