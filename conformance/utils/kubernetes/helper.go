@@ -65,7 +65,7 @@ func RunCommandFromPod(client k8sclient.Interface, kubeConfig *rest.Config, podN
 
 // PokeServer verifies expected connectivity. It waits for the expected result by checking the connectivity every TimeoutConfig.PokeInterval
 // and timing out after TimeoutConfig.PokeTimeout. If eventually the expected result is met, it verifies the connectivity
-// once more to rule out transient behaviours.
+// once more to rule out transient cases.
 func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Config, clientNamespace, clientPod, protocol, targetHost string, targetPort int32, timeoutConfig config.TimeoutConfig, shouldConnect bool) {
 	require.Eventually(t, func() bool {
 		return doPokeServer(t, client, kubeConfig, clientNamespace, clientPod, protocol, targetHost, targetPort, timeoutConfig.RequestTimeout, shouldConnect)
