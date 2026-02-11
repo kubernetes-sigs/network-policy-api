@@ -63,6 +63,9 @@ func RunCommandFromPod(client k8sclient.Interface, kubeConfig *rest.Config, podN
 	return stdoutB.String(), stderrB.String(), nil
 }
 
+// PokeServer verifies expected connectivity. It waits for the expected result by checking the connectivity every TimeoutConfig.PokeInterval
+// and timing out after TimeoutConfig.PokeTimeout. If eventually the expected result is met, it verifies the connectivity
+// once more to rule out transient behaviours.
 func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Config, clientNamespace, clientPod, protocol, targetHost string, targetPort int32, timeoutConfig config.TimeoutConfig, shouldConnect bool) {
 	require.Eventually(t, func() bool {
 		return doPokeServer(t, client, kubeConfig, clientNamespace, clientPod, protocol, targetHost, targetPort, timeoutConfig.RequestTimeout, shouldConnect)
@@ -149,7 +152,7 @@ func GetPod(t *testing.T, c client.Client, namespace string, name string, timeou
 		Namespace: namespace,
 		Name:      name,
 	}, pod)
-	require.NoErrorf(t, err, "unable to fetch %s/%s", namespace, name)
+	require.NoErrorf(t, err, "unable to fetch pod %s/%s", namespace, name)
 	return pod
 }
 
@@ -160,7 +163,7 @@ func GetAdminNetworkPolicy(t *testing.T, c client.Client, name string, timeout t
 	err := c.Get(ctx, client.ObjectKey{
 		Name: name,
 	}, anp)
-	require.NoErrorf(t, err, "unable to fetch the admin network policy %s", name)
+	require.NoErrorf(t, err, "unable to fetch admin network policy %s", name)
 	return anp
 }
 
@@ -168,7 +171,7 @@ func PatchAdminNetworkPolicy(t *testing.T, c client.Client, from *v1alpha1.Admin
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	err := c.Patch(ctx, to, client.MergeFrom(from))
-	require.NoErrorf(t, err, "unable to patch the admin network policy %s", from.Name)
+	require.NoErrorf(t, err, "unable to patch admin network policy %s", from.Name)
 }
 
 func GetBaselineAdminNetworkPolicy(t *testing.T, c client.Client, name string, timeout time.Duration) *v1alpha1.BaselineAdminNetworkPolicy {
@@ -178,7 +181,7 @@ func GetBaselineAdminNetworkPolicy(t *testing.T, c client.Client, name string, t
 	err := c.Get(ctx, client.ObjectKey{
 		Name: name,
 	}, banp)
-	require.NoErrorf(t, err, "unable to fetch the baseline admin network policy %s", name)
+	require.NoErrorf(t, err, "unable to fetch baseline admin network policy %s", name)
 	return banp
 }
 
@@ -186,5 +189,5 @@ func PatchBaselineAdminNetworkPolicy(t *testing.T, c client.Client, from *v1alph
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	err := c.Patch(ctx, to, client.MergeFrom(from))
-	require.NoErrorf(t, err, "unable to patch the baseline admin network policy %s", from.Name)
+	require.NoErrorf(t, err, "unable to patch baseline admin network policy %s", from.Name)
 }
