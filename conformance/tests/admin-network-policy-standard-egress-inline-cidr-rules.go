@@ -17,14 +17,9 @@ limitations under the License.
 package tests
 
 import (
-	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/utils/net"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
@@ -45,65 +40,39 @@ var CNPAdminTierEgressInlineCIDRPeers = suite.ConformanceTest{
 	},
 	Manifests: []string{"base/admin_tier/standard-egress-inline-cidr-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
-		ctx, cancel := context.WithTimeout(context.Background(), s.TimeoutConfig.GetTimeout)
-		defer cancel()
 		// This test uses `inline-cidr-as-peers-example` admin CNP
 		t.Run("Should support a 'deny-egress' rule policy for egress-cidr-peer", func(t *testing.T) {
 			// harry-potter-1 is our client pod in gryffindor namespace
 			// Let us pick a pod in ravenclaw namespace and try to connect, it won't work
 			// ensure egress is DENIED to 0.0.0.0/0 from gryffindor; egressRule at index1 should take effect
 			// luna-lovegood-0 is our server pod in ravenclaw namespace
-			serverPod := &v1.Pod{}
-			err := s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-ravenclaw",
-				Name:      "luna-lovegood-0",
-			}, serverPod)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
-			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
-				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
+			serverPod := kubernetes.GetPod(t, s.Client, "network-policy-conformance-ravenclaw", "luna-lovegood-0", s.TimeoutConfig.GetTimeout)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, false)
 			// Let us pick a pod in hufflepuff namespace and try to connect, it won't work
 			// ensure egress is DENIED to 0.0.0.0/0 from gryffindor; egressRule at index1 should take effect
 			// cedric-diggory-0 is our server pod in hufflepuff namespace
-			serverPod = &v1.Pod{}
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-hufflepuff",
-				Name:      "cedric-diggory-0",
-			}, serverPod)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
-				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
+			serverPod = kubernetes.GetPod(t, s.Client, "network-policy-conformance-hufflepuff", "cedric-diggory-0", s.TimeoutConfig.GetTimeout)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, false)
 			// Let us pick a pod in slytherin namespace and try to connect, it will work since we have a higher priority allow rule
 			// ensure traffic is allowed to slytherin; egressRule at index0 should take effect
 			// draco-malfoy-0 is our server pod in slytherin namespace
-			serverPod = &v1.Pod{}
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-slytherin",
-				Name:      "draco-malfoy-0",
-			}, serverPod)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPod.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPod.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
-				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
+			serverPod = kubernetes.GetPod(t, s.Client, "network-policy-conformance-slytherin", "draco-malfoy-0", s.TimeoutConfig.GetTimeout)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, true)
 		})
 		// To test allow CIDR rule, insert the following rule at index0
 		//- name: "allow-egress-to-specific-podIPs"
@@ -113,23 +82,9 @@ var CNPAdminTierEgressInlineCIDRPeers = suite.ConformanceTest{
 		//	  - luna-lovegood-0.IP
 		//    - cedric-diggory-0.IP
 		t.Run("Should support an 'allow-egress' rule policy for egress-cidr-peer", func(t *testing.T) {
-			serverPodRavenclaw := &v1.Pod{}
-			err := s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-ravenclaw",
-				Name:      "luna-lovegood-0",
-			}, serverPodRavenclaw)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
-			serverPodHufflepuff := &v1.Pod{}
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-hufflepuff",
-				Name:      "cedric-diggory-0",
-			}, serverPodHufflepuff)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
-			cnp := &api.ClusterNetworkPolicy{}
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Name: "inline-cidr-as-peers-example",
-			}, cnp)
-			require.NoErrorf(t, err, "unable to fetch the cluster network policy")
+			cnp := kubernetes.GetClusterNetworkPolicy(t, s.Client, "inline-cidr-as-peers-example", s.TimeoutConfig.GetTimeout)
+			serverPodRavenclaw := kubernetes.GetPod(t, s.Client, "network-policy-conformance-ravenclaw", "luna-lovegood-0", s.TimeoutConfig.GetTimeout)
+			serverPodHufflepuff := kubernetes.GetPod(t, s.Client, "network-policy-conformance-hufflepuff", "cedric-diggory-0", s.TimeoutConfig.GetTimeout)
 			mutate := cnp.DeepCopy()
 			var mask string
 			if net.IsIPv4String(serverPodRavenclaw.Status.PodIP) {
@@ -153,62 +108,42 @@ var CNPAdminTierEgressInlineCIDRPeers = suite.ConformanceTest{
 				},
 			}
 			mutate.Spec.Egress = append(newRule, mutate.Spec.Egress...)
-			err = s.Client.Patch(ctx, mutate, client.MergeFrom(cnp))
-			require.NoErrorf(t, err, "unable to patch the cluster network policy")
+			kubernetes.PatchClusterNetworkPolicy(t, s.Client, cnp, mutate, s.TimeoutConfig.GetTimeout)
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to luna-lovegood-0.IP and cedric-diggory-0.IP
 			// new egressRule at index0 should take effect
-			success := kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPodRavenclaw.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPodRavenclaw.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
-				serverPodRavenclaw.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPodHufflepuff.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPodHufflepuff.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
-				serverPodHufflepuff.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, true)
-			assert.True(t, success)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPodRavenclaw.Status.PodIP, int32(80), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPodRavenclaw.Status.PodIP, int32(53), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPodRavenclaw.Status.PodIP, int32(9003), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPodHufflepuff.Status.PodIP, int32(80), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPodHufflepuff.Status.PodIP, int32(53), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPodHufflepuff.Status.PodIP, int32(9003), s.TimeoutConfig, true)
+
 			// ensure other pods are still unreachable: luna-lovegood-1.IP and cedric-diggory-1.IP
 			// deny at egress rule index2 should kick in
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-ravenclaw",
-				Name:      "luna-lovegood-1",
-			}, serverPodRavenclaw)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
-			err = s.Client.Get(ctx, client.ObjectKey{
-				Namespace: "network-policy-conformance-hufflepuff",
-				Name:      "cedric-diggory-1",
-			}, serverPodHufflepuff)
-			require.NoErrorf(t, err, "unable to fetch the server pod")
+			serverPodRavenclaw = kubernetes.GetPod(t, s.Client, "network-policy-conformance-ravenclaw", "luna-lovegood-1", s.TimeoutConfig.GetTimeout)
+			serverPodHufflepuff = kubernetes.GetPod(t, s.Client, "network-policy-conformance-hufflepuff", "cedric-diggory-1", s.TimeoutConfig.GetTimeout)
 			// harry-potter-0 is our client pod in gryffindor namespace
 			// ensure egress is ALLOWED to luna-lovegood-0.IP and cedric-diggory-0.IP
 			// new egressRule at index0 should take effect
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPodRavenclaw.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPodRavenclaw.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
-				serverPodRavenclaw.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
-				serverPodHufflepuff.Status.PodIP, int32(80), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
-				serverPodHufflepuff.Status.PodIP, int32(53), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
-			success = kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
-				serverPodHufflepuff.Status.PodIP, int32(9003), s.TimeoutConfig.RequestTimeout, false)
-			assert.True(t, success)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPodRavenclaw.Status.PodIP, int32(80), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPodRavenclaw.Status.PodIP, int32(53), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPodRavenclaw.Status.PodIP, int32(9003), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPodHufflepuff.Status.PodIP, int32(80), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPodHufflepuff.Status.PodIP, int32(53), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPodHufflepuff.Status.PodIP, int32(9003), s.TimeoutConfig, false)
 		})
 	},
 }
