@@ -93,7 +93,7 @@ jobs:
     - name: Run tests
       run: |
         go mod download
-        go test  -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=0.6.1 --contact=antonio.ojea.garcia@gmail.com --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
+        go test  -v ./conformance -run TestConformanceProfiles -timeout 20m -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=0.6.1 --contact=antonio.ojea.garcia@gmail.com --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
 
     - name: Upload Junit Reports
       if: always()

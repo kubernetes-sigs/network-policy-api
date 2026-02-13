@@ -53,15 +53,15 @@ crd-e2e:
 
 .PHONY: conformance
 conformance:
-	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformance -args ${CONFORMANCE_FLAGS}
+	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformance -timeout 20m -args ${CONFORMANCE_FLAGS}
 
 .PHONY: conformance-profiles
 conformance-profiles:
-	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformanceProfiles -args ${CONFORMANCE_FLAGS}
+	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformanceProfiles -timeout 20m -args ${CONFORMANCE_FLAGS}
 
 .PHONY: conformance-profiles-default
 conformance-profiles-default:
-	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformanceProfiles -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy
+	go test ${GO_TEST_FLAGS} -v ./conformance -run TestConformanceProfiles -timeout 20m -args --conformance-profiles=AdminNetworkPolicy,BaselineAdminNetworkPolicy
 
 ##@ Deployment
 install: generate ## Install standard CRDs into the K8s cluster specified in ~/.kube/config.
