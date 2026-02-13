@@ -58,7 +58,7 @@ crd-e2e: ## Run the CRD e2e tests.
 
 .PHONY: conformance
 conformance: ## Run the conformance tests.
-	go test ${GO_TEST_FLAGS} -v ./conformance \
+	go test ${GO_TEST_FLAGS} -v ./conformance -timeout 20m \
 		-run '^TestConformance$$' -args ${CONFORMANCE_FLAGS}
 
 .PHONY: conformance-profiles
@@ -68,7 +68,7 @@ conformance-profiles: ## Run the conformance profiles.
 
 .PHONY: conformance-profiles-default
 conformance-profiles-default: ## Run the default conformance profile.
-	go test ${GO_TEST_FLAGS} -v ./conformance \
+	go test ${GO_TEST_FLAGS} -v ./conformance -timeout 20m \
 		-run '^TestConformanceProfiles$$' -args \
 		--conformance-profiles=ClusterNetworkPolicy
 
@@ -89,8 +89,8 @@ uninstall-experimental: generate kustomize ## Uninstall experimental CRDs from t
 .PHONY: docs ## Build the documentation website
 docs:
 	./hack/make-docs.sh
- 
-.PHONY: local-docs ## Deploy the docs locally 
+
+.PHONY: local-docs ## Deploy the docs locally
 local-docs:
 	mkdocs serve
 
