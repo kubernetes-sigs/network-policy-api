@@ -62,7 +62,7 @@ func DefaultTimeoutConfig() TimeoutConfig {
 		GetTimeout:            20 * time.Second,
 		ManifestFetchTimeout:  10 * time.Second,
 		NamespacesMustBeReady: 300 * time.Second,
-		RequestTimeout:        3 * time.Second,
+		RequestTimeout:        1 * time.Second,
 		PokeTimeout:           10 * time.Second,
 		PokeInterval:          500 * time.Millisecond,
 	}
