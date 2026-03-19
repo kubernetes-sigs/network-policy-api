@@ -1,4 +1,4 @@
-# NPEP-126: Add northbound traffic support in (B)ANP API
+# NPEP-126: Add northbound traffic support in ClusterNetworkPolicy API
 
 * Issue: [#126](https://github.com/kubernetes-sigs/network-policy-api/issues/126)
 * Status: Experimental
@@ -6,7 +6,7 @@
 ## TLDR
 
 This NPEP proposes adding support for cluster egress (northbound) traffic control
-in the `AdminNetworkPolicy` and `BaselineAdminNetworkPolicy` API objects.
+in the `ClusterNetworkPolicy` API object.
 
 ## Goals
 
@@ -15,9 +15,9 @@ in the `AdminNetworkPolicy` and `BaselineAdminNetworkPolicy` API objects.
   - Currently the behaviour for policies defined around traffic from cluster
     workloads (non-hostNetworked pods) towards nodes in the
     cluster is undefined. See https://github.com/kubernetes-sigs/network-policy-api/issues/73.
-    - ANP currently supports only east-west traffic and this traffic flow cuts from
+    - KCNP currently supports only east-west traffic and this traffic flow cuts from
     overlay to underlay which makes this part of the egress (northbound) use case.
-    - Let's provide a defined behaviour in ANP to explicitly achieve the use case.
+    - Let's provide a defined behaviour in KCNP to explicitly achieve the use case.
     - NOTE: Traffic towards nodes here includes traffic towards host-networked pods on that node
       because a "node" resource encompasses all objects that share the host-networking resources
 * Implement egress traffic control towards k8s-apiservers
@@ -32,10 +32,10 @@ in the `AdminNetworkPolicy` and `BaselineAdminNetworkPolicy` API objects.
   - Currently the behaviour for policies defined around traffic from cluster
   workloads (non-hostNetworked pods) towards hostNetworked pods in the
   cluster is undefined. See https://github.com/kubernetes-sigs/network-policy-api/issues/73.
-  - ANP currently supports only east-west traffic and this traffic flow cuts from
+  - KCNP currently supports only east-west traffic and this traffic flow cuts from
   overlay to underlay which makes this part of the egress (northbound) use case.
   - NOTE: Currently there are no user stories for `CNI pod to arbitrarily chosen hostNetworked pods`.
-    Let's provide a defined behaviour in ANP to explicitly achieve the use case in the future if we have
+    Let's provide a defined behaviour in KCNP to explicitly achieve the use case in the future if we have
     user stories for this outside of the k8s-apiserver usecase which is already covered in the goals.
     If that happens, this can be moved to goals.
 
@@ -83,7 +83,7 @@ Proof of Concept for the API design details can be found here:
 
 ### Implementing egress traffic control towards cluster nodes
 
-This NPEP proposes to add a new type of `AdminNetworkPolicyEgressPeer` called `Nodes`
+This NPEP proposes to add a new type of `ClusterNetworkPolicyEgressPeer` called `Nodes`
 to be able to explicitly select nodes (based on the node's labels) in the cluster.
 This ensures that if the list of IPs on a node OR list of nodes change, the users
 don't need to manually intervene to include those new IPs. The label selectors will
@@ -91,13 +91,13 @@ take care of this automatically. Note that the nodeIPs that this type of peer ma
 on are the IPs present in `Node.Status.Addresses` field of the node.
 
 ```
-// AdminNetworkPolicyEgressPeer defines a peer to allow traffic to.
+// ClusterNetworkPolicyEgressPeer defines a peer to allow traffic to.
 // Exactly one of the selector pointers must be set for a given peer. If a
 // consumer observes none of its fields are set, they must assume an unknown
 // option has been specified and fail closed.
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
-type AdminNetworkPolicyEgressPeer struct {
+type ClusterNetworkPolicyEgressPeer struct {
     <snipped>
 	// Nodes defines a way to select a set of nodes in
 	// in the cluster. This field follows standard label selector
@@ -108,23 +108,18 @@ type AdminNetworkPolicyEgressPeer struct {
 }
 ```
 
-Note that `AdminNetworkPolicyPeer` will be changed to
-`AdminNetworkPolicyEgressPeer` and `AdminNetworkPolicyIngressPeer` since ingress and
-egress peers have started to diverge at this point and it is easy to
-maintain it with two sets of peer definitions.
-This ensures nodes can be referred to only as "egress peers".
-
 Example: Admin wants to deny egress traffic from tenants who don't have
 `restricted`, `confidential` or `internal` level security clearance
 to control-plane nodes at 443 and 6443 ports in the cluster
 
 ```
 apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+kind: ClusterNetworkPolicy
 metadata:
   name: node-as-egress-peer
 spec:
   priority: 55
+  tier: Admin
   subject:
     namespaces:
       matchExpressions:
@@ -136,30 +131,30 @@ spec:
     - nodes:
         matchLabels:
           node-role.kubernetes.io/control-plane:
-    ports:
-      - portNumber:
-          protocol: TCP
-          port: 443
-      - portNumber:
-          protocol: TCP
-          port: 6443
+    protocols:
+      - tcp:
+        destinationPort:
+          number: 443
+      - tcp:
+        destinationPort:
+          number: 6443
 ```
 
 ### Implementing egress traffic control towards CIDRs
 
-This NPEP proposes to add a new type of `AdminNetworkPolicyEgressPeer` called `Networks`
+This NPEP proposes to add a new type of `ClusterNetworkPolicyEgressPeer` called `Networks`
 to be able to select destination CIDRs. This is provided to be able to select entities
 outside the cluster that cannot be selected using the other peer types.
-This peer type will not be supported in `AdminNetworkPolicyIngressPeer`.
+This peer type will not be supported in `ClusterNetworkPolicyIngressPeer`.
 
 ```
-// AdminNetworkPolicyEgressPeer defines a peer to allow traffic to.
+// ClusterNetworkPolicyEgressPeer defines a peer to allow traffic to.
 // Exactly one of the selector pointers must be set for a given peer. If a
 // consumer observes none of its fields are set, they must assume an unknown
 // option has been specified and fail closed.
 // +kubebuilder:validation:MaxProperties=1
 // +kubebuilder:validation:MinProperties=1
-type AdminNetworkPolicyEgressPeer struct {
+type ClusterNetworkPolicyEgressPeer struct {
     <snipped>
 	// Networks defines a way to select peers via CIDR blocks. This is
 	// intended for representing entities that live outside the cluster,
@@ -187,11 +182,12 @@ destination.
 Example: Let's define ANP and BANP that refer to some CIDR networks:
 ```
 apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+kind: ClusterNetworkPolicy
 metadata:
   name: network-as-egress-peer
 spec:
   priority: 70
+  tier: Admin
   subject:
     namespaces: {}
   egress:
@@ -202,10 +198,10 @@ spec:
       - 194.0.2.0/24
       - 205.0.113.15/32
       - 199.51.100.10/32
-    ports:
-      - portNumber:
-          protocol: UDP
-          port: 53
+    protocols:
+      - udp:
+        destinationPort:
+          number: 53
   - name: "allow-all-egress-to-intranet"
     action: "Allow"
     to:
@@ -227,10 +223,11 @@ spec:
       - 0.0.0.0/0
 ---
 apiVersion: policy.networking.k8s.io/v1alpha1
-kind: BaselineAdminNetworkPolicy
+kind: ClusterNetworkPolicy
 metadata:
   name: default
 spec:
+  tier: Baseline
   subject:
     namespaces: {}
   egress:
@@ -251,17 +248,16 @@ This allows admins to specify rules that define:
 
 * Instead of adding CIDR peer directly into the main object, we can
 define a new object called `NetworkSet` and use selectors or
-name of that object to be referred to from AdminNetworkPolicy and
-BaselineAdminNetworkPolicy objects. This is particularly useful
-if CIDR ranges are prone to changes versus the current model is
-is better if the set of CIDRs are mostly a constant and are only referred
-to from one or two egress rules. It increases readability. However the
-drawback is if the CIDRs do change, then one has to ensure to update all
-the relevant ANPs and BANP accordingly. In order to see whether we need
-a new object to be able to define CIDRs in addition to the in-line peer,
-we have another NPEP where that is being discussed
-https://github.com/kubernetes-sigs/network-policy-api/pull/183. The scope
-of this NPEP is limited to inline CIDR peers.
+name of that object to be referred to from the ClusterNetworkPolicy
+object. This is particularly useful if CIDR ranges are prone to changes
+versus the current model is is better if the set of CIDRs are mostly a
+constant and are only referred to from one or two egress rules. It
+increases readability. However the drawback is if the CIDRs do change,
+then one has to ensure to update all the relevant KCNPs accordingly.
+In order to see whether we need a new object to be able to define CIDRs
+in addition to the in-line peer, we have another NPEP where that is being
+discussed https://github.com/kubernetes-sigs/network-policy-api/pull/183.
+The scope of this NPEP is limited to inline CIDR peers.
 
 ## References
 

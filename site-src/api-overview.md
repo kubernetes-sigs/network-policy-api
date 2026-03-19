@@ -121,8 +121,19 @@ before policies with higher priority values in the same tier.
 Each CNP should define at least one `Ingress` or `Egress` relevant in-cluster traffic flow 
 along with the associated Action that should occur. In each `gress` rule the user 
 should AT THE MINIMUM define an `Action`, and at least one `ClusterNetworkPolicyPeer`.
-Optionally the user may also define select `Ports` to filter traffic on and also 
+Optionally the user may also define select `Protocols` to filter traffic on and also
 a name for each rule to make management and reporting easier for Admins.
+
+Within the `Protocols` array, `TCP`, `UDP`, or `SCTP` protocols can be specified, each with an
+optional `DestinationPort`. The `DestinationPort` can be a single `Number` or a `Range`
+with a `Start` and `End`. If `DestinationPort` is omitted, all ports for the specified
+protocol match.
+
+Alternatively, `DestinationNamedPort` can be used to target a port by name. A named port is
+defined directly within the ports section of the `Pod` or `Deployment` container spec by assigning
+a string to the name field alongside the containerPort. Existing named ports can be located by
+inspecting the resource's YAML under `spec.containers[].ports` or by running `kubectl get pod <pod-name> -o jsonpath='{.spec.containers[*].ports[*].name}'`. Using a name instead of a number allows the ClusterNetworkPolicy to remain valid even
+if the container’s underlying port number is updated.
 
 ### Status 
 
