@@ -108,6 +108,25 @@ will skip any lower precedence `Admin` tier rules and proceed to be evaluated by
 `Baseline` tier policies. When the `Pass` action is matched at the `Admin` tier, `NetworkPolicy` will 
 apply next or if there is no `NetworkPolicy` match, `Baseline` policies will be evaluated.
 
+### FQDN Selectors
+
+ClusterNetworkPolicy supports specifying egress peers by domain name using the
+`domainNames` field. This allows administrators to create allowlist-style policies
+for external services identified by FQDN rather than IP address.
+
+**Restrictions:**
+
+- **Admin tier only**: `domainNames` cannot be used in the Baseline tier. Since
+  Kubernetes NetworkPolicy has no FQDN selector, allowing `domainNames` in
+  Baseline would create rules that namespace admins cannot override with
+  NetworkPolicy, breaking the tier override model.
+- **Accept action only**: `domainNames` may only be used with `Accept` rules.
+  To control access, combine a `domainNames` Accept rule with a lower-precedence
+  egress Deny rule to maintain an explicit allowlist of reachable domains.
+
+See [NPEP-133](npeps/npep-133-fqdn-egress-selector.md) for full details on
+expected behavior, DNS security model, and implementation guidelines.
+
 ### Priorities 
 
 Integer priority values were added to the ClusterNetworkPolicy API to allow Cluster 

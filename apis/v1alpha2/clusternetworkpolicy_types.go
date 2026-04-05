@@ -58,6 +58,9 @@ type ClusterNetworkPolicyList struct {
 }
 
 // ClusterNetworkPolicySpec defines the desired state of ClusterNetworkPolicy.
+//
+// <network-policy-api:experimental:validation>
+// +kubebuilder:validation:XValidation:rule="self.tier == 'Baseline' ? !self.egress.exists(rule, rule.to.exists(peer, has(peer.domainNames))) : true",message="domainNames cannot be used in Baseline tier as NetworkPolicy cannot override FQDN rules"
 type ClusterNetworkPolicySpec struct {
 	// Tier is used as the top-level grouping for network policy prioritization.
 	//
@@ -234,6 +237,7 @@ type ClusterNetworkPolicyIngressRule struct {
 //
 // <network-policy-api:experimental:validation>
 // +kubebuilder:validation:XValidation:rule="!(self.to.exists(peer, has(peer.networks) || has(peer.nodes) || has(peer.domainNames)) && has(self.protocols) && self.protocols.exists(protocol, has(protocol.destinationNamedPort)))",message="networks/nodes/domainNames peer cannot be set with namedPorts since there are no namedPorts for networks/nodes/domainNames"
+// +kubebuilder:validation:XValidation:rule="self.to.exists(peer, has(peer.domainNames)) ? self.action == 'Accept' : true",message="domainNames may only be used with Accept action"
 type ClusterNetworkPolicyEgressRule struct {
 	// Name is an identifier for this rule, that may be no more than
 	// 100 characters in length. This field should be used by the implementation
@@ -393,12 +397,21 @@ type ClusterNetworkPolicyEgressPeer struct {
 
 	// DomainNames provides a way to specify domain names as peers.
 	//
+	// DomainNames is restricted to the Admin tier of ClusterNetworkPolicy only.
+	// Since Kubernetes NetworkPolicy does not have a FQDN selector, using
+	// domainNames in the Baseline tier would allow writing baseline rules that
+	// can't be replicated by an overriding NetworkPolicy, breaking the
+	// fundamental tier override model.
+	//
 	// DomainNames is only supported for Accept rules. In order to control
 	// access, DomainNames Accept rules should be used with a lower precedence
 	// egress deny -- this allows the admin to maintain an explicit "allowlist"
 	// of reachable domains.
 	//
 	// DomainNames can have up to 25 domain names specified in one rule.
+	//
+	// See NPEP-133 for full details on expected behavior, DNS security model,
+	// and implementation guidelines.
 	//
 	// <network-policy-api:experimental>
 	//

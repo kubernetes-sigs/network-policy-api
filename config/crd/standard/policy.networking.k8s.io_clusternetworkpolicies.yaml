@@ -1076,6 +1076,11 @@ spec:
             - subject
             - tier
             type: object
+            x-kubernetes-validations:
+            - message: domainNames cannot be used in Baseline tier as NetworkPolicy
+                cannot override FQDN rules
+              rule: 'self.tier == ''Baseline'' ? !self.egress.exists(rule, rule.to.exists(peer,
+                has(peer.domainNames))) : true'
           status:
             description: Status is the status to be reported by the implementation.
             properties:
