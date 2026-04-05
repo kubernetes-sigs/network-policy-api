@@ -16,27 +16,24 @@ Names](https://www.wikipedia.org/wiki/Fully_qualified_domain_name) (FQDNs).
   (for example `kubernetes.io`).
 * Support basic wildcard matching capabilities when specifying FQDNs (for
   example `*.cloud-provider.io`)
-* Currently only `ALLOW` type rules are proposed.
+* Currently only `ACCEPT` type rules are proposed.
   * Safely enforcing `DENY` rules based on FQDN selectors is difficult as there
     is no guarantee a Network Policy plugin is aware of all IPs backing a FQDN
     policy. If a Network Policy plugin has incomplete information, it may
     accidentally allow traffic to an IP belonging to a denied domain. This would
     constitute a security breach.
     
-    By contrast, `ALLOW` rules, which may also have an incomplete list of IPs,
+    By contrast, `ACCEPT` rules, which may also have an incomplete list of IPs,
     would not create a security breach. In case of incomplete information, valid
     traffic would be dropped as the plugin believes the destination IP does not
     belong to the domain. While this is definitely undesirable, it is at least
     not an unsafe failure.
 
-* Currently only Admin tier of ClusterNetworkPolicy is the intended scope for this
-  proposal.
-  * Since Kubernetes NetworkPolicy does not have a FQDN selector, adding this
-    capability to Baseline tier could result in writing baseline rules that can't
-    be replicated by an overriding NetworkPolicy. For example, if Baseline tier
-    allows traffic to `example.io`, but the namespace admin installs a Kubernetes
-    Network Policy, the namespace admin has no way to replicate the `example.io`
-    selector using just Kubernetes Network Policies.
+* DomainNames may only be used with Accept action (not Pass or Deny).
+  * The rationale for excluding Deny is described above.
+  * Pass is excluded for now because no existing implementations support
+    DomainNames with Pass and there is no strong use case for it. This
+    restriction may be relaxed in the future.
 
 ## Non-Goals
 
@@ -83,7 +80,7 @@ hampers the readability of the network policies.
   entire tree of domains. For example, our CDN has domains of the format
   `<session>.<random>.<region>.my-app.cdn.com`. I want to be able to use a
   wild-card selector to allow the full tree of subdomains below
-  `**.my-app.cdn.com`.
+  `*.my-app.cdn.com`.
 
 ### Future User Stories
 
@@ -93,15 +90,24 @@ goal in this case is to ensure we do not make these unimplementable down the
 line.
 
 * As a cluster admin, I want to switch the default disposition of the cluster to
-  be default deny. This is enforced using a `Baseline` tier in ClusterNetworkPolicy`.
-  I also want individual namespace owners to be able to specify their egress peers.
-  Namespace admins would then use a FQDN selector in the Kubernetes
-  `NetworkPolicy` objects to allow `my-service.com`.
+  be default deny. This is enforced using a Baseline-tier
+  `ClusterNetworkPolicy`. I also want individual namespace owners to be able to
+  specify their egress peers. Namespace admins would then use a FQDN selector
+  in the Kubernetes `NetworkPolicy` objects to allow `my-service.com`.
   
 ## API
 
-This NPEP proposes adding a new type of `ClusterNetworkPolicyEgressPeer` called
-`FQDNPeerSelector` which allows specifying domain names.
+This NPEP proposes adding a `DomainNames` field to
+`ClusterNetworkPolicyEgressPeer` which allows specifying domain names as
+egress peers. DomainNames is only available with Accept rules.
+
+This restriction is enforced via CEL validation on
+`ClusterNetworkPolicyEgressRule`:
+
+```go
+// +kubebuilder:validation:XValidation:rule="self.action != 'Accept' ? !self.to.exists(peer, has(peer.domainNames)) : true",message="domainNames may only be used with Accept action"
+type ClusterNetworkPolicyEgressRule struct { ... }
+```
 
 ```golang
 
@@ -130,11 +136,11 @@ type DomainName string
 type ClusterNetworkPolicyEgressPeer struct {
     <snipped>
     // DomainNames provides a way to specify domain names as peers.
-    // 
-    // DomainNames is only supported for Allow rules. In order to control
-    // access, DomainNames Allow rules should be used with a lower priority
-    // egress deny -- this allows the admin to maintain an explicit "allowlist"
-    // of reachable domains.
+    //
+    // DomainNames is only supported for Accept rules.
+    // In order to control access, DomainNames Accept rules should be used
+    // with a lower precedence egress deny -- this allows the admin to
+    // maintain an explicit "allowlist" of reachable domains.
     // 
     // Support: Extended
     //
@@ -142,7 +148,8 @@ type ClusterNetworkPolicyEgressPeer struct {
     // +optional
     // +listType=set
     // +kubebuilder:validation:MinItems=1
-    DomainNames []Domain `json:"domainNames,omitempty"`
+    // +kubebuilder:validation:MaxItems=25
+    DomainNames []DomainName `json:"domainNames,omitempty"`
 }
 ```
 
@@ -151,11 +158,12 @@ type ClusterNetworkPolicyEgressPeer struct {
 #### Pods in `monitoring` namespace can talk to `my-service.com` and `*.cloud-provider.io`
 
 ```yaml
-apiVersion: policy.networking.k8s.io/v1alpha1
+apiVersion: policy.networking.k8s.io/v1alpha2
 kind: ClusterNetworkPolicy
 metadata:
   name: allow-my-service-egress
 spec:
+  tier: Admin
   priority: 55
   tier: Admin
   subject:
@@ -164,7 +172,7 @@ spec:
         kubernetes.io/metadata.name: "monitoring"
   egress:
   - name: "allow-to-my-service"
-    action: "Allow"
+    action: "Accept"
     to:
     - domainNames:
       - "my-service.com"
@@ -179,14 +187,16 @@ spec:
 
 There are a couple ways to maintain an allowlist:
 
-This example, includes the DENY rule in the same ANP object. It's also possible
-to use another ANP object with a lower priority (e.g. `100` in this example):
+This example includes the Deny rule in the same ClusterNetworkPolicy object.
+It's also possible to use another ClusterNetworkPolicy object with a lower
+priority (e.g. `100` in this example):
 ```yaml
-apiVersion: policy.networking.k8s.io/v1alpha1
+apiVersion: policy.networking.k8s.io/v1alpha2
 kind: ClusterNetworkPolicy
 metadata:
   name: allow-my-service-egress
 spec:
+  tier: Admin
   priority: 55
   tier: Admin
   subject:
@@ -195,30 +205,32 @@ spec:
         kubernetes.io/metadata.name: "monitoring"
   egress:
   - name: "allow-to-my-service"
-    action: "Allow"
+    action: "Accept"
     to:
     - domainNames:
       - "my-service.com"
       - "*.cloud-provider.io"
     protocols:
     - tcp:
-      destinationPort:
-        number: 443
+        destinationPort:
+          number: 443
   - name: "default-deny"
     action: "Deny"
     to:
     - networks:
       - "0.0.0.0/0"
+      - "::/0"
 ```
 
-This example uses a default-deny Baseline ClusterNetworkPolicy to create the
-allowlist:
+This example uses a Baseline-tier default-deny ClusterNetworkPolicy to create
+the allowlist:
 ```yaml
-apiVersion: policy.networking.k8s.io/v1alpha1
+apiVersion: policy.networking.k8s.io/v1alpha2
 kind: ClusterNetworkPolicy
 metadata:
   name: allow-my-service-egress
 spec:
+  tier: Admin
   priority: 55
   tier: Admin
   subject:
@@ -227,36 +239,40 @@ spec:
         kubernetes.io/metadata.name: "monitoring"
   egress:
   - name: "allow-to-my-service"
-    action: "Allow"
+    action: "Accept"
     to:
     - domainNames:
       - "my-service.com"
       - "*.cloud-provider.io"
     protocols:
     - tcp:
-      destinationPort:
-        number: 443
+        destinationPort:
+          number: 443
 ---
-apiVersion: policy.networking.k8s.io/v1alpha1
+apiVersion: policy.networking.k8s.io/v1alpha2
 kind: ClusterNetworkPolicy
 metadata:
-  name: default
+  name: default-deny
 spec:
   tier: Baseline
+  priority: 0
   subject:
     namespaces: {}
-  ingress:
-    - action: Deny
-      to:
-      - networks:
-        - "0.0.0.0/0"
+  egress:
+  - name: "default-deny"
+    action: "Deny"
+    to:
+    - networks:
+      - "0.0.0.0/0"
+      - "::/0"
 ```
 
 ### Expected Behavior
 
 1. A FQDN egress policy does not grant the workload permission to communicate
    with any in-cluster DNS services (like `kube-dns`). A separate rule needs to
-   be configured to allow traffic to any DNS servers.
+   be configured to allow traffic to any DNS servers. FQDN policies are not
+   expected to work if the pod cannot reach DNS.
 1. FQDN policies should not affect the ability of workloads to resolve domains,
    only their ability to communicate with the IP backing them. Put another way,
    FQDN policies should not result in any form of DNS filtering.
@@ -268,6 +284,10 @@ spec:
    considered authoritative for resolving domain names. This could be the
    `kube-dns` Service or potentially some other DNS provider specified in the
    implementation's configuration.
+1. Pods are expected to use the DNS configuration provided via `resolv.conf`
+   (i.e. the canonical cluster DNS server). If a pod uses a different DNS
+   server (e.g. hardcoded `8.8.8.8`), FQDN rule processing is not guaranteed
+   to work.
 1. DNS record querying and lifetimes:
    *  Pods are expected to make a DNS query for a domain before sending traffic
       to it. If the Pod fails to send a DNS request and instead just sends
@@ -277,9 +297,12 @@ spec:
       establish new connection using DNS records that are expired is not
       guaranteed to work.
    *  When the TTL for a DNS record expires, the implementor should stop
-      allowing new connections to that IP. Existing connection will still be
+      allowing new connections to that IP. Existing connections will still be
       allowed (that's consistent with NetworkPolicy behavior on long-running
-      connections). 
+      connections).
+   *  If a DNS record is refreshed before the TTL expires (e.g., due to a new
+      DNS query from the workload), the TTL timer should be reset based on the
+      new response.
 1. Implementations must support at least 100 unique IPs (either IPv4 or IPv6)
    for each domain. This is true for both explicitly specified domains, as well
    as for each domain selected by a wild-card rule. For example, the rule
@@ -346,6 +369,82 @@ spec:
         ```
         The implementer can still deny traffic to `1.2.3.4` because no single
         response contained the full chain required to resolve the domain.
+
+### Recommended Behavior
+
+The following recommendations are based on operational experience from existing
+implementations and feedback gathered during KubeCon Atlanta 2025.
+
+1. Pods should only make DNS requests to the canonical DNS server, because
+   FQDN rules for a pod are only guaranteed to work after that pod makes an
+   appropriate DNS request to the canonical DNS server (see [Expected
+   Behavior](#expected-behavior)). If a pod queries an alternate DNS server
+   (e.g. hardcoded `8.8.8.8`), the implementation may not observe the DNS
+   response, and the FQDN Accept rule will simply not take effect. This is
+   a functionality issue, not a security breach -- the pod's traffic is
+   denied, not accidentally allowed. For example, when a pod queries the
+   canonical DNS server for `my-service.com` and receives `1.2.3.4`, the
+   implementation observes that response and learns that `my-service.com`
+   maps to `1.2.3.4`. It can then enforce the FQDN Accept rule by allowing
+   traffic to `1.2.3.4`. If the pod instead queries `8.8.8.8`, the
+   implementation never sees the response and has no IP to allow -- the rule
+   simply doesn't take effect.
+1. Administrators should create a high-precedence Admin-tier rule allowing
+   egress DNS traffic to the canonical DNS server (e.g. `kube-dns` in
+   `kube-system`), to ensure that DNS is not blocked by other deny rules.
+   For example:
+   ```yaml
+   apiVersion: policy.networking.k8s.io/v1alpha2
+   kind: ClusterNetworkPolicy
+   metadata:
+     name: allow-dns
+   spec:
+     tier: Admin
+     priority: 50
+     subject:
+       namespaces:
+         matchLabels:
+           requires-fqdn-policy: "true"
+     egress:
+     - name: "allow-dns"
+       action: "Accept"
+       to:
+       - namespaces:
+           matchLabels:
+             kubernetes.io/metadata.name: "kube-system"
+       protocols:
+       - udp:
+           destinationPort:
+             number: 53
+       - tcp:
+           destinationPort:
+             number: 53
+   ```
+1. Implementations that operate by snooping DNS responses on the wire MUST
+   only trust responses originating from the canonical DNS server. Trusting
+   responses from arbitrary sources is a security concern: a malicious actor
+   could forge DNS responses to trick the implementation into allowing
+   traffic to unintended IPs.
+1. Implementations MAY provide a configurable grace period beyond the TTL to
+   accommodate DNS propagation delays and client-side caching.
+1. Although securing DNS resolution is a non-goal of this NPEP, implementations
+   are recommended to consider mitigations for DNS cache poisoning (e.g.,
+   DNSSEC validation by the canonical DNS server) when documenting their trust
+   model.
+
+## Connection Lifecycle on Policy Updates
+
+When FQDN policies change, implementations must handle in-flight connections
+gracefully. See the [Expected Behavior](#expected-behavior) section for DNS
+record updates.
+
+* **Policy addition**: New connections matching the FQDN are allowed once DNS
+  resolution for the domain has been observed. Connections to IPs that haven't
+  been observed via DNS are not guaranteed to be allowed.
+* **Policy removal**: Existing established connections SHOULD be allowed to
+  complete gracefully. New connections SHOULD be denied after the policy is
+  removed. This is consistent with the general NetworkPolicy behavior for
+  long-running connections.
 
 ## Alternatives
 
