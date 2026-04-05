@@ -5,6 +5,7 @@
 - [v0.1.0](#v010)
 - [v0.1.1](#v011)
 - [v0.1.7](#v017)
+- [v0.2.0](#v020)
 
 # v0.1.0
 
@@ -62,5 +63,34 @@ the selected subject of the policy. Given the selection based on sameness and no
 could compound to many possible ways of expressing relations that would exceed cardinality, the
 community is working on a better API proposal for tenancy. See [NPEP-122](https://github.com/kubernetes-sigs/network-policy-api/pull/178)
 for more details.
+
+Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
+
+# v0.2.0
+
+API Version: v1alpha2
+
+This is a major release of the network-policy-api that introduces v1alpha2 with
+a single unified resource for cluster administrators:
+
+- ClusterNetworkPolicy (CNP)
+
+ClusterNetworkPolicy combines the previously separate AdminNetworkPolicy and
+BaselineAdminNetworkPolicy resources into a single CRD with a `tier` field
+(Admin or Baseline) to control policy precedence.
+See [NPEP-285](https://network-policy-api.sigs.k8s.io/npeps/npep-285-combine-crds)
+for more details.
+
+The key changes since v0.1.7 include:
+
+- **NPEP-285: Combine ANP and BANP into ClusterNetworkPolicy** - A single CRD
+  with `tier` field replaces the two separate resources. The `Allow` action has
+  been renamed to `Accept`.
+- **NPEP-187: Ports and Protocols** - The `ports` field has been replaced with
+  a new `protocols` field that provides explicit per-protocol matching for TCP,
+  UDP, and SCTP with clearer semantics.
+- Updated conformance tests for the new v1alpha2 API
+- Reduced MaxItems from 100 to 25 for rules and peers
+- Updated documentation and user stories for ClusterNetworkPolicy
 
 Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
