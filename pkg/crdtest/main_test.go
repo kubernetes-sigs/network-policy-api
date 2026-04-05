@@ -147,11 +147,11 @@ func watchAndTest(watchDir string) {
 					todoMap[event.Name] = event
 				}
 
-			case err, ok := <-watcher.Errors:
+			case watchErr, ok := <-watcher.Errors:
 				if !ok {
 					return
 				}
-				klog.Errorf("Watcher error: %v", err)
+				klog.Errorf("Watcher error: %v", watchErr)
 
 			// We debounce the FSNotify events to avoid
 			// printing out duplicate test results.
