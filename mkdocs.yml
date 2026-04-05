@@ -69,6 +69,8 @@ nav:
       - Experimental:
         - npeps/npep-126-egress-traffic-control.md
         - npeps/npep-133-fqdn-egress-selector.md
+        - npeps/npep-187-ports-and-protocols.md
+        - npeps/npep-285-combine-crds.md
       - Standard:
         - npeps/npep-137-conformance-profiles.md
         # - Declined:
