@@ -281,12 +281,21 @@ spec:
                             description: |-
                               DomainNames provides a way to specify domain names as peers.
 
+                              DomainNames is restricted to the Admin tier of ClusterNetworkPolicy only.
+                              Since Kubernetes NetworkPolicy does not have a FQDN selector, using
+                              domainNames in the Baseline tier would allow writing baseline rules that
+                              can't be replicated by an overriding NetworkPolicy, breaking the
+                              fundamental tier override model.
+
                               DomainNames is only supported for Accept rules. In order to control
                               access, DomainNames Accept rules should be used with a lower precedence
                               egress deny -- this allows the admin to maintain an explicit "allowlist"
                               of reachable domains.
 
                               DomainNames can have up to 25 domain names specified in one rule.
+
+                              See NPEP-133 for full details on expected behavior, DNS security model,
+                              and implementation guidelines.
 
                               <network-policy-api:experimental>
                             items:
@@ -565,6 +574,9 @@ spec:
                     rule: '!(self.to.exists(peer, has(peer.networks) || has(peer.nodes)
                       || has(peer.domainNames)) && has(self.protocols) && self.protocols.exists(protocol,
                       has(protocol.destinationNamedPort)))'
+                  - message: domainNames may only be used with Accept action
+                    rule: 'self.to.exists(peer, has(peer.domainNames)) ? self.action
+                      == ''Accept'' : true'
                 maxItems: 25
                 type: array
               ingress:
@@ -1174,6 +1186,11 @@ spec:
             - subject
             - tier
             type: object
+            x-kubernetes-validations:
+            - message: domainNames cannot be used in Baseline tier as NetworkPolicy
+                cannot override FQDN rules
+              rule: 'self.tier == ''Baseline'' ? !self.egress.exists(rule, rule.to.exists(peer,
+                has(peer.domainNames))) : true'
           status:
             description: Status is the status to be reported by the implementation.
             properties:
