@@ -56,9 +56,10 @@ skips any remaining cluster network policies and is handled by standard
 namespace scoped network policies.
 
 For Example: In the diagram below egress traffic destined for the service
-`svc-pub` in namespace `bar-ns-1` on TCP port 8080 is delegated to the k8s
-network policies implemented in `foo-ns-1` and `foo-ns-2`. If no k8s network
-policies match the delegated traffic, the traffic will be allowed.
+`svc-pub` in namespace `bar-ns-1` on TCP port 8080, the named port `web-alt`
+and UDP port 53 is delegated to the k8s network policies implemented in
+`foo-ns-1` and `foo-ns-2`. If no k8s network policies match the delegated
+traffic, the traffic will be allowed.
 
 ![Alt text](./images/delegation.png?raw=true "Delegate")
 

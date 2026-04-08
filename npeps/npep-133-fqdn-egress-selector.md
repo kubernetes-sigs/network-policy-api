@@ -29,20 +29,21 @@ Names](https://www.wikipedia.org/wiki/Fully_qualified_domain_name) (FQDNs).
     belong to the domain. While this is definitely undesirable, it is at least
     not an unsafe failure.
 
-* Currently only AdminNetworkPolicy is the intended scope for this proposal.
+* Currently only Admin tier of ClusterNetworkPolicy is the intended scope for this
+  proposal.
   * Since Kubernetes NetworkPolicy does not have a FQDN selector, adding this
-    capability to BaselineAdminNetworkPolicy could result in writing baseline
-    rules that can't be replicated by an overriding NetworkPolicy. For example,
-    if BANP allows traffic to `example.io`, but the namespace admin installs a
-    Kubernetes Network Policy, the namespace admin has no way to replicate the
-    `example.io` selector using just Kubernetes Network Policies.
+    capability to Baseline tier could result in writing baseline rules that can't
+    be replicated by an overriding NetworkPolicy. For example, if Baseline tier
+    allows traffic to `example.io`, but the namespace admin installs a Kubernetes
+    Network Policy, the namespace admin has no way to replicate the `example.io`
+    selector using just Kubernetes Network Policies.
 
 ## Non-Goals
 
 * This enhancement does not include a FQDN selector for allowing ingress
   traffic.
 * This enhancement only describes enhancements to the existing L4 filtering as
-  provided by AdminNetworkPolicy. It does not propose any new L7 matching or
+  provided by ClusterNetworkPolicy. It does not propose any new L7 matching or
   filtering capabilities, like matching HTTP traffic or URL paths.
   * This selector should not control what DNS records are resolvable from a
     particular workload.
@@ -81,7 +82,7 @@ hampers the readability of the network policies.
 * As a cluster admin, I want to allow Pods in the cluster to send traffic to a
   entire tree of domains. For example, our CDN has domains of the format
   `<session>.<random>.<region>.my-app.cdn.com`. I want to be able to use a
-  wild-card selector toallow the full tree of subdomains below
+  wild-card selector to allow the full tree of subdomains below
   `**.my-app.cdn.com`.
 
 ### Future User Stories
@@ -92,14 +93,14 @@ goal in this case is to ensure we do not make these unimplementable down the
 line.
 
 * As a cluster admin, I want to switch the default disposition of the cluster to
-  be default deny. This is enforced using a `BaselineAdminNetworkPolicy`. I also
-  want individual namespace owners to be able to specify their egress peers.
+  be default deny. This is enforced using a `Baseline` tier in ClusterNetworkPolicy`.
+  I also want individual namespace owners to be able to specify their egress peers.
   Namespace admins would then use a FQDN selector in the Kubernetes
   `NetworkPolicy` objects to allow `my-service.com`.
   
 ## API
 
-This NPEP proposes adding a new type of `AdminNetworkPolicyEgressPeer` called
+This NPEP proposes adding a new type of `ClusterNetworkPolicyEgressPeer` called
 `FQDNPeerSelector` which allows specifying domain names.
 
 ```golang
@@ -126,7 +127,7 @@ This NPEP proposes adding a new type of `AdminNetworkPolicyEgressPeer` called
 // +kubebuilder:validation:Pattern=`^(\*\.)?([a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.)+[a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.?$`
 type DomainName string
 
-type AdminNetworkPolicyEgressPeer struct {
+type ClusterNetworkPolicyEgressPeer struct {
     <snipped>
     // DomainNames provides a way to specify domain names as peers.
     // 
@@ -151,11 +152,12 @@ type AdminNetworkPolicyEgressPeer struct {
 
 ```yaml
 apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+kind: ClusterNetworkPolicy
 metadata:
   name: allow-my-service-egress
 spec:
   priority: 55
+  tier: Admin
   subject:
     namespaces:
       matchLabels:
@@ -167,10 +169,10 @@ spec:
     - domainNames:
       - "my-service.com"
       - "*.cloud-provider.io"
-    ports:
-    - portNumber:
-        protocol: TCP
-        port: 443
+    protocols:
+    - tcp:
+        destinationPort:
+          number: 443
 ```
 
 #### Maintaining an allowlist of domains
@@ -181,11 +183,12 @@ This example, includes the DENY rule in the same ANP object. It's also possible
 to use another ANP object with a lower priority (e.g. `100` in this example):
 ```yaml
 apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+kind: ClusterNetworkPolicy
 metadata:
   name: allow-my-service-egress
 spec:
   priority: 55
+  tier: Admin
   subject:
     namespaces:
       matchLabels:
@@ -197,10 +200,10 @@ spec:
     - domainNames:
       - "my-service.com"
       - "*.cloud-provider.io"
-    ports:
-    - portNumber:
-        protocol: TCP
-        port: 443
+    protocols:
+    - tcp:
+      destinationPort:
+        number: 443
   - name: "default-deny"
     action: "Deny"
     to:
@@ -208,15 +211,16 @@ spec:
       - "0.0.0.0/0"
 ```
 
-This example uses a default-deny BaselineAdminNetworkPolicy to create the
+This example uses a default-deny Baseline ClusterNetworkPolicy to create the
 allowlist:
 ```yaml
 apiVersion: policy.networking.k8s.io/v1alpha1
-kind: AdminNetworkPolicy
+kind: ClusterNetworkPolicy
 metadata:
   name: allow-my-service-egress
 spec:
   priority: 55
+  tier: Admin
   subject:
     namespaces:
       matchLabels:
@@ -228,16 +232,17 @@ spec:
     - domainNames:
       - "my-service.com"
       - "*.cloud-provider.io"
-    ports:
-    - portNumber:
-        protocol: TCP
-        port: 443
+    protocols:
+    - tcp:
+      destinationPort:
+        number: 443
 ---
 apiVersion: policy.networking.k8s.io/v1alpha1
-kind: BaselineAdminNetworkPolicy
+kind: ClusterNetworkPolicy
 metadata:
   name: default
 spec:
+  tier: Baseline
   subject:
     namespaces: {}
   ingress:
