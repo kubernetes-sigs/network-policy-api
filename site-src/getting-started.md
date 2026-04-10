@@ -23,6 +23,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/network-polic
 -f https://raw.githubusercontent.com/kubernetes-sigs/network-policy-api/refs/tags/v0.1.7/config/crd/standard/policy.networking.k8s.io_baselineadminnetworkpolicies.yaml
 ```
 
+We are also going to preserve and maintain the [release-0.1](https://github.com/kubernetes-sigs/network-policy-api/tree/release-0.1) 
+branch for the `v1alpha1` APIs, including potential updates and bug fixes until further notice.
+
 **3. Try out one of the sample yamls for specific user stories**
 
 - [Deny traffic at a cluster level](reference/examples.md#sample-spec-for-story-1-deny-traffic-at-a-cluster-level)
