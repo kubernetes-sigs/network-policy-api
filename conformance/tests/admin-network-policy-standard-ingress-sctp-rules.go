@@ -51,6 +51,43 @@ var CNPAdminTierIngressSCTP = suite.ConformanceTest{
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig, true)
 		})
 
+		t.Run("Should support a 'deny-ingress' policy for SCTP protocol on a namespace selector when namespace labels are changed to no longer match", func(t *testing.T) {
+			// This test uses `ingress-sctp` admin CNP
+			// harry-potter-0 is our server pod in gryffindor namespace
+			serverPod := kubernetes.GetPod(t, s.Client, "network-policy-conformance-gryffindor", "harry-potter-0", s.TimeoutConfig.GetTimeout)
+			// luna-lovegood-0 is our client pod in ravenclaw namespace
+			// ensure ingress is ALLOWED from gryffindor to ravenclaw
+			// ingressRule at index0 will take precedence over ingressRule at index1; thus ALLOW takes precedence over DENY since rules are ordered
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, true)
+			// luna-lovegood-1 is our client pod in ravenclaw namespace
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig, true)
+
+			cnp := kubernetes.GetClusterNetworkPolicy(t, s.Client, "ingress-sctp", s.TimeoutConfig.GetTimeout)
+			mutate := cnp.DeepCopy()
+			// update namespace selector in ingressRule at index0 to match "conformance-house: gryffindor" label
+			mutate.Spec.Ingress[0].From[0].Namespaces.MatchLabels = map[string]string{"conformance-house": "gryffindor"}
+			kubernetes.PatchClusterNetworkPolicy(t, s.Client, cnp, mutate, s.TimeoutConfig.GetTimeout)
+
+			// ensure ingress is ALLOWED from gryffindor to ravenclaw since namespace label still matches
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, true)
+
+			// update namespace label for gryffindor to "conformance-house": "denied-namespace-label" to no longer match ingressRule at index0
+			allowedNamespace := kubernetes.GetNamespace(t, s.Client, "network-policy-conformance-gryffindor", s.TimeoutConfig.GetTimeout)
+			mutateNamespace := allowedNamespace.DeepCopy()
+			mutateNamespace.SetLabels(map[string]string{"conformance-house": "denied-namespace-label"})
+			kubernetes.PatchNamespace(t, s.Client, allowedNamespace, mutateNamespace, s.TimeoutConfig.GetTimeout)
+
+			// ensure ingress is DENIED from gryffindor to ravenclaw since namespace label no longer matches
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, false)
+			// luna-lovegood-1 is our client pod in ravenclaw namespace
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "sctp",
+				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig, false)
+		})
+
 		t.Run("Should support an 'allow-ingress' policy for SCTP protocol at the specified port", func(t *testing.T) {
 			// This test uses `ingress-sctp` admin CNP
 			// luna-lovegood-1 is our server pod in ravenclaw namespace

@@ -156,6 +156,24 @@ func GetPod(t *testing.T, c client.Client, namespace string, name string, timeou
 	return pod
 }
 
+func GetNamespace(t *testing.T, c client.Client, name string, timeout time.Duration) *v1.Namespace {
+	namespace := &v1.Namespace{}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := c.Get(ctx, client.ObjectKey{
+		Name: name,
+	}, namespace)
+	require.NoErrorf(t, err, "unable to fetch namespace %s", name)
+	return namespace
+}
+
+func PatchNamespace(t *testing.T, c client.Client, from *v1.Namespace, to *v1.Namespace, timeout time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := c.Patch(ctx, to, client.MergeFrom(from))
+	require.NoErrorf(t, err, "unable to patch namespace %s", from.Name)
+}
+
 func GetClusterNetworkPolicy(t *testing.T, c client.Client, name string, timeout time.Duration) *api.ClusterNetworkPolicy {
 	cnp := &api.ClusterNetworkPolicy{}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
