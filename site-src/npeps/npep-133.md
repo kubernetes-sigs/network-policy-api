@@ -16,39 +16,39 @@ Names](https://www.wikipedia.org/wiki/Fully_qualified_domain_name) (FQDNs).
   (for example `kubernetes.io`).
 * Support basic wildcard matching capabilities when specifying FQDNs (for
   example `*.cloud-provider.io`)
-* Currently only `ALLOW` type rules are proposed.
+* Currently only `Accept` type rules are proposed.
   * Safely enforcing `DENY` rules based on FQDN selectors is difficult as there
     is no guarantee a Network Policy plugin is aware of all IPs backing a FQDN
     policy. If a Network Policy plugin has incomplete information, it may
     accidentally allow traffic to an IP belonging to a denied domain. This would
     constitute a security breach.
     
-    By contrast, `ALLOW` rules, which may also have an incomplete list of IPs,
+    By contrast, `Accept` rules, which may also have an incomplete list of IPs,
     would not create a security breach. In case of incomplete information, valid
     traffic would be dropped as the plugin believes the destination IP does not
     belong to the domain. While this is definitely undesirable, it is at least
     not an unsafe failure.
 
-* Currently only AdminNetworkPolicy is the intended scope for this proposal.
+* Currently only ClusterNetworkPolicy is the intended scope for this proposal.
   * Since Kubernetes NetworkPolicy does not have a FQDN selector, adding this
-    capability to BaselineAdminNetworkPolicy could result in writing baseline
-    rules that can't be replicated by an overriding NetworkPolicy. For example,
-    if BANP allows traffic to `example.io`, but the namespace admin installs a
-    Kubernetes Network Policy, the namespace admin has no way to replicate the
-    `example.io` selector using just Kubernetes Network Policies.
+    capability to Baseline tier of ClusterNetworkPolicy could result in writing
+    baseline rules that can't be replicated by an overriding NetworkPolicy. For
+    example, if CNP allows traffic to `example.io`, but the namespace admin
+    installs a Kubernetes Network Policy, the namespace admin has no way to
+    replicate the `example.io` selector using just Kubernetes Network Policies.
 
 ## Non-Goals
 
 * This enhancement does not include a FQDN selector for allowing ingress
   traffic.
 * This enhancement only describes enhancements to the existing L4 filtering as
-  provided by AdminNetworkPolicy. It does not propose any new L7 matching or
+  provided by ClusterNetworkPolicy. It does not propose any new L7 matching or
   filtering capabilities, like matching HTTP traffic or URL paths.
   * This selector should not control what DNS records are resolvable from a
     particular workload.
 * This enhancement does not provide a mechanism for selecting in-cluster
   endpoints using FQDNs. To select Pods, Nodes, or the API Server,
-  AdminNetworkPolicy has other more specific selectors.
+  ClusterNetworkPolicy has other more specific selectors.
   * Using the FQDN selector to refer to other Kubernetes endpoints, while not
     explicitly disallowed, is not defined by this spec and left up to individual
     providers. Trying to allow traffic to the following domains is NOT

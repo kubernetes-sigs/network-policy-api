@@ -16,14 +16,14 @@ Names](https://www.wikipedia.org/wiki/Fully_qualified_domain_name) (FQDNs).
   (for example `kubernetes.io`).
 * Support basic wildcard matching capabilities when specifying FQDNs (for
   example `*.cloud-provider.io`)
-* Currently only `ALLOW` type rules are proposed.
-  * Safely enforcing `DENY` rules based on FQDN selectors is difficult as there
+* Currently only `Accept` type rules are proposed.
+  * Safely enforcing `Deny` rules based on FQDN selectors is difficult as there
     is no guarantee a Network Policy plugin is aware of all IPs backing a FQDN
     policy. If a Network Policy plugin has incomplete information, it may
     accidentally allow traffic to an IP belonging to a denied domain. This would
     constitute a security breach.
     
-    By contrast, `ALLOW` rules, which may also have an incomplete list of IPs,
+    By contrast, `Accept` rules, which may also have an incomplete list of IPs,
     would not create a security breach. In case of incomplete information, valid
     traffic would be dropped as the plugin believes the destination IP does not
     belong to the domain. While this is definitely undesirable, it is at least
@@ -179,8 +179,8 @@ spec:
 
 There are a couple ways to maintain an allowlist:
 
-This example, includes the DENY rule in the same ANP object. It's also possible
-to use another ANP object with a lower priority (e.g. `100` in this example):
+This example, includes the Deny rule in the same CNP object. It's also possible
+to use another CNP object with a lower priority (e.g. `100` in this example):
 ```yaml
 apiVersion: policy.networking.k8s.io/v1alpha1
 kind: ClusterNetworkPolicy
