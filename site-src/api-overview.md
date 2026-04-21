@@ -8,7 +8,7 @@ personas, sometimes creating a complex web of objects to be maintained. In
 contrast, each resource in the Network Policy API is designed to be used by a
 specific persona.
 
-With the advent of the ClusterNetworkPolicy resource Cluster Admins will now have 
+With the advent of the ClusterNetworkPolicy resource Cluster Admins will now have
 the ability to apply policy globally with only a few simple policy objects.
 
 ## Roles and personas
@@ -60,13 +60,13 @@ Policy tiers are evaluated in the following order:
 
 ClusterNetworkPolicy can use 2 of these tiers: `Admin` and `Baseline`.
 
-The `Admin` tier will help administrators set strict security rules for the cluster, 
-i.e. a developer CANNOT override these rules by creating NetworkPolicies that apply 
+The `Admin` tier will help administrators set strict security rules for the cluster,
+i.e. a developer CANNOT override these rules by creating NetworkPolicies that apply
 to the same workloads as the ClusterNetworkPolicy.
 
-The `Baseline` tier will allow administrators to set baseline security rules that 
-describe default connectivity for cluster workloads, which CAN be overridden by 
-developer NetworkPolicies if needed. 
+The `Baseline` tier will allow administrators to set baseline security rules that
+describe default connectivity for cluster workloads, which CAN be overridden by
+developer NetworkPolicies if needed.
 The major use case for `Baseline` tier is the ability to flip the [default security stance of the
 cluster](user-stories.md#story-5-cluster-wide-default-guardrails).
 
@@ -101,32 +101,32 @@ CoreDNS for example). This traffic should not be blocked when developers apply
 NetworkPolicy to their Namespaces which isolates the workloads.
 
 ClusterNetworkPolicy `Pass` rules in the `Admin` tier allow an admin to delegate security posture for
-certain traffic to the Namespace owners by overriding any lower precedence Allow
+certain traffic to the Namespace owners by overriding any lower precedence Accept
 or Deny rules. For example, intra-namespace traffic management can be delegated to namespace
 admins explicitly with the use of `Pass` rules. More specifically traffic selected by a `Pass` rule
 will skip any lower precedence `Admin` tier rules and proceed to be evaluated by `NetworkPolicy` and
-`Baseline` tier policies. When the `Pass` action is matched at the `Admin` tier, `NetworkPolicy` will 
+`Baseline` tier policies. When the `Pass` action is matched at the `Admin` tier, `NetworkPolicy` will
 apply next or if there is no `NetworkPolicy` match, `Baseline` policies will be evaluated.
 
-### Priorities 
+### Priorities
 
-Integer priority values were added to the ClusterNetworkPolicy API to allow Cluster 
-Admins to express direct and intentional ordering between various CNP Objects.  
-The `Priority` field in the CNP spec is defined as a non-negative integer value 
-where rules with lower priority values have higher precedence, and are checked 
+Integer priority values were added to the ClusterNetworkPolicy API to allow Cluster
+Admins to express direct and intentional ordering between various CNP Objects.
+The `Priority` field in the CNP spec is defined as a non-negative integer value
+where rules with lower priority values have higher precedence, and are checked
 before policies with higher priority values in the same tier.
 
-### Rules 
+### Rules
 
-Each CNP should define at least one `Ingress` or `Egress` relevant in-cluster traffic flow 
-along with the associated Action that should occur. In each `gress` rule the user 
+Each CNP should define at least one `Ingress` or `Egress` relevant in-cluster traffic flow
+along with the associated Action that should occur. In each `gress` rule the user
 should AT THE MINIMUM define an `Action`, and at least one `ClusterNetworkPolicyPeer`.
 Optionally the user may also define select `Protocols` to filter traffic on and also
 a name for each rule to make management and reporting easier for Admins.
 
 Within the `Protocols` array, `TCP`, `UDP`, or `SCTP` protocols can be specified, each with an
-optional `DestinationPort`. The `DestinationPort` can be a single `Number` or a `Range`
-with a `Start` and `End`. If `DestinationPort` is omitted, all ports for the specified
+optional `destinationPort`. The `destinationPort` can be a single `number` or a `range`
+with a `start` and `end`. If `destinationPort` is omitted, all ports for the specified
 protocol match.
 
 Alternatively, `DestinationNamedPort` can be used to target a port by name. A named port is
@@ -135,10 +135,10 @@ a string to the name field alongside the containerPort. Existing named ports can
 inspecting the resource's YAML under `spec.containers[].ports` or by running `kubectl get pod <pod-name> -o jsonpath='{.spec.containers[*].ports[*].name}'`. Using a name instead of a number allows the ClusterNetworkPolicy to remain valid even
 if the container’s underlying port number is updated.
 
-### Status 
+### Status
 
-For `v1alpha2` of this API the ANP status field is simply defined as a list of 
+For `v1alpha2` of this API the CNP status field is simply defined as a list of
 [`metav1.condition`](https://github.com/kubernetes/apimachinery/blob/v0.25.0/pkg/apis/meta/v1/types.go#L1464)s. Currently there are no rules as to what these conditions should display,
-and it is up to each implementation to report what they see fit. For further 
-API iterations the community may consider standardizing these conditions based on 
+and it is up to each implementation to report what they see fit. For further
+API iterations the community may consider standardizing these conditions based on
 the usefulness they provide for various implementors.
