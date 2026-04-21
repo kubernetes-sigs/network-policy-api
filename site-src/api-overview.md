@@ -78,9 +78,10 @@ traffic, ClusterNetworkPolicy will enable administrators to set `Pass`,
 be read as-is, i.e. there will not be any implicit isolation effects for the Pods
 selected by the ClusterNetworkPolicy, as opposed to implicit deny NetworkPolicy rules imply.
 
-- **Accept**: Accepts the selected traffic, allowing it into
-  the destination. No further ClusterNetworkPolicy or
-  NetworkPolicy rules will be processed.
+- **Accept**: Accepts the selected traffic, including replies to that
+  traffic and related ICMP traffic (e.g. ICMP errors such as
+  "destination unreachable" or "packet too big"). No further
+  ClusterNetworkPolicy or NetworkPolicy rules will be processed.
 
 - **Deny**: Drops the selected traffic. No further
   ClusterNetworkPolicy or NetworkPolicy rules will be
@@ -119,8 +120,8 @@ before policies with higher priority values in the same tier.
 ### Rules
 
 Each CNP should define at least one `Ingress` or `Egress` relevant in-cluster traffic flow
-along with the associated Action that should occur. In each `gress` rule the user
-should AT THE MINIMUM define an `Action`, and at least one `ClusterNetworkPolicyPeer`.
+along with the associated Action that should occur. In each rule the user
+should *at a minimum* define an `Action`, and at least one peer (`To` or `From` entry).
 Optionally the user may also define select `Protocols` to filter traffic on and also
 a name for each rule to make management and reporting easier for Admins.
 

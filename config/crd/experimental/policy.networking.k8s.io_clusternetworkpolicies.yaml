@@ -75,15 +75,15 @@ spec:
                     action:
                       description: |-
                         Action specifies the effect this rule will have on matching
-                        traffic.  Currently the following actions are supported:
+                        traffic. Currently, the following actions are supported:
 
-                        - Accept: Accepts the selected traffic, allowing it to
-                          egress. No further ClusterNetworkPolicy or NetworkPolicy
-                          rules will be processed.
+                        - Accept: Accepts the selected traffic, including replies to that
+                          traffic and related ICMP traffic. No further egress
+                          ClusterNetworkPolicy or NetworkPolicy rules will be processed
+                          but any ingress rules at the destination do apply.
 
-                        - Deny: Drops the selected traffic. No further
-                          ClusterNetworkPolicy or NetworkPolicy rules will be
-                          processed.
+                        - Deny: Drops the selected traffic. No further ClusterNetworkPolicy or
+                          NetworkPolicy rules will be processed.
 
                         - Pass: Skips all further ClusterNetworkPolicy rules in the
                           current tier for the selected traffic, and passes
@@ -373,6 +373,11 @@ spec:
                               or deny all IPv4 pod-to-pod traffic as well. If you don't want that,
                               add a rule that Passes all pod traffic before the Networks rule.
 
+                              Networks matches both regular IP traffic and ICMP traffic to/from
+                              the specified CIDRs. For example, a Networks entry of "0.0.0.0/0"
+                              will match both IPv4 and ICMP traffic, while "::/0" will match
+                              both IPv6 and ICMPv6 traffic.
+
                               Each item in Networks should be provided in the CIDR format and should be
                               IPv4 or IPv6, for example "10.0.0.0/8" or "fd00::/8".
 
@@ -588,11 +593,11 @@ spec:
                     action:
                       description: |-
                         Action specifies the effect this rule will have on matching
-                        traffic. Currently the following actions are supported:
+                        traffic. Currently, the following actions are supported:
 
-                        - Accept: Accepts the selected traffic, allowing it into
-                          the destination. No further ClusterNetworkPolicy or
-                          NetworkPolicy rules will be processed.
+                        - Accept: Accepts the selected traffic, including replies to that
+                          traffic and related ICMP traffic. No further ingress
+                          ClusterNetworkPolicy or NetworkPolicy rules will be processed.
 
                           Note: while Accept ensures traffic is accepted by
                           Kubernetes network policy, it is still possible that the
