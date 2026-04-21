@@ -32,8 +32,8 @@ const (
 	channelAnnotation       = "policy.networking.k8s.io/channel"
 
 	// These values must be updated during the release process
-	bundleVersion = "v0.1.7"
-	approvalLink  = "https://github.com/kubernetes-sigs/network-policy-api/pull/300"
+	bundleVersion = "v0.2.0"
+	approvalLink  = "https://github.com/kubernetes-sigs/network-policy-api/pull/347"
 )
 
 var standardKinds = map[string]bool{
