@@ -73,6 +73,34 @@ var CNPAdminTierEgressInlineCIDRPeers = suite.ConformanceTest{
 				serverPod.Status.PodIP, int32(53), s.TimeoutConfig, true)
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
 				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, true)
+
+			// update namespace label for slytherin to "conformance-house": "denied-namespace-label" to no longer match ingressRule at index0
+			namespace := kubernetes.GetNamespace(t, s.Client, "network-policy-conformance-slytherin", s.TimeoutConfig.GetTimeout)
+			mutateNamespace := namespace.DeepCopy()
+			mutateNamespace.SetLabels(map[string]string{"conformance-house": "denied-namespace-label"})
+			kubernetes.PatchNamespace(t, s.Client, namespace, mutateNamespace, s.TimeoutConfig.GetTimeout)
+
+			// ensure traffic is no longer allowed to slytherin since the namespace label no longer matches
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig, false)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, false)
+
+			// update namespace label for slytherin back to "conformance-house": "slytherin" to match ingressRule at index0 again
+			namespace = kubernetes.GetNamespace(t, s.Client, "network-policy-conformance-slytherin", s.TimeoutConfig.GetTimeout)
+			mutateNamespace = namespace.DeepCopy()
+			mutateNamespace.SetLabels(map[string]string{"conformance-house": "slytherin"})
+			kubernetes.PatchNamespace(t, s.Client, namespace, mutateNamespace, s.TimeoutConfig.GetTimeout)
+
+			// ensure traffic is allowed to slytherin again since the namespace label matches again
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig, true)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, true)
 		})
 		// To test allow CIDR rule, insert the following rule at index0
 		//- name: "allow-egress-to-specific-podIPs"
