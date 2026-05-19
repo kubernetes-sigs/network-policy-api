@@ -80,7 +80,7 @@ jobs:
 
     - name: Install network policy APIs
       run: |
-        /usr/local/bin/kubectl apply -f ./config/crd/standard/policy.networking.k8s.io_clusternetworkpolicies.yaml
+        /usr/local/bin/kubectl apply -f ./config/crd/experimental/policy.networking.k8s.io_clusternetworkpolicies.yaml
 
     - name: Install kube-network-policies from main
       run: |
@@ -114,7 +114,7 @@ jobs:
       run: |
         go mod download
         REPO_VERSION=$(git describe --always --dirty)
-        go test  -v ./conformance -run TestConformanceProfiles -timeout 20m -args --conformance-profiles=ClusterNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=${REPO_VERSION} --contact=https://github.com/kubernetes-sigs/kube-network-policies/issues/new --additional-info=https://github.com/kubernetes-sigs/kube-network-policies
+        go test  -v ./conformance -run TestConformanceProfiles -timeout 20m -args --conformance-profiles=ClusterNetworkPolicy --organization=kubernetes --project=kube-network-policies --url=https://github.com/kubernetes-sigs/kube-network-policies --version=${REPO_VERSION} --contact=https://github.com/kubernetes-sigs/kube-network-policies/issues/new --additional-info=https://github.com/kubernetes-sigs/kube-network-policies --all-features
 
     - name: Upload Junit Reports
       if: always()
