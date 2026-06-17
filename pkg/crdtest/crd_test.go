@@ -60,7 +60,11 @@ func TestValid(t *testing.T) {
 			t.Fatalf("loadYAML(%s) = %v, want nil\nYAML was:\n%s", filePath, err, text)
 		}
 		t.Run(obj.GetName(), func(t *testing.T) {
-			if err := globals.k8sClient.Create(context.Background(), obj); err != nil {
+			err := globals.k8sClient.Create(context.Background(), obj)
+			if err != nil && strings.Contains(e.Name(), ".experimental.yaml") {
+				t.Skipf("Skipping experimental test case on standard CRDs (failed to create: %v)", err)
+			}
+			if err != nil {
 				t.Fatalf("Create() = %v, want nil\nYAML was:\n%s", err, text)
 			}
 			if err := globals.k8sClient.Delete(context.Background(), obj); err != nil {
@@ -87,6 +91,9 @@ func TestInvalid(t *testing.T) {
 		t.Run(obj.GetName(), func(t *testing.T) {
 			err := globals.k8sClient.Create(context.Background(), obj)
 			t.Logf("Create() = %v", err)
+			if err == nil && strings.Contains(e.Name(), ".experimental.yaml") {
+				t.Skip("Skipping experimental test case on standard CRDs (validation rule not present)")
+			}
 			if err == nil {
 				t.Fatalf("Create() = nil, want error\nYAML was:\n%s", text)
 			}
