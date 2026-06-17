@@ -35,7 +35,10 @@ var CNPAdminTierGress = suite.ConformanceTest{
 	Features: []suite.SupportedFeature{
 		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_tier/standard-gress-rules-combined.yaml"},
+	Manifests: []string{
+		"base/admin_tier/standard-gress-rules-combined.yaml",
+		"base/admin_tier/standard-gress-omitted-namespaceselector.yaml",
+	},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-gress' policy across different protocols", func(t *testing.T) {
@@ -344,6 +347,21 @@ var CNPAdminTierGress = suite.ConformanceTest{
 			// ensure ingress from slytherin is ALLOWED to gryffindor for rest of the traffic; matches no rules hence allowed
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig, true)
+		})
+
+		t.Run("Should support matching pods across namespaces when namespaceSelector is omitted", func(t *testing.T) {
+			// This test uses `gress-omitted-namespaceselector` admin CNP
+			// viktor-krum-0 is our server pod in durmstrang namespace (subject of CNP)
+			serverPod := kubernetes.GetPod(t, s.Client, "network-policy-conformance-durmstrang", "viktor-krum-0", s.TimeoutConfig.GetTimeout)
+
+			// Verify connectivity:
+			// luna-lovegood-0 (in ravenclaw) -> viktor-krum-0 on port 80 should FAIL (blocked by deny rule)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-0", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, false)
+
+			// cedric-diggory-0 (in hufflepuff) -> viktor-krum-0 on port 80 should FAIL (blocked by deny rule)
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, false)
 		})
 	},
 }

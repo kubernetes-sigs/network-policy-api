@@ -36,6 +36,13 @@ metadata:
   name: network-policy-conformance-forbidden-forrest
   labels:
     conformance-house: forbidden-forrest
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: network-policy-conformance-durmstrang
+  labels:
+    conformance-house: durmstrang
 # Create 4 deployments; 2 pods each under these namespaces
 ---
 apiVersion: apps/v1
@@ -312,4 +319,63 @@ spec:
           command: ["/bin/bash", "-c", "/agnhost porter"]
           env:
           - name: SERVE_SCTP_PORT_{{ index .HostNetworkPorts 7 }}
+            value: "foo"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: viktor-krum
+  namespace: network-policy-conformance-durmstrang
+spec:
+  selector:
+    matchLabels:
+      conformance-house: durmstrang
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        conformance-house: durmstrang
+    spec:
+      containers:
+        - name: viktor-krum-client
+          image: registry.k8s.io/e2e-test-images/agnhost:2.45
+        - name: viktor-krum-80
+          image: registry.k8s.io/e2e-test-images/agnhost:2.45
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 80"]
+          ports:
+            - containerPort: 80
+              protocol: TCP
+              name: web
+        - name: viktor-krum-8080
+          image: registry.k8s.io/e2e-test-images/agnhost:2.45
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --tcp --http=false --port 8080"]
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: web-8080
+        - name: viktor-krum-53
+          image: registry.k8s.io/e2e-test-images/agnhost:2.45
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 53"]
+          ports:
+            - containerPort: 53
+              protocol: UDP
+              name: dns
+        - name: viktor-krum-5353
+          image: registry.k8s.io/e2e-test-images/agnhost:2.45
+          command: ["/bin/bash", "-c", "/agnhost serve-hostname --udp --http=false --port 5353"]
+          ports:
+            - containerPort: 5353
+              protocol: UDP
+              name: dns-sd
+        - name: viktor-krum-9003
+          image: registry.k8s.io/e2e-test-images/agnhost:2.45
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9003
+            value: "foo"
+        - name: viktor-krum-9005
+          image: registry.k8s.io/e2e-test-images/agnhost:2.45
+          command: ["/bin/bash", "-c", "/agnhost porter"]
+          env:
+          - name: SERVE_SCTP_PORT_9005
             value: "foo"

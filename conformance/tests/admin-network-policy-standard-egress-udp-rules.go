@@ -35,7 +35,10 @@ var CNPAdminTierEgressUDP = suite.ConformanceTest{
 	Features: []suite.SupportedFeature{
 		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_tier/standard-egress-udp-rules.yaml"},
+	Manifests: []string{
+		"base/admin_tier/standard-egress-udp-rules.yaml",
+		"base/admin_tier/standard-egress-udp-port-range-rules.yaml",
+	},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
@@ -64,6 +67,23 @@ var CNPAdminTierEgressUDP = suite.ConformanceTest{
 			// ensure egress is DENIED to gryffindor from hufflepuff for rest of the traffic; egressRule at index6
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig, false)
+		})
+
+		t.Run("Should support an 'allow-egress' policy for UDP protocol at the specified port range", func(t *testing.T) {
+			// This test uses `egress-udp-port-range` admin CNP
+			// harry-potter-1 is our server pod in gryffindor namespace
+			serverPod := kubernetes.GetPod(t, s.Client, "network-policy-conformance-gryffindor", "harry-potter-1", s.TimeoutConfig.GetTimeout)
+			// viktor-krum-0 is our client pod in durmstrang namespace
+			// ensure egress is ALLOWED to gryffindor from durmstrang at port 53 (in range); egressRule at index0 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-durmstrang", "viktor-krum-0", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig, true)
+			// ensure egress is ALLOWED to gryffindor from durmstrang at port 5353 (in range); egressRule at index0 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-durmstrang", "viktor-krum-0", "udp",
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig, true)
+			// viktor-krum-1 is our client pod in durmstrang namespace
+			// ensure egress is DENIED to gryffindor from durmstrang for rest of the traffic (e.g. port 5354, outside range); egressRule at index1 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-durmstrang", "viktor-krum-1", "udp",
+				serverPod.Status.PodIP, int32(5354), s.TimeoutConfig, false)
 		})
 
 		t.Run("Should support an 'deny-egress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {

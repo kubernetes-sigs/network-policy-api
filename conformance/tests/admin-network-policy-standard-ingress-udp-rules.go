@@ -36,7 +36,10 @@ var CNPAdminTierIngressUDP = suite.ConformanceTest{
 	Features: []suite.SupportedFeature{
 		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_tier/standard-ingress-udp-rules.yaml"},
+	Manifests: []string{
+		"base/admin_tier/standard-ingress-udp-rules.yaml",
+		"base/admin_tier/standard-ingress-udp-port-range-rules.yaml",
+	},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-ingress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {
@@ -64,6 +67,23 @@ var CNPAdminTierIngressUDP = suite.ConformanceTest{
 			// ensure ingress is DENIED from gryffindor to hufflepuff for rest of the traffic; ingressRule at index6 should take effect
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "udp",
 				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig, false)
+		})
+
+		t.Run("Should support an 'allow-ingress' policy for UDP protocol at the specified port range", func(t *testing.T) {
+			// This test uses `ingress-udp-port-range` admin CNP
+			// viktor-krum-0 is our server pod in durmstrang namespace
+			serverPod := kubernetes.GetPod(t, s.Client, "network-policy-conformance-durmstrang", "viktor-krum-0", s.TimeoutConfig.GetTimeout)
+			// cedric-diggory-0 is our client pod in hufflepuff namespace
+			// ensure ingress is ALLOWED from hufflepuff to durmstrang at port 53 (in range); ingressRule at index0 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+				serverPod.Status.PodIP, int32(53), s.TimeoutConfig, true)
+			// ensure ingress is ALLOWED from hufflepuff to durmstrang at port 5353 (in range); ingressRule at index0 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-0", "udp",
+				serverPod.Status.PodIP, int32(5353), s.TimeoutConfig, true)
+			// cedric-diggory-1 is our client pod in hufflepuff namespace
+			// ensure ingress is DENIED from hufflepuff to durmstrang for rest of the traffic (e.g. port 5354, outside range); ingressRule at index1 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-hufflepuff", "cedric-diggory-1", "udp",
+				serverPod.Status.PodIP, int32(5354), s.TimeoutConfig, false)
 		})
 
 		t.Run("Should support an 'deny-ingress' policy for UDP protocol; ensure rule ordering is respected", func(t *testing.T) {

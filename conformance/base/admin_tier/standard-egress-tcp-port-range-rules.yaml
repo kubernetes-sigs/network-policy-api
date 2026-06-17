@@ -1,0 +1,30 @@
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: egress-tcp-port-range
+spec:
+  tier: Admin
+  priority: 3
+  subject:
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: network-policy-conformance-durmstrang
+  egress:
+  - name: "allow-to-hufflepuff-at-port-range-80-8080"
+    action: "Accept"
+    to:
+    - namespaces:
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
+    protocols:
+      - tcp:
+          destinationPort:
+            range:
+              start: 80
+              end: 8080
+  - name: "deny-to-hufflepuff-everything-else"
+    action: "Deny"
+    to:
+    - namespaces:
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-hufflepuff
