@@ -1,0 +1,23 @@
+# A Baseline-tier ClusterNetworkPolicy with ONLY ingress rules on the gryffindor
+# subject (and deliberately NO egress section). Per the API contract — "CNPs with
+# no egress rules do not affect egress traffic" — the subject's egress must remain
+# fully open even though ingress from slytherin is denied.
+# Baseline-tier sibling; used by CNPBaselineTierIngressRulesEgressUnaffected (issue #103).
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: baseline-ingress-isolation
+spec:
+  tier: Baseline
+  priority: 20
+  subject:
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+  ingress:
+  - name: "deny-from-slytherin"
+    action: "Deny"
+    from:
+    - namespaces:
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
