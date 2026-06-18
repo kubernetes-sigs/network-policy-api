@@ -65,6 +65,27 @@ var CNPAdminTierIngressTCP = suite.ConformanceTest{
 				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig, false)
 		})
 
+		t.Run("Should not affect egress traffic when only ingress rules are specified", func(t *testing.T) {
+			// The `ingress-tcp` admin CNP declares no egress rules, so the subject's egress
+			// must be unaffected. Keep this step after an observed DENY (which proves the
+			// policy is programmed) and before the rule reorderings (so it probes the
+			// declared manifest). Probe targets are picked so no rule can match the reply
+			// path even on stateless dataplanes; hufflepuff's "deny everything else" would.
+			// luna-lovegood-0 is our server pod in ravenclaw namespace
+			serverPod := kubernetes.GetPod(t, s.Client, "network-policy-conformance-ravenclaw", "luna-lovegood-0", s.TimeoutConfig.GetTimeout)
+			// harry-potter-0 is our client pod in gryffindor namespace
+			// ensure egress is ALLOWED from gryffindor to ravenclaw; matches no egress rules since there are none
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, true)
+			// draco-malfoy-0 is our server pod in slytherin namespace
+			serverPod = kubernetes.GetPod(t, s.Client, "network-policy-conformance-slytherin", "draco-malfoy-0", s.TimeoutConfig.GetTimeout)
+			// harry-potter-1 is our client pod in gryffindor namespace
+			// ensure egress is ALLOWED from gryffindor to slytherin, even at port 80
+			// where the ingress rule denies the opposite direction
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-1", "tcp",
+				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, true)
+		})
+
 		t.Run("Should support an 'deny-ingress' policy for TCP protocol; ensure rule ordering is respected", func(t *testing.T) {
 			// This test uses `ingress-tcp` admin CNP
 			// harry-potter-1 is our server pod in gryffindor namespace
