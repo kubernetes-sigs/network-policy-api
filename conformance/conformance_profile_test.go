@@ -100,8 +100,8 @@ func TestConformanceProfiles(t *testing.T) {
 }
 
 func testConformance(t *testing.T) {
-	t.Logf("Running conformance profile tests with cleanup: %t\n debug: %t\n enable all features: %t \n supported features: [%v]\n exempt features: [%v]\n conformance profiles: [%v]",
-		*flags.CleanupBaseResources, *flags.ShowDebug, *flags.EnableAllSupportedFeatures, *flags.SupportedFeatures, *flags.ExemptFeatures, *flags.ConformanceProfiles)
+	t.Logf("Running conformance profile tests with cleanup: %t\n debug: %t\n enable all features: %t \n dry-run: %t \n supported features: [%v]\n exempt features: [%v]\n conformance profiles: [%v]",
+		*flags.CleanupBaseResources, *flags.ShowDebug, *flags.EnableAllSupportedFeatures, *flags.DryRun, *flags.SupportedFeatures, *flags.ExemptFeatures, *flags.ConformanceProfiles)
 
 	cSuite, err := suite.NewConformanceProfileTestSuite(
 		suite.ConformanceProfileOptions{
@@ -110,6 +110,7 @@ func testConformance(t *testing.T) {
 				ClientSet:                  clientSet,
 				KubeConfig:                 *cfg,
 				Debug:                      *flags.ShowDebug,
+				DryRun:                     *flags.DryRun,
 				CleanupBaseResources:       *flags.CleanupBaseResources,
 				SupportedFeatures:          supportedFeatures,
 				ExemptFeatures:             exemptFeatures,
@@ -127,6 +128,10 @@ func testConformance(t *testing.T) {
 	report, err := cSuite.Report()
 	if err != nil {
 		t.Fatalf("error generating conformance profile report: %v", err)
+	}
+	if *flags.DryRun {
+		t.Log("WARNING: --dry-run was enabled; connectivity was NOT verified. " +
+			"This report reflects only manifest/schema validity and test setup, and MUST NOT be submitted as a conformance result.")
 	}
 	writeReport(t.Logf, *report, *flags.ReportOutput)
 }

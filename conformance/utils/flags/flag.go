@@ -29,6 +29,7 @@ var (
 	SupportedFeatures          = flag.String("supported-features", "", "Supported features included in conformance tests suites")
 	ExemptFeatures             = flag.String("exempt-features", "", "Exempt Features excluded from conformance tests suites")
 	EnableAllSupportedFeatures = flag.Bool("all-features", false, "Whether to enable all supported features for conformance tests")
+	DryRun                     = flag.Bool("dry-run", false, "Apply manifests and run all test logic but skip the dataplane connectivity probes. Validates suite/manifest stability against a cluster that has the CRDs installed but no NetworkPolicy implementation")
 )
 
 // Required for Conformance Profiles
