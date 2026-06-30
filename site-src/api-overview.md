@@ -49,11 +49,26 @@ The ClusterNetworkPolicy (CNP) resource will help administrators set cluster-wid
 rules for the cluster, which are evaluated before or after the NetworkPolicies defined by the
 namespace owners.
 
+ClusterNetworkPolicy is logically enforced outside the Pod
+network namespace. This determines how it applies to "hairpin" traffic that a Pod
+sends to itself:
+
+- A Pod connecting to its own Pod IP is not subject to CNP.
+- A Pod connecting to a Service IP that the service proxy load-balances back
+to the same Pod is subject to ClusterNetworkPolicy.
+
+As a result, a Pod reaching itself by its Pod IP and that same Pod reaching itself
+through a Service IP can behave differently, and this is expected.
+Note that this behavior is based on the logical model of the pod network, 
+and CNP must behave this way even if it is implemented within the pod network namespace, 
+or if traffic from a Pod to a Service IP doesn't leave the pod network namespace.
+
 ### Tiers
 
 Tier is used as the top-level grouping for network policy prioritization.
 
 Policy tiers are evaluated in the following order:
+
 * `Admin` tier
 * NetworkPolicy tier
 * `Baseline` tier
