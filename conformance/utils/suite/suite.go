@@ -41,6 +41,7 @@ type ConformanceTestSuite struct {
 	KubeConfig                rest.Config
 	Debug                     bool
 	Cleanup                   bool
+	DryRun                    bool
 	BaseManifests             string
 	HostNetworkPortRangeStart int
 	HostNetworkPortRangeEnd   int
@@ -58,6 +59,7 @@ type Options struct {
 	ClientSet       k8sclient.Interface
 	KubeConfig      rest.Config
 	Debug           bool
+	DryRun          bool
 	BaseManifests   string
 	NamespaceLabels map[string]string
 	// HostNetworkPortRangeStart and HostNetworkPortRangeEnd allows using a custom port range for host-networked pods.
@@ -108,6 +110,7 @@ func New(s Options) *ConformanceTestSuite {
 		KubeConfig:                s.KubeConfig,
 		Debug:                     s.Debug,
 		Cleanup:                   s.CleanupBaseResources,
+		DryRun:                    s.DryRun,
 		BaseManifests:             s.BaseManifests,
 		HostNetworkPortRangeStart: s.HostNetworkPortRangeStart,
 		HostNetworkPortRangeEnd:   s.HostNetworkPortRangeEnd,
@@ -131,6 +134,15 @@ func New(s Options) *ConformanceTestSuite {
 // Setup ensures the base resources required for conformance tests are installed
 // in the cluster. It also ensures that all relevant resources are ready.
 func (suite *ConformanceTestSuite) Setup(t *testing.T) {
+	// Propagate dry-run mode to the connectivity probe helper before any test
+	// runs. In dry-run mode PokeServer becomes a no-op, so the suite still
+	// applies all manifests and exercises setup/teardown but skips the
+	// dataplane probes (which require a NetworkPolicy implementation).
+	kubernetes.SetDryRun(suite.DryRun)
+	if suite.DryRun {
+		t.Log("Dry-run mode enabled: manifests will be applied and resources reconciled, but connectivity probes will be skipped")
+	}
+
 	suite.Applier.FS = suite.FS
 
 	if suite.HostNetworkPortRangeStart != 0 && suite.HostNetworkPortRangeEnd == 0 ||

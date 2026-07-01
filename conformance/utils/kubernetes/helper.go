@@ -30,6 +30,20 @@ var (
 	numStatufulSetReplicas int32 = 2
 )
 
+// dryRun, when true, makes PokeServer skip the actual dataplane connectivity
+// probe and its assertion. It is set once via SetDryRun before any test runs,
+// so reads during the (possibly parallel) test run are race-free.
+var dryRun bool
+
+// SetDryRun toggles dry-run mode for connectivity probes. In dry-run mode
+// PokeServer logs the probe it would have performed and returns without
+// contacting the dataplane. This lets the suite validate manifests, setup and
+// teardown against a cluster that has the CRDs installed but no NetworkPolicy
+// implementation (for example, upstream CI on a vanilla cluster).
+func SetDryRun(d bool) {
+	dryRun = d
+}
+
 // RunCommandFromPod is a utility function that runs kubectl exec command on the Pod specified and returns the result.
 func RunCommandFromPod(client k8sclient.Interface, kubeConfig *rest.Config, podNamespace, podName string, cmd []string) (stdout string, stderr string, err error) {
 	// TODO(dyanngg): find a better way to derive container name
@@ -67,6 +81,11 @@ func RunCommandFromPod(client k8sclient.Interface, kubeConfig *rest.Config, podN
 // and timing out after TimeoutConfig.PokeTimeout. If eventually the expected result is met, it verifies the connectivity
 // once more to rule out transient cases.
 func PokeServer(t *testing.T, client k8sclient.Interface, kubeConfig *rest.Config, clientNamespace, clientPod, protocol, targetHost string, targetPort int32, timeoutConfig config.TimeoutConfig, shouldConnect bool) {
+	if dryRun {
+		t.Logf("[dry-run] skipping connectivity probe from %s/%s to %s:%d (%s), expected shouldConnect=%t",
+			clientNamespace, clientPod, targetHost, targetPort, protocol, shouldConnect)
+		return
+	}
 	require.Eventually(t, func() bool {
 		return doPokeServer(t, client, kubeConfig, clientNamespace, clientPod, protocol, targetHost, targetPort, timeoutConfig.RequestTimeout, shouldConnect)
 	}, timeoutConfig.PokeTimeout, timeoutConfig.PokeInterval)

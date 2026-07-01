@@ -59,14 +59,15 @@ func TestConformance(t *testing.T) {
 	supportedFeatures := suite.ParseSupportedFeatures(*flags.SupportedFeatures)
 	exemptFeatures := suite.ParseSupportedFeatures(*flags.ExemptFeatures)
 
-	t.Logf("Running conformance tests with cleanup: %t\n debug: %t\n enable all features: %t \n supported features: [%v]\n exempt features: [%v]",
-		*flags.CleanupBaseResources, *flags.ShowDebug, *flags.EnableAllSupportedFeatures, *flags.SupportedFeatures, *flags.ExemptFeatures)
+	t.Logf("Running conformance tests with cleanup: %t\n debug: %t\n enable all features: %t \n dry-run: %t \n supported features: [%v]\n exempt features: [%v]",
+		*flags.CleanupBaseResources, *flags.ShowDebug, *flags.EnableAllSupportedFeatures, *flags.DryRun, *flags.SupportedFeatures, *flags.ExemptFeatures)
 
 	cSuite := suite.New(suite.Options{
 		Client:                     c,
 		ClientSet:                  clientset,
 		KubeConfig:                 *cfg,
 		Debug:                      *flags.ShowDebug,
+		DryRun:                     *flags.DryRun,
 		CleanupBaseResources:       *flags.CleanupBaseResources,
 		SupportedFeatures:          supportedFeatures,
 		ExemptFeatures:             exemptFeatures,
