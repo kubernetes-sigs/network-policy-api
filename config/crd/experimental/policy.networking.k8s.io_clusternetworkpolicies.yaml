@@ -309,7 +309,7 @@ spec:
                                     "www.kubernetes.io", "blog.kubernetes.io", and
                                     "latest.blog.kubernetes.io" match, however "kubernetes.io", and
                                     "wikipedia.org" do not.
-                              pattern: ^(\*\.)?([a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.)+[a-zA-z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.?$
+                              pattern: ^(\*\.)?([a-zA-Z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([-a-zA-Z0-9_]*[a-zA-Z0-9])?\.?$
                               type: string
                             maxItems: 25
                             minItems: 1
