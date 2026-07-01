@@ -35,7 +35,10 @@ var CNPAdminTierEgressSCTP = suite.ConformanceTest{
 	Features: []suite.SupportedFeature{
 		suite.SupportClusterNetworkPolicy,
 	},
-	Manifests: []string{"base/admin_tier/standard-egress-sctp-rules.yaml"},
+	Manifests: []string{
+		"base/admin_tier/standard-egress-sctp-rules.yaml",
+		"base/admin_tier/standard-egress-sctp-port-range-rules.yaml",
+	},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
 
 		t.Run("Should support an 'allow-egress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {
@@ -64,6 +67,23 @@ var CNPAdminTierEgressSCTP = suite.ConformanceTest{
 			// ensure egress is DENIED to hufflepuff from ravenclaw for rest of the traffic; egressRule at index6 should take effect
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-ravenclaw", "luna-lovegood-1", "sctp",
 				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig, false)
+		})
+
+		t.Run("Should support an 'allow-egress' policy for SCTP protocol at the specified port range", func(t *testing.T) {
+			// This test uses `egress-sctp-port-range` admin CNP
+			// cedric-diggory-1 is our server pod in hufflepuff namespace
+			serverPod := kubernetes.GetPod(t, s.Client, "network-policy-conformance-hufflepuff", "cedric-diggory-1", s.TimeoutConfig.GetTimeout)
+			// viktor-krum-0 is our client pod in durmstrang namespace
+			// ensure egress is ALLOWED to hufflepuff from durmstrang at port 9003 (in range); egressRule at index0 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-durmstrang", "viktor-krum-0", "sctp",
+				serverPod.Status.PodIP, int32(9003), s.TimeoutConfig, true)
+			// ensure egress is ALLOWED to hufflepuff from durmstrang at port 9005 (in range); egressRule at index0 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-durmstrang", "viktor-krum-0", "sctp",
+				serverPod.Status.PodIP, int32(9005), s.TimeoutConfig, true)
+			// viktor-krum-1 is our client pod in durmstrang namespace
+			// ensure egress is DENIED to hufflepuff from durmstrang for rest of the traffic (e.g. port 9006, outside range); egressRule at index1 should take effect
+			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-durmstrang", "viktor-krum-1", "sctp",
+				serverPod.Status.PodIP, int32(9006), s.TimeoutConfig, false)
 		})
 
 		t.Run("Should support an 'deny-egress' policy for SCTP protocol; ensure rule ordering is respected", func(t *testing.T) {
