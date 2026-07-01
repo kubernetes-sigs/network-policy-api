@@ -1,0 +1,23 @@
+# An Admin-tier ClusterNetworkPolicy with ONLY egress rules on the gryffindor
+# subject (and deliberately NO ingress section). Per the API contract — "CNPs with
+# no ingress rules do not affect ingress traffic" — the subject's ingress must remain
+# fully open even though egress to slytherin is denied.
+# Used by CNPAdminTierEgressRulesIngressUnaffected (issue #103).
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: admin-egress-isolation
+spec:
+  tier: Admin
+  priority: 20
+  subject:
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: network-policy-conformance-gryffindor
+  egress:
+  - name: "deny-to-slytherin"
+    action: "Deny"
+    to:
+    - namespaces:
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
