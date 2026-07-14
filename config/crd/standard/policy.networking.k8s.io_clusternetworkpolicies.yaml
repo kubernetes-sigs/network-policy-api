@@ -114,12 +114,6 @@ spec:
                         maxProperties: 1
                         minProperties: 1
                         properties:
-                          destinationNamedPort:
-                            description: |-
-                              DestinationNamedPort selects a destination port on a pod based on the
-                              ContainerPort name. You can't use this in a rule that targets resources
-                              without named ports (e.g. Nodes or Networks).
-                            type: string
                           sctp:
                             description: SCTP specific protocol matches.
                             minProperties: 1
@@ -719,12 +713,6 @@ spec:
                         maxProperties: 1
                         minProperties: 1
                         properties:
-                          destinationNamedPort:
-                            description: |-
-                              DestinationNamedPort selects a destination port on a pod based on the
-                              ContainerPort name. You can't use this in a rule that targets resources
-                              without named ports (e.g. Nodes or Networks).
-                            type: string
                           sctp:
                             description: SCTP specific protocol matches.
                             minProperties: 1
