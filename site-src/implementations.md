@@ -6,6 +6,13 @@ Network Policy API resources and provides status and resource references for the
 Implementors of Network Policy API resources are encouraged to update this document with status information about their
 implementations, the versions they cover, and documentation to help users get started.
 
+Implementations are also strongly encouraged to substantiate their entries by
+submitting a [conformance report](https://github.com/kubernetes-sigs/network-policy-api/tree/main/conformance/reports)
+— a machine-generated record of exactly which profiles and features were
+tested and passed, with a link to the CI run that produced it. See the
+[reports README](https://github.com/kubernetes-sigs/network-policy-api/blob/main/conformance/reports/README.md)
+for how to generate and submit one.
+
 ## ClusterNetworkPolicy
 
 Updated: 21-April-2026
