@@ -17,6 +17,7 @@ limitations under the License.
 package suite
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -24,11 +25,13 @@ import (
 	"testing"
 	"time"
 
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	confv1a1 "sigs.k8s.io/network-policy-api/conformance/apis/v1alpha1"
 	"sigs.k8s.io/network-policy-api/conformance/utils/config"
+	"sigs.k8s.io/network-policy-api/pkg/consts"
 )
 
 type ConformanceProfileTestSuite struct {
@@ -41,6 +44,12 @@ type ConformanceProfileTestSuite struct {
 	// conformanceProfiles is a compiled list of profiles to check
 	// conformance against.
 	conformanceProfiles sets.Set[ConformanceProfileName]
+
+	// apiVersion is the version of the Network Policy API CRDs installed in
+	// the cluster when the suite was created, as recorded by their
+	// bundle-version annotation, and is the version the report certifies
+	// against.
+	apiVersion string
 
 	// running indicates whether the test suite is currently running
 	running bool
@@ -118,6 +127,16 @@ func NewConformanceProfileTestSuite(s ConformanceProfileOptions) (*ConformancePr
 			}
 		}
 	}
+	installedCRDs := &apiextensionsv1.CustomResourceDefinitionList{}
+	if err := s.Client.List(context.TODO(), installedCRDs); err != nil {
+		return nil, fmt.Errorf("failed to list installed CRDs: %w", err)
+	}
+	version, _, err := getAPIVersionAndChannel(installedCRDs.Items)
+	if err != nil {
+		return nil, err
+	}
+	suite.apiVersion = version
+
 	suite.ConformanceTestSuite = *New(s.Options)
 	return suite, nil
 }
@@ -207,13 +226,9 @@ func (suite *ConformanceProfileTestSuite) Report() (*confv1a1.ConformanceReport,
 			APIVersion: "policy.networking.k8s.io/v1alpha1",
 			Kind:       "ConformanceReport",
 		},
-		Date:           time.Now().Format(time.RFC3339),
-		Implementation: suite.implementation,
-		// TODO: Need to add logic to how we can determine against which API version test was run against
-		// Shouldn't this be same as Implementation.Version?
-		// Currently pinning it to the version where profiles are going to be introduced in
-		// We might need to bump this with every version we release
-		NetworkPolicyV2APIVersion: "v0.1.2",
+		Date:                      time.Now().Format(time.RFC3339),
+		Implementation:            suite.implementation,
+		NetworkPolicyV2APIVersion: suite.apiVersion,
 		ProfileReports:            profileReports.list(),
 	}, nil
 }
@@ -266,4 +281,37 @@ func ParseConformanceProfiles(p string) sets.Set[ConformanceProfileName] {
 		res.Insert(ConformanceProfileName(value))
 	}
 	return res
+}
+
+// getAPIVersionAndChannel iterates over all the CRDs installed in the cluster
+// and checks the version and channel annotations. In case the annotations are
+// not found or there are CRDs with different versions or channels, an error is
+// returned.
+func getAPIVersionAndChannel(crds []apiextensionsv1.CustomResourceDefinition) (version string, channel string, err error) {
+	for _, crd := range crds {
+		v, okv := crd.Annotations[consts.BundleVersionAnnotation]
+		c, okc := crd.Annotations[consts.ChannelAnnotation]
+		if !okv && !okc {
+			continue
+		}
+		if !okv || !okc {
+			return "", "", errors.New("detected CRDs with partial version and channel annotations")
+		}
+		if version != "" && v != version {
+			return "", "", errors.New("multiple Network Policy API CRDs versions detected")
+		}
+		if channel != "" && c != channel {
+			return "", "", errors.New("multiple Network Policy API CRDs channels detected")
+		}
+		version = v
+		channel = c
+	}
+	if version == "" || channel == "" {
+		return "", "", errors.New("no Network Policy API CRDs with the proper annotations found in the cluster")
+	}
+	if version != consts.BundleVersion {
+		return "", "", errors.New("the installed CRDs version is different from the suite version")
+	}
+
+	return version, channel, nil
 }
