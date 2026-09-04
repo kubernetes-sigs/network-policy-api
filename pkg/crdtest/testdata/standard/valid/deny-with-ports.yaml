@@ -34,8 +34,6 @@ spec:
         - udp:
             destinationPort:
               number: 9090
-        - destinationNamedPort: http
-        - destinationNamedPort: monitoring
         # Does not exist in the current API, but shows an example of
         # an additional, non-port based extension.
 #       - icmp:

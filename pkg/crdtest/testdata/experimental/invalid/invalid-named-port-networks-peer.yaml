@@ -1,0 +1,21 @@
+# destinationNamedPort cannot be combined with a networks peer, since
+# CIDRs have no named ports.
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: invalid-named-port-networks-peer
+spec:
+  tier: Admin
+  priority: 10
+  subject:
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: sensitive-ns
+  egress:
+    - action: Deny
+      name: deny-networks-named-port
+      to:
+      - networks:
+        - 10.0.0.0/8
+      protocols:
+        - destinationNamedPort: http
