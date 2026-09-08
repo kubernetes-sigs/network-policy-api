@@ -20,6 +20,7 @@ import (
 	"os"
 	"testing"
 
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -70,6 +71,11 @@ func TestConformanceProfiles(t *testing.T) {
 	err = api.Install(c.Scheme())
 	if err != nil {
 		t.Fatalf("Error installing api scheme: %v", err)
+	}
+
+	err = apiextensionsv1.AddToScheme(c.Scheme())
+	if err != nil {
+		t.Fatalf("Error installing apiextensions scheme: %v", err)
 	}
 
 	// standard conformance flags

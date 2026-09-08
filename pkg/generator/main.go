@@ -25,15 +25,8 @@ import (
 	"sigs.k8s.io/controller-tools/pkg/loader"
 	"sigs.k8s.io/controller-tools/pkg/markers"
 	"sigs.k8s.io/yaml"
-)
 
-const (
-	bundleVersionAnnotation = "policy.networking.k8s.io/bundle-version"
-	channelAnnotation       = "policy.networking.k8s.io/channel"
-
-	// These values must be updated during the release process
-	bundleVersion = "v0.2.0"
-	approvalLink  = "https://github.com/kubernetes-sigs/network-policy-api/pull/347"
+	"sigs.k8s.io/network-policy-api/pkg/consts"
 )
 
 var standardKinds = map[string]bool{
@@ -96,9 +89,9 @@ func main() {
 			if crdRaw.ObjectMeta.Annotations == nil {
 				crdRaw.ObjectMeta.Annotations = map[string]string{}
 			}
-			crdRaw.ObjectMeta.Annotations[bundleVersionAnnotation] = bundleVersion
-			crdRaw.ObjectMeta.Annotations[channelAnnotation] = channel
-			crdRaw.ObjectMeta.Annotations[apiext.KubeAPIApprovedAnnotation] = approvalLink
+			crdRaw.ObjectMeta.Annotations[consts.BundleVersionAnnotation] = consts.BundleVersion
+			crdRaw.ObjectMeta.Annotations[consts.ChannelAnnotation] = channel
+			crdRaw.ObjectMeta.Annotations[apiext.KubeAPIApprovedAnnotation] = consts.ApprovalLink
 
 			// Prevent the top level metadata for the CRD to be generated regardless of the intention in the arguments
 			crd.FixTopLevelMetadata(crdRaw)
