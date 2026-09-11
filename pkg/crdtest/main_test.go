@@ -8,7 +8,7 @@ You may obtain a copy of the License at
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUTHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
@@ -30,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,11 +40,15 @@ import (
 
 var (
 	globals struct {
+		scheme *runtime.Scheme
+		// k8sClient is only set when a single environment was requested
+		// explicitly, via -kubeConfig, -crdDir or -watch. Otherwise TestCRDs
+		// starts one API server per channel.
 		k8sClient client.Client
 	}
 
 	watchDir    = flag.String("watch", "", "directory to continuously watch for yaml files to test the CRDs")
-	crdDir      = flag.String("crdDir", "", "directory to load the CRDs from. If unset, will load from the default location")
+	crdDir      = flag.String("crdDir", "", "directory to load the CRDs from. If unset, every channel under config/crd is tested in turn")
 	kubeConfig  = flag.String("kubeConfig", "", "KUBE_CONFIG for the cluster to use. If unset, will use internal testenv")
 	prettyWatch = flag.Bool("prettyWatch", true, "pretty-print output to stdout if in -watch mode")
 )
@@ -55,25 +58,28 @@ are two ways to use this:
 
 # Test cases
 
-Each test case takes its name from the name of the resource being
-instantiated.
+Test cases are grouped by the API channel whose CRDs they need, and each
+test case takes its name from the name of the resource being instantiated.
 
- - pkg/crdtest/testdata/{valid, invalid}
+ - pkg/crdtest/testdata/{standard, experimental}/{valid, invalid}
+
+Since the experimental CRDs are a superset of the standard ones, the
+standard test cases are also applied to the experimental channel.
 
 # Running
 
-Run as a standard Go-test:
+Run as a standard Go-test, which covers every channel:
 
   $ go test ./pkg/crdtest
 
 Run in -watch mode for development:
 
   $ go test -c -o crdtest ./pkg/crdtest # or "make crdtest"
-  $ ./crdtest -crdDir config/crd/standard -watch pkg/crdtest/testdata/valid
+  $ ./crdtest -crdDir config/crd/standard -watch pkg/crdtest/testdata/standard/valid
 
-will apply all yamls in pkg/crdtest/valid folder and continue watching
-the changes to the *.yaml files in the folder. When a file is
-changed, it will load it into an API server and print the result.
+will apply all yamls in pkg/crdtest/testdata/standard/valid folder and
+continue watching the changes to the *.yaml files in the folder. When a
+file is changed, it will load it into an API server and print the result.
 
 `
 
@@ -201,6 +207,46 @@ func ignorePath(path string) bool {
 	return false
 }
 
+// startEnv brings up an API server with the CRDs in crdDir installed, and
+// returns a client for it along with a function stopping it.
+func startEnv(crdDir string) (client.Client, func() error, error) {
+	klog.Infof("Using testenv with CRDs from %s", crdDir)
+
+	// The version used here MUST reflect the available versions at
+	// controller-runtime repo:
+	//   https://raw.githubusercontent.com/kubernetes-sigs/controller-tools/HEAD/envtest-releases.yaml
+	// If the envvar is not passed, the latest GA will be used
+	k8sVersion := os.Getenv("K8S_VERSION")
+
+	testEnv := &envtest.Environment{
+		Scheme:                      globals.scheme,
+		ErrorIfCRDPathMissing:       true,
+		DownloadBinaryAssets:        true,
+		DownloadBinaryAssetsVersion: k8sVersion,
+		CRDInstallOptions: envtest.CRDInstallOptions{
+			Paths:           []string{crdDir},
+			CleanUpAfterUse: true,
+		},
+	}
+
+	startTs := time.Now()
+	restConfig, err := testEnv.Start()
+	if err != nil {
+		return nil, nil, fmt.Errorf("initializing test environment: %w (took %v)", err, time.Since(startTs))
+	}
+	klog.Infof("testEnv.Start() took %v", time.Since(startTs))
+
+	k8sClient, err := client.New(restConfig, client.Options{Scheme: globals.scheme})
+	if err != nil {
+		if stopErr := testEnv.Stop(); stopErr != nil {
+			klog.Errorf("Failed to stop test environment: %v", stopErr)
+		}
+		return nil, nil, fmt.Errorf("creating client: %w", err)
+	}
+
+	return k8sClient, testEnv.Stop, nil
+}
+
 func TestMain(m *testing.M) {
 	klog.InitFlags(nil)
 
@@ -217,74 +263,46 @@ func TestMain(m *testing.M) {
 
 	klog.Info("Running crdtest")
 
-	scheme := runtime.NewScheme()
+	globals.scheme = runtime.NewScheme()
 
-	var (
-		restConfig *rest.Config
-		testEnv    *envtest.Environment
-		err        error
-	)
-
-	corev1.AddToScheme(scheme)
+	corev1.AddToScheme(globals.scheme)
 	klog.Info("Added corev1 to scheme")
 
-	v1alpha2.Install(scheme)
+	v1alpha2.Install(globals.scheme)
 	klog.Info("Added v1alpha2 to scheme")
 
-	if *kubeConfig != "" {
+	var stop func() error
+
+	switch {
+	case *kubeConfig != "":
 		klog.Infof("Using kubeConfig=%q", *kubeConfig)
-		restConfig, err = clientcmd.BuildConfigFromFlags("", *kubeConfig)
+		restConfig, err := clientcmd.BuildConfigFromFlags("", *kubeConfig)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to get restConfig from BuildConfigFromFlags: %v", err))
 		}
-	} else {
-		klog.Info("Using testenv")
-
-		// The version used here MUST reflect the available versions at
-		// controller-runtime repo:
-		//   https://raw.githubusercontent.com/kubernetes-sigs/controller-tools/HEAD/envtest-releases.yaml
-		// If the envvar is not passed, the latest GA will be used
-		k8sVersion := os.Getenv("K8S_VERSION")
-
-		var paths []string
-		if *crdDir != "" {
-			paths = []string{*crdDir}
-		} else {
-			paths = []string{
-				filepath.Join("..", "..", "config", "crd", "standard"),
-			}
-		}
-
-		klog.Infof("Paths to CRDs: %v", paths)
-
-		testEnv = &envtest.Environment{
-			Scheme:                      scheme,
-			ErrorIfCRDPathMissing:       true,
-			DownloadBinaryAssets:        true,
-			DownloadBinaryAssetsVersion: k8sVersion,
-			CRDInstallOptions: envtest.CRDInstallOptions{
-				Paths:           paths,
-				CleanUpAfterUse: true,
-			},
-		}
-
-		startTs := time.Now()
-		restConfig, err = testEnv.Start()
+		globals.k8sClient, err = client.New(restConfig, client.Options{Scheme: globals.scheme})
 		if err != nil {
-			panic(fmt.Sprintf("Error initializing test environment: %v (took %v)", err, time.Since(startTs)))
+			panic(fmt.Sprintf("Failed to create client: %v", err))
 		}
-		klog.Infof("testEnv.Start() took %v", time.Since(startTs))
-	}
 
-	globals.k8sClient, err = client.New(restConfig, client.Options{Scheme: scheme})
-	if err != nil {
-		panic(fmt.Sprintf("Failed to get restConfig from BuildConfigFromFlags: %v", err))
+	case *crdDir != "" || *watchDir != "":
+		// Watch mode needs a client before any test runs, so it falls back to
+		// the standard channel when no CRD directory was given.
+		dir := *crdDir
+		if dir == "" {
+			dir = standardChannel.crdDir
+		}
+		var err error
+		globals.k8sClient, stop, err = startEnv(dir)
+		if err != nil {
+			panic(fmt.Sprintf("Error starting test environment: %v", err))
+		}
 	}
 
 	if *watchDir != "" {
 		watchAndTest(*watchDir)
-		if testEnv != nil {
-			if err := testEnv.Stop(); err != nil {
+		if stop != nil {
+			if err := stop(); err != nil {
 				panic(fmt.Sprintf("error stopping test environment: %v", err))
 			}
 		}
@@ -292,8 +310,8 @@ func TestMain(m *testing.M) {
 	}
 
 	rc := m.Run()
-	if testEnv != nil {
-		if err := testEnv.Stop(); err != nil {
+	if stop != nil {
+		if err := stop(); err != nil {
 			panic(fmt.Sprintf("error stopping test environment: %v", err))
 		}
 	}
