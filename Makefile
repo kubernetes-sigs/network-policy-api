@@ -8,6 +8,9 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+# Ensure correct toolchain is used
+export GOTOOLCHAIN=go$(shell sed -n 's/^go //p' go.mod)
+
 ##@ General
 
 # The help target prints out all targets with their descriptions organized
