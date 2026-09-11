@@ -1,0 +1,23 @@
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: deny-with-named-ports
+spec:
+  tier: Admin
+  priority: 0
+  subject:
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: sensitive-ns
+  ingress:
+    - action: Deny
+      name: select-all-deny-all
+      from:
+      - pods:
+          namespaceSelector:
+            matchLabels: {}
+          podSelector:
+            matchLabels: {}
+      protocols:
+        - destinationNamedPort: http
+        - destinationNamedPort: monitoring
