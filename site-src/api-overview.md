@@ -43,25 +43,18 @@ selected by the ClusterNetworkPolicy, as opposed to what NetworkPolicy rules imp
 
 - We now have multiple API versions, see the [ClusterNetworkPolicy blog post](blog/posts/ClusterNetworkPolicy.md) for more details
 
+### Hairpin Traffic Semantics
+
+ClusterNetworkPolicy is logically enforced outside the Pod network namespace. This determines how policy applies to "hairpin" traffic that a Pod sends to itself:
+- A Pod connecting directly to its own Pod IP is never subject to ClusterNetworkPolicy enforcement.
+- For a Pod connecting to a Service IP that load-balances back to itself, the **preferred behavior** is that such traffic is subject to ClusterNetworkPolicy enforcement.
+- To accommodate existing dataplanes (e.g., socket-level load balancers), service hairpin enforcement is **not required for conformance in Beta**. The API reserves the right to mandate this behavior in a future release.
+
 ## The ClusterNetworkPolicy Resource
 
 The ClusterNetworkPolicy (CNP) resource will help administrators set cluster-wide security
 rules for the cluster, which are evaluated before or after the NetworkPolicies defined by the
 namespace owners.
-
-ClusterNetworkPolicy is logically enforced outside the Pod
-network namespace. This determines how it applies to "hairpin" traffic that a Pod
-sends to itself:
-
-- A Pod connecting to its own Pod IP is not subject to CNP.
-- A Pod connecting to a Service IP that the service proxy load-balances back
-to the same Pod is subject to ClusterNetworkPolicy.
-
-As a result, a Pod reaching itself by its Pod IP and that same Pod reaching itself
-through a Service IP can behave differently, and this is expected.
-Note that this behavior is based on the logical model of the pod network, 
-and CNP must behave this way even if it is implemented within the pod network namespace, 
-or if traffic from a Pod to a Service IP doesn't leave the pod network namespace.
 
 ### Tiers
 
