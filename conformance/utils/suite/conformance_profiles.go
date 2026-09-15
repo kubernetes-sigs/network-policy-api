@@ -58,6 +58,7 @@ var (
 		ExperimentalFeatures: sets.New(
 			SupportClusterNetworkPolicyNamedPorts,
 			SupportClusterNetworkPolicyEgressNodePeers,
+			SupportClusterNetworkPolicyHairpin,
 		),
 	}
 )

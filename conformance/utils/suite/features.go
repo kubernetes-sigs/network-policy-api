@@ -46,10 +46,11 @@ var StandardFeatures = sets.New(
 // -----------------------------------------------------------------------------
 
 const (
-	// This option indicates ClusterNetworkPolicy's NamedPorts, EgressNodePeers
-	// fall under the extended test conformance.
+	// This option indicates ClusterNetworkPolicy's NamedPorts, EgressNodePeers,
+	// and Hairpin traffic fall under the extended test conformance.
 	SupportClusterNetworkPolicyNamedPorts      SupportedFeature = "ClusterNetworkPolicyNamedPorts"
 	SupportClusterNetworkPolicyEgressNodePeers SupportedFeature = "ClusterNetworkPolicyEgressNodePeers"
+	SupportClusterNetworkPolicyHairpin         SupportedFeature = "HairpinServicePolicyEnforcement"
 )
 
 // ExperimentalFeatures are newer, unstable features that are not part of the standard channel.
@@ -57,6 +58,7 @@ const (
 var ExperimentalFeatures = sets.New(
 	SupportClusterNetworkPolicyNamedPorts,
 	SupportClusterNetworkPolicyEgressNodePeers,
+	SupportClusterNetworkPolicyHairpin,
 ).Insert(StandardFeatures.UnsortedList()...)
 
 // -----------------------------------------------------------------------------
