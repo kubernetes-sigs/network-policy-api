@@ -101,29 +101,28 @@ func NewConformanceProfileTestSuite(s ConformanceProfileOptions) (*ConformancePr
 	// conformance profile or at least some specific features they support.
 	if s.EnableAllSupportedFeatures {
 		s.SupportedFeatures = AllFeatures
-	} else {
-		if s.SupportedFeatures == nil {
-			s.SupportedFeatures = sets.New[SupportedFeature]()
+	} else if s.SupportedFeatures == nil {
+		s.SupportedFeatures = sets.New[SupportedFeature]()
+	}
+	// Record, per selected profile, which of its experimental features are
+	// supported and which are not, so the report can list both. This runs for
+	// --all-features too: every experimental feature is then supported.
+	for _, conformanceProfileName := range s.ConformanceProfiles.UnsortedList() {
+		conformanceProfile, err := getConformanceProfileForName(conformanceProfileName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve conformance profile: %w", err)
 		}
-		// the use of a conformance profile implicitly enables any features of
-		// that profile which are supported at a Standard level of support.
-		for _, conformanceProfileName := range s.ConformanceProfiles.UnsortedList() {
-			conformanceProfile, err := getConformanceProfileForName(conformanceProfileName)
-			if err != nil {
-				return nil, fmt.Errorf("failed to retrieve conformance profile: %w", err)
-			}
-			for _, f := range conformanceProfile.ExperimentalFeatures.UnsortedList() {
-				if s.SupportedFeatures.Has(f) {
-					if suite.experimentalSupportedFeatures[conformanceProfileName] == nil {
-						suite.experimentalSupportedFeatures[conformanceProfileName] = sets.New[SupportedFeature]()
-					}
-					suite.experimentalSupportedFeatures[conformanceProfileName].Insert(f)
-				} else {
-					if suite.experimentalUnsupportedFeatures[conformanceProfileName] == nil {
-						suite.experimentalUnsupportedFeatures[conformanceProfileName] = sets.New[SupportedFeature]()
-					}
-					suite.experimentalUnsupportedFeatures[conformanceProfileName].Insert(f)
+		for _, f := range conformanceProfile.ExperimentalFeatures.UnsortedList() {
+			if s.SupportedFeatures.Has(f) {
+				if suite.experimentalSupportedFeatures[conformanceProfileName] == nil {
+					suite.experimentalSupportedFeatures[conformanceProfileName] = sets.New[SupportedFeature]()
 				}
+				suite.experimentalSupportedFeatures[conformanceProfileName].Insert(f)
+			} else {
+				if suite.experimentalUnsupportedFeatures[conformanceProfileName] == nil {
+					suite.experimentalUnsupportedFeatures[conformanceProfileName] = sets.New[SupportedFeature]()
+				}
+				suite.experimentalUnsupportedFeatures[conformanceProfileName].Insert(f)
 			}
 		}
 	}
