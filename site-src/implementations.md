@@ -17,7 +17,7 @@ for how to generate and submit one.
 
 Updated: 21-April-2026
 
-- [Kube-network-policies](https://github.com/kubernetes-sigs/kube-network-policies)
+- [Kube-network-policies](https://github.com/kubernetes-sigs/kube-network-policies) ([conformance report](https://github.com/kubernetes-sigs/network-policy-api/blob/main/conformance/reports/v0.2.0/kube-network-policies.yaml))
 - [Kube-OVN CNI](https://github.com/kubeovn/kube-ovn) (Experimental support)
 - [Calico CNI](https://github.com/projectcalico/calico) (Standard support in Calico v3.32)
 

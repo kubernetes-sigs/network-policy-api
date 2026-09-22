@@ -25,16 +25,9 @@ implementation, named after the project:
 conformance/reports
 |-- v0.2.0
 |   |-- kube-network-policies.yaml
-|   |-- acme-cni.yaml
 |-- v0.1.2
 |   |-- ovn-kubernetes.yaml
 ```
-
-> **Note:** `v0.1.2/ovn-kubernetes.yaml` is a historical report predating the
-> v1alpha2 `ClusterNetworkPolicy` consolidation (NPEP-285): it reports the
-> v1alpha1-era `AdminNetworkPolicy`/`BaselineAdminNetworkPolicy` profiles in
-> an older report layout. It is kept for the record and is not a template for
-> new submissions.
 
 ## Generating a report
 
@@ -44,48 +37,57 @@ short, you need a multi-node cluster running your implementation, with the
 `ClusterNetworkPolicy` CRD installed from the release channel you are
 certifying.
 
-Run the suite from the Network Policy API release you are certifying against
-(check out the corresponding tag, e.g. `v0.2.0`), passing your
-implementation's details:
+The suite and the installed CRDs must come from the same Network Policy API
+release: the suite reads the release from the
+`policy.networking.k8s.io/bundle-version` annotation on the installed CRDs,
+records it in the report as `networkPolicyV2APIVersion`, and refuses to run
+if it differs from its own bundle version. Check out the release you are
+certifying against and run the suite with your implementation's details:
 
 ```shell
 go test -v ./conformance -run TestConformanceProfiles -timeout 20m -args \
     --conformance-profiles=ClusterNetworkPolicy \
-    --organization=<your organization> \
-    --project=<your project> \
-    --url=<project url> \
-    --version=<implementation version being certified> \
-    --contact=<comma-separated maintainer contacts> \
-    --additional-info=<link to the public CI run that generated this report> \
+    --supported-features=<comma_separated_experimental_features_you_support> \
+    --organization=<your_organization> \
+    --project=<your_project> \
+    --url=<project_url> \
+    --version=<implementation_version_being_certified> \
+    --contact=<comma_separated_maintainer_contacts> \
+    --additional-info=<link_to_the_public_CI_run_that_generated_this_report> \
     --all-features \
-    --report-output=<project>.yaml
+    --report-output=<absolute_path_of_the_report_file_to_write>
 ```
 
-If the implementation does not support every experimental feature, replace
-`--all-features` with an explicit `--supported-features` selection; features
-that are not enabled are recorded in the report as `unsupportedFeatures`, and
-their tests are skipped without affecting the standard result.
+Selecting a profile implies its standard features, so `--supported-features`
+only needs to list the experimental features you claim — for
+`ClusterNetworkPolicy`, any of `ClusterNetworkPolicyNamedPorts` and
+`ClusterNetworkPolicyEgressNodePeers`. The features you list are recorded in
+the report as `supportedFeatures`; the profile's remaining experimental
+features are recorded as `unsupportedFeatures`, and their tests are skipped
+without affecting the standard result.
 
-This project's own CI performs exactly such a run for kube-network-policies
+This project's own CI runs the profiles suite against kube-network-policies
 on every pull request — see
 [`.github/workflows/conformance.yml`](../../.github/workflows/conformance.yml)
-for a complete working example.
+for a complete working setup; the resulting report is printed in the job log.
 
 ## What a report contains
 
-Abridged example (values are illustrative):
+The inaugural report,
+[`v0.2.0/kube-network-policies.yaml`](v0.2.0/kube-network-policies.yaml),
+generated as described above against kube-network-policies:
 
 ```yaml
 apiVersion: policy.networking.k8s.io/v1alpha1
-date: "2026-08-02T10:00:00Z"
+date: "2026-09-18T15:14:48-07:00"
 implementation:
-  additionalInformation: https://github.com/my-org/my-project/actions/runs/123456789
+  additionalInformation: https://github.com/kubernetes-sigs/network-policy-api/actions/runs/34631447770
   contact:
-  - '@my-org/maintainers'
-  organization: my-org
-  project: my-project
-  url: https://github.com/my-org/my-project
-  version: v1.2.3
+  - https://github.com/kubernetes-sigs/kube-network-policies/issues/new
+  organization: kubernetes
+  project: kube-network-policies
+  url: https://github.com/kubernetes-sigs/kube-network-policies
+  version: v1.1.1-12-g9984dcd
 kind: ConformanceReport
 networkPolicyV2APIVersion: v0.2.0
 profiles:
@@ -93,18 +95,18 @@ profiles:
     result: success
     statistics:
       Failed: 0
-      Passed: 4
+      Passed: 6
       Skipped: 0
     summary: ""
     supportedFeatures:
-    - ClusterNetworkPolicyEgressNodePeers
     - ClusterNetworkPolicyNamedPorts
+    - ClusterNetworkPolicyEgressNodePeers
   name: ClusterNetworkPolicy
   standard:
     result: success
     statistics:
       Failed: 0
-      Passed: 19
+      Passed: 22
       Skipped: 0
     summary: ""
 ```
