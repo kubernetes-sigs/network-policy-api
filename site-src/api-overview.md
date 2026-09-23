@@ -43,25 +43,17 @@ selected by the ClusterNetworkPolicy, as opposed to what NetworkPolicy rules imp
 
 - We now have multiple API versions, see the [ClusterNetworkPolicy blog post](blog/posts/ClusterNetworkPolicy.md) for more details
 
+- **Hairpin Traffic Semantics:** ClusterNetworkPolicy is logically enforced outside the Pod
+network namespace. This determines how policy applies to "hairpin" traffic that a Pod sends to itself:
+  - A Pod connecting to its own Pod IP is not subject to ClusterNetworkPolicy.
+  - A Pod connecting to a Service IP that load-balances back to the same Pod is subject to ClusterNetworkPolicy, because the traffic logically leaves the Pod to reach the service proxy. As a result, a Pod reaching itself by Pod IP vs. Service IP can behave differently, which is expected under the logical model.
+  - Dataplanes where service load balancing occurs at the socket translation layer (before traffic enters the network layer) may not observe or enforce policy on service hairpin traffic. Such implementations may omit enforcement for service hairpin traffic, provided this capability limitation is declared via the conformance profile framework (`HairpinServicePolicyEnforcement`).
+
 ## The ClusterNetworkPolicy Resource
 
 The ClusterNetworkPolicy (CNP) resource will help administrators set cluster-wide security
 rules for the cluster, which are evaluated before or after the NetworkPolicies defined by the
 namespace owners.
-
-ClusterNetworkPolicy is logically enforced outside the Pod
-network namespace. This determines how it applies to "hairpin" traffic that a Pod
-sends to itself:
-
-- A Pod connecting to its own Pod IP is not subject to CNP.
-- A Pod connecting to a Service IP that the service proxy load-balances back
-to the same Pod is subject to ClusterNetworkPolicy.
-
-As a result, a Pod reaching itself by its Pod IP and that same Pod reaching itself
-through a Service IP can behave differently, and this is expected.
-Note that this behavior is based on the logical model of the pod network, 
-and CNP must behave this way even if it is implemented within the pod network namespace, 
-or if traffic from a Pod to a Service IP doesn't leave the pod network namespace.
 
 ### Tiers
 

@@ -191,3 +191,15 @@ func PatchClusterNetworkPolicy(t *testing.T, c client.Client, from *api.ClusterN
 	err := c.Patch(ctx, to, client.MergeFrom(from))
 	require.NoErrorf(t, err, "unable to patch cluster network policy %s", from.Name)
 }
+
+func GetService(t *testing.T, c client.Client, namespace string, name string, timeout time.Duration) *v1.Service {
+	svc := &v1.Service{}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := c.Get(ctx, client.ObjectKey{
+		Namespace: namespace,
+		Name:      name,
+	}, svc)
+	require.NoErrorf(t, err, "unable to fetch service %s/%s", namespace, name)
+	return svc
+}
