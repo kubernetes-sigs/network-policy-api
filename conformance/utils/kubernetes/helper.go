@@ -174,6 +174,32 @@ func PatchNamespace(t *testing.T, c client.Client, from *v1.Namespace, to *v1.Na
 	require.NoErrorf(t, err, "unable to patch namespace %s", from.Name)
 }
 
+func PatchPod(t *testing.T, c client.Client, from *v1.Pod, to *v1.Pod, timeout time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	err := c.Patch(ctx, to, client.MergeFrom(from))
+	require.NoErrorf(t, err, "unable to patch pod %s/%s", from.Namespace, from.Name)
+}
+
+// SetPodLabel adds or updates a single label on the given pod.
+func SetPodLabel(t *testing.T, c client.Client, namespace string, name string, key string, value string, timeout time.Duration) {
+	pod := GetPod(t, c, namespace, name, timeout)
+	mutatePod := pod.DeepCopy()
+	if mutatePod.Labels == nil {
+		mutatePod.Labels = map[string]string{}
+	}
+	mutatePod.Labels[key] = value
+	PatchPod(t, c, pod, mutatePod, timeout)
+}
+
+// RemovePodLabel removes a single label from the given pod; it is a no-op if the label is absent.
+func RemovePodLabel(t *testing.T, c client.Client, namespace string, name string, key string, timeout time.Duration) {
+	pod := GetPod(t, c, namespace, name, timeout)
+	mutatePod := pod.DeepCopy()
+	delete(mutatePod.Labels, key)
+	PatchPod(t, c, pod, mutatePod, timeout)
+}
+
 func GetClusterNetworkPolicy(t *testing.T, c client.Client, name string, timeout time.Duration) *api.ClusterNetworkPolicy {
 	cnp := &api.ClusterNetworkPolicy{}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
