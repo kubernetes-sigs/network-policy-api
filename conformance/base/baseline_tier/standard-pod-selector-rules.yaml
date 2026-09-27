@@ -1,0 +1,73 @@
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: pod-selector-rules
+spec:
+  tier: Baseline
+  priority: 10
+  subject:
+    # namespaceSelector is omitted on purpose: the subject is selected by pod label alone, across all
+    # namespaces. An implementation that ignored podSelector would apply this policy to every pod.
+    pods:
+      podSelector:
+        matchLabels:
+          conformance-house: gryffindor
+  egress:
+  - name: "deny-to-ravenclaw-pods"
+    action: "Deny"
+    to:
+    - pods:
+        podSelector:
+          matchLabels:
+            conformance-house: ravenclaw
+  - name: "deny-to-cedric-diggory-0"
+    action: "Deny"
+    to:
+    - pods:
+        namespaceSelector:
+          matchLabels:
+            conformance-house: hufflepuff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: cedric-diggory-0
+  ingress:
+  - name: "deny-from-slytherin-pods"
+    action: "Deny"
+    from:
+    - pods:
+        podSelector:
+          matchLabels:
+            conformance-house: slytherin
+  - name: "deny-from-cedric-diggory-0"
+    action: "Deny"
+    from:
+    - pods:
+        namespaceSelector:
+          matchLabels:
+            conformance-house: hufflepuff
+        podSelector:
+          matchLabels:
+            statefulset.kubernetes.io/pod-name: cedric-diggory-0
+---
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: pod-name-subject-rules
+spec:
+  tier: Baseline
+  priority: 10
+  subject:
+    pods:
+      namespaceSelector:
+        matchLabels:
+          conformance-house: ravenclaw
+      podSelector:
+        matchLabels:
+          statefulset.kubernetes.io/pod-name: luna-lovegood-0
+  egress:
+  - name: "deny-to-slytherin"
+    action: "Deny"
+    to:
+    - namespaces:
+        matchLabels:
+          kubernetes.io/metadata.name: network-policy-conformance-slytherin
