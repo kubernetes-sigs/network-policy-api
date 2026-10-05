@@ -1,0 +1,31 @@
+apiVersion: policy.networking.k8s.io/v1alpha1
+date: "2026-09-18T15:14:48-07:00"
+implementation:
+  additionalInformation: https://github.com/kubernetes-sigs/network-policy-api/actions/runs/34631447770
+  contact:
+  - https://github.com/kubernetes-sigs/kube-network-policies/issues/new
+  organization: kubernetes
+  project: kube-network-policies
+  url: https://github.com/kubernetes-sigs/kube-network-policies
+  version: v1.1.1-12-g9984dcd
+kind: ConformanceReport
+networkPolicyV2APIVersion: v0.2.0
+profiles:
+- experimental:
+    result: success
+    statistics:
+      Failed: 0
+      Passed: 6
+      Skipped: 0
+    summary: ""
+    supportedFeatures:
+    - ClusterNetworkPolicyNamedPorts
+    - ClusterNetworkPolicyEgressNodePeers
+  name: ClusterNetworkPolicy
+  standard:
+    result: success
+    statistics:
+      Failed: 0
+      Passed: 22
+      Skipped: 0
+    summary: ""
