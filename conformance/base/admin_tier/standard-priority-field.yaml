@@ -1,4 +1,4 @@
-apiVersion: policy.networking.k8s.io/v1alpha2
+apiVersion: policy.networking.k8s.io/v1beta1
 kind: ClusterNetworkPolicy
 metadata:
   name: priority-50-example
@@ -36,7 +36,7 @@ spec:
           matchLabels:
             conformance-house: slytherin
 ---
-apiVersion: policy.networking.k8s.io/v1alpha2
+apiVersion: policy.networking.k8s.io/v1beta1
 kind: ClusterNetworkPolicy
 metadata:
   name: old-priority-60-new-priority-40-example
@@ -74,7 +74,7 @@ spec:
           matchLabels:
             conformance-house: slytherin
 ---
-apiVersion: policy.networking.k8s.io/v1alpha2
+apiVersion: policy.networking.k8s.io/v1beta1
 kind: ClusterNetworkPolicy
 metadata:
   name: default
