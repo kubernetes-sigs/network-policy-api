@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/yaml"
 
-	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
+	api "sigs.k8s.io/network-policy-api/apis/v1beta1"
 	confv1a1 "sigs.k8s.io/network-policy-api/conformance/apis/v1alpha1"
 	"sigs.k8s.io/network-policy-api/conformance/tests"
 	"sigs.k8s.io/network-policy-api/conformance/utils/flags"
