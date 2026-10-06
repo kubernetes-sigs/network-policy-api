@@ -8,7 +8,7 @@
 
 As a policy creator, 
 
-- I need to limit ingress from and egress to nodes (and specifically, their Kubernetes recognized network interfaces), so that 'special' nodes which may scale up and down dynamically over time, can be protected from sending or recieveing traffic.
+- I need to limit ingress from and egress to nodes (and specifically, their Kubernetes recognized network interfaces), so that 'special' nodes which may scale up and down dynamically over time, can be protected from sending or receiving traffic.
 - Since these nodes can increase/decrease, targetting them via metadata rather then IP addresses is required, and the obvious metadata to use would be `labels`.
 
 ## Notes
