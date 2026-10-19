@@ -113,12 +113,16 @@ profiles:
 
 The `result` field summarizes each support level:
 
-- `success` — every test at that level ran and passed (for the experimental
-  level: every test for the features the implementation declared support
-  for).
-- `partial` — no failures, but some tests were skipped. Skipped standard
-  tests mean the implementation cannot be considered conformant.
-- `failure` — one or more tests failed.
+- `success` — For the `standard` level, all tests that are not marked as optional
+  by the profile passed, and all optional tests either passed or were skipped.
+  For the `experimental` level, all tests for features that the implementation
+  declared support for passed, and all other tests were skipped.
+- `failure` — one or more tests failed, or a test that is not optional was
+  skipped. `summary` names the skipped required tests.
+
+The optional tests of a profile are listed in its `OptionalTests` field in
+[`conformance_profiles.go`](../utils/suite/conformance_profiles.go); skipping
+any other test (via the suite's `SkipTests` option) makes the result a failure.
 
 ## Submitting a report
 
