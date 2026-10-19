@@ -30,9 +30,9 @@ type ConformanceReport struct {
 	// Date indicates the date that this report was generated.
 	Date string `json:"date"`
 
-	// NetworkPolicyV2APIVersion indicates which release version of NetworkPolicy API this
+	// NetworkPolicyBundleVersion indicates which release version of NetworkPolicy API this
 	// test report was made for.
-	NetworkPolicyV2APIVersion string `json:"networkPolicyV2APIVersion"`
+	NetworkPolicyBundleVersion string `json:"networkPolicyBundleVersion"`
 
 	// ProfileReports is a list of the individual reports for each conformance
 	// profile that was enabled for a test run.

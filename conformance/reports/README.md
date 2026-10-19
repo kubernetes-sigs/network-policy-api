@@ -40,7 +40,7 @@ certifying.
 The suite and the installed CRDs must come from the same Network Policy API
 release: the suite reads the release from the
 `policy.networking.k8s.io/bundle-version` annotation on the installed CRDs,
-records it in the report as `networkPolicyV2APIVersion`, and refuses to run
+records it in the report as `networkPolicyBundleVersion`, and refuses to run
 if it differs from its own bundle version. Check out the release you are
 certifying against and run the suite with your implementation's details:
 
@@ -89,7 +89,7 @@ implementation:
   url: https://github.com/kubernetes-sigs/kube-network-policies
   version: v1.1.1-12-g9984dcd
 kind: ConformanceReport
-networkPolicyV2APIVersion: v0.2.0
+networkPolicyBundleVersion: v0.2.0
 profiles:
 - experimental:
     result: success

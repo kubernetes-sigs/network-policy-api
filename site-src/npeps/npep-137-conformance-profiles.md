@@ -159,7 +159,7 @@ generate an output that looks like this:
           version: 0.1.1
           additionalInformation: "https://github.com/ovn-org/ovn-kubernetes/blob/1c9f73dc8a755c07b22858c7404a7884970d1989/test/conformance/network_policy_v2_test.go"
         kind: ConformanceReport
-        networkPolicyV2APIVersion: v0.1.1
+        networkPolicyBundleVersion: v0.1.1
         profiles:
         - core:
             failedTests:
