@@ -1,4 +1,4 @@
-apiVersion: policy.networking.k8s.io/v1alpha2
+apiVersion: policy.networking.k8s.io/v1beta1
 kind: ClusterNetworkPolicy
 metadata:
   name: same-priority-gryffindor-slytherin
@@ -32,7 +32,7 @@ spec:
           destinationPort:
             number: 80
 ---
-apiVersion: policy.networking.k8s.io/v1alpha2
+apiVersion: policy.networking.k8s.io/v1beta1
 kind: ClusterNetworkPolicy
 metadata:
   name: same-priority-gryffindor-hufflepuff
@@ -66,7 +66,7 @@ spec:
           destinationPort:
             number: 80
 ---
-apiVersion: policy.networking.k8s.io/v1alpha2
+apiVersion: policy.networking.k8s.io/v1beta1
 kind: ClusterNetworkPolicy
 metadata:
   name: same-priority-hufflepuff-slytherin
