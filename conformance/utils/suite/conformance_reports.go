@@ -17,6 +17,9 @@ limitations under the License.
 package suite
 
 import (
+	"fmt"
+	"strings"
+
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	confv1a1 "sigs.k8s.io/network-policy-api/conformance/apis/v1alpha1"
@@ -115,24 +118,10 @@ func (p profileReportsMap) list() (profileReports []confv1a1.ProfileReport) {
 
 func (p profileReportsMap) compileResults(supportedFeaturesMap map[ConformanceProfileName]sets.Set[SupportedFeature], unsupportedFeaturesMap map[ConformanceProfileName]sets.Set[SupportedFeature]) {
 	for key, report := range p {
-		// report the overall result for Standard features
-		if report.Standard.Failed > 0 {
-			report.Standard.Result = confv1a1.Failure
-		} else if report.Standard.Skipped > 0 {
-			report.Standard.Result = confv1a1.Partial
-		} else {
-			report.Standard.Result = confv1a1.Success
-		}
-
+		profile := conformanceProfileMap[ConformanceProfileName(report.Name)]
+		compileStatus(&report.Standard, profile.OptionalTests)
 		if report.Experimental != nil {
-			// report the overall result for Experimental features
-			if report.Experimental.Failed > 0 {
-				report.Experimental.Result = confv1a1.Failure
-			} else if report.Experimental.Skipped > 0 {
-				report.Experimental.Result = confv1a1.Partial
-			} else {
-				report.Experimental.Result = confv1a1.Success
-			}
+			compileStatus(&report.Experimental.Status, profile.OptionalTests)
 		}
 		p[key] = report
 
@@ -165,6 +154,26 @@ func (p profileReportsMap) compileResults(supportedFeaturesMap map[ConformancePr
 // -----------------------------------------------------------------------------
 // ConformanceReport - Private Helper Functions
 // -----------------------------------------------------------------------------
+
+// compileStatus sets the overall result for one support level: failure if any
+// test failed or any non-optional test was skipped, success otherwise.
+func compileStatus(status *confv1a1.Status, optionalTests sets.Set[string]) {
+	var skippedRequired []string
+	for _, name := range status.SkippedTests {
+		if !optionalTests.Has(name) {
+			skippedRequired = append(skippedRequired, name)
+		}
+	}
+	switch {
+	case status.Failed > 0:
+		status.Result = confv1a1.Failure
+	case len(skippedRequired) > 0:
+		status.Result = confv1a1.Failure
+		status.Summary = fmt.Sprintf("required tests skipped: %s", strings.Join(skippedRequired, ", "))
+	default:
+		status.Result = confv1a1.Success
+	}
+}
 
 // isTestExperimental determines if a provided test is considered to be supported
 // at an experimental level of support given the provided conformance profile.

@@ -40,7 +40,7 @@ certifying.
 The suite and the installed CRDs must come from the same Network Policy API
 release: the suite reads the release from the
 `policy.networking.k8s.io/bundle-version` annotation on the installed CRDs,
-records it in the report as `networkPolicyV2APIVersion`, and refuses to run
+records it in the report as `networkPolicyBundleVersion`, and refuses to run
 if it differs from its own bundle version. Check out the release you are
 certifying against and run the suite with your implementation's details:
 
@@ -89,7 +89,7 @@ implementation:
   url: https://github.com/kubernetes-sigs/kube-network-policies
   version: v1.1.1-12-g9984dcd
 kind: ConformanceReport
-networkPolicyV2APIVersion: v0.2.0
+networkPolicyBundleVersion: v0.2.0
 profiles:
 - experimental:
     result: success
@@ -113,12 +113,16 @@ profiles:
 
 The `result` field summarizes each support level:
 
-- `success` — every test at that level ran and passed (for the experimental
-  level: every test for the features the implementation declared support
-  for).
-- `partial` — no failures, but some tests were skipped. Skipped standard
-  tests mean the implementation cannot be considered conformant.
-- `failure` — one or more tests failed.
+- `success` — For the `standard` level, all tests that are not marked as optional
+  by the profile passed, and all optional tests either passed or were skipped.
+  For the `experimental` level, all tests for features that the implementation
+  declared support for passed, and all other tests were skipped.
+- `failure` — one or more tests failed, or a test that is not optional was
+  skipped. `summary` names the skipped required tests.
+
+The optional tests of a profile are listed in its `OptionalTests` field in
+[`conformance_profiles.go`](../utils/suite/conformance_profiles.go); skipping
+any other test (via the suite's `SkipTests` option) makes the result a failure.
 
 ## Submitting a report
 

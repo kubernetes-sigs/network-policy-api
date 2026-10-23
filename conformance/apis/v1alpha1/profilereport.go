@@ -58,9 +58,8 @@ type Status struct {
 	Statistics `json:"statistics"`
 
 	// SkippedTests indicates which tests were explicitly disabled in the test
-	// suite. Skipping tests for Core level support implicitly identifies the
-	// results as being partial and the implementation will not be considered
-	// conformant at any level.
+	// suite. Skipping a test that the conformance profile does not list as
+	// optional makes the result a failure.
 	SkippedTests []string `json:"skippedTests,omitempty"`
 
 	// FailedTests indicates which tests were failing during the execution of

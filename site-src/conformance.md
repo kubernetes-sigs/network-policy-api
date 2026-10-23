@@ -247,8 +247,11 @@ enabled features as `supportedFeatures` and the profile's remaining
 experimental features as `unsupportedFeatures`. To produce a standard-only
 report, pass neither `--all-features` nor `--supported-features`: only the
 standard tests run, and the report contains just the `standard` section.
-Skipped or failing **standard** tests, on the other hand, mean the
-implementation is not conformant, and the report will say so.
+
+Failing a test, or skipping a test that the profile does not mark as optional,
+means the implementation is not conformant at that support level, and its
+`result` is `failure`. The tests a profile allows to be skipped are listed in
+its `OptionalTests` field in [`conformance_profiles.go`][profiles].
 
 To submit a report, open a pull request adding the generated YAML under
 [`conformance/reports`][reports-dir] as

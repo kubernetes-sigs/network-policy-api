@@ -8,6 +8,8 @@ following:
 
 * API Types (Go bindings for the resources)
 * CRDs (Kubernetes definitions of the resources)
+* Conformance tests (the test suite that verifies an implementation against
+  the API semantics of that release)
 
 ### API Versions (e.g. v1alpha2, v1beta1)
 
@@ -42,6 +44,15 @@ and channel:
 policy.networking.k8s.io/bundle-version: v0.4.0
 policy.networking.k8s.io/channel: standard|experimental
 ```
+
+The conformance test suite is tied to the same bundle version. It reads the
+`bundle-version` annotation from the installed CRDs, records it in the
+conformance report as `networkPolicyBundleVersion`, and refuses to run if it
+differs from the bundle version of the suite itself. Because the tests are
+part of the bundle, the bundle version in a report identifies exactly which set
+of conformance tests was run against the implementation. Conformance reports
+are therefore submitted per bundle version (see the [conformance
+documentation](./conformance.md)).
 
 ## What can Change
 
