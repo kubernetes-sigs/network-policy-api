@@ -9,7 +9,7 @@ implementation:
   url: https://github.com/kubernetes-sigs/kube-network-policies
   version: v1.1.1-12-g9984dcd
 kind: ConformanceReport
-networkPolicyV2APIVersion: v0.2.0
+networkPolicyBundleVersion: v0.2.0
 profiles:
 - experimental:
     result: success

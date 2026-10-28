@@ -34,6 +34,10 @@ type ConformanceProfile struct {
 	Name                 ConformanceProfileName
 	StandardFeatures     sets.Set[SupportedFeature]
 	ExperimentalFeatures sets.Set[SupportedFeature]
+	// OptionalTests lists tests (by ShortName) that may be skipped without
+	// making the profile result a failure. Skipping any test not listed
+	// here will result in a failure.
+	OptionalTests sets.Set[string]
 }
 
 type ConformanceProfileName string
@@ -59,6 +63,7 @@ var (
 			SupportClusterNetworkPolicyNamedPorts,
 			SupportClusterNetworkPolicyEgressNodePeers,
 		),
+		OptionalTests: sets.New[string](),
 	}
 )
 

@@ -225,10 +225,10 @@ func (suite *ConformanceProfileTestSuite) Report() (*confv1a1.ConformanceReport,
 			APIVersion: "policy.networking.k8s.io/v1alpha1",
 			Kind:       "ConformanceReport",
 		},
-		Date:                      time.Now().Format(time.RFC3339),
-		Implementation:            suite.implementation,
-		NetworkPolicyV2APIVersion: suite.apiVersion,
-		ProfileReports:            profileReports.list(),
+		Date:                       time.Now().Format(time.RFC3339),
+		Implementation:             suite.implementation,
+		NetworkPolicyBundleVersion: suite.apiVersion,
+		ProfileReports:             profileReports.list(),
 	}, nil
 }
 

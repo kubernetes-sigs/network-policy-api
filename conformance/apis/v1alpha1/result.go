@@ -22,14 +22,10 @@ type Result string
 
 var (
 	// Success indicates that the test run concluded in all required tests
-	// passing.
+	// passing and all optional tests either passing or skipped.
 	Success Result = "success"
 
-	// Partial indicates that the test run concluded in some of the required
-	// tests passing without any failures, but some were skipped.
-	Partial Result = "partial"
-
-	// Failure indicates that the test run concluded in one ore more tests
-	// failing to complete successfully.
+	// Failure indicates that the test run concluded in one or more tests
+	// failing, or in a required (non-optional) test being skipped.
 	Failure Result = "failure"
 )

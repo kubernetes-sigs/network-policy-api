@@ -9,7 +9,7 @@ implementation:
   url: https://github.com/ovn-org/ovn-kubernetes
   version: 0.1.2
 kind: ConformanceReport
-networkPolicyV2APIVersion: v0.1.2
+networkPolicyBundleVersion: v0.1.2
 profiles:
   - core:
     result: success
