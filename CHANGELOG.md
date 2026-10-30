@@ -6,6 +6,7 @@
 - [v0.1.1](#v011)
 - [v0.1.7](#v017)
 - [v0.2.0](#v020)
+- [v0.2.1](#v021)
 
 # v0.1.0
 
@@ -92,5 +93,61 @@ The key changes since v0.1.7 include:
 - Updated conformance tests for the new v1alpha2 API
 - Reduced MaxItems from 100 to 25 for rules and peers
 - Updated documentation and user stories for ClusterNetworkPolicy
+
+Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
+
+# v0.2.1
+
+API Version: v1alpha2
+
+This is a patch release of the network-policy-api on top of v0.2.0. It continues
+to ship the single unified resource for cluster administrators:
+
+- ClusterNetworkPolicy (CNP)
+
+There are no breaking changes to the shape of the API in this release. The
+changes are focused on API validation fixes, channel placement corrections, and
+a large set of conformance test and documentation improvements.
+
+The key changes since v0.2.0 include:
+
+- **API validation fixes:**
+  - Fixed validation of CIDR fields so that malformed CIDR values are rejected.
+  - Fixed the `DomainName` validation pattern to reject invalid characters.
+- **NamedPort is experimental again** - The `namedPort`/`destinationNamedPort`
+  fields have been moved back to the experimental channel while the design is
+  finalized, so they are no longer present in the standard channel CRDs.
+- **Conformance tests:**
+  - Added CEL validation tests for the CRDs.
+  - Added pod selector tests for CNP subjects, peers and label changes.
+  - Added tests verifying CNP ingress/egress directional isolation for both the
+    Admin and Baseline tiers.
+  - Added tests for same-priority CNPs across both tiers and directions.
+  - Added tests for `PortRange`.
+  - Added namespace selector change coverage.
+  - Added optional tests and removed the partial result status.
+  - Enabled experimental features in conformance CI.
+  - Added generation of the supported features list for `--all-features`.
+  - The conformance report's bundle version is now derived from the installed
+    CRDs' `bundle-version` annotation (previously hardcoded), and the suite
+    refuses to run if it does not match the suite's own bundle version.
+  - Renamed the conformance report's `networkPolicyV2APIVersion` field to
+    `networkPolicyBundleVersion`.
+- **Documentation:**
+  - Added a conformance reports README and submission process.
+  - Documented how to run the conformance suite (the "Running Tests" section).
+  - Added the kube-network-policies v0.2.0 conformance report.
+  - Added install instructions for the released CNP version.
+  - Clarified hairpinning behavior.
+  - Marked service hairpin policy enforcement as preferred for beta.
+  - Clarified ICMP handling (related and reply ICMP traffic is accepted
+    alongside the main connection, and `Networks` CIDR peers also match ICMP
+    traffic to/from those CIDRs).
+  - Tightened the `Accept`/`Deny`/`Pass` rule action descriptions.
+  - Documented the v1alpha1 promise to maintain the `release-0.1` branch.
+  - Added CNP support notes for Calico.
+  - Updated NPEP-133 with Admin-tier restriction, DNS security guidance, and CEL.
+  - Updated NPEP-379 to match CNP.
+  - Fixed minor inconsistencies in the API overview documentation.
 
 Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
