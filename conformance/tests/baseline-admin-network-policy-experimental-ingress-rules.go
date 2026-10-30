@@ -19,7 +19,7 @@ package tests
 import (
 	"testing"
 
-	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
+	api "sigs.k8s.io/network-policy-api/apis/v1beta1"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
