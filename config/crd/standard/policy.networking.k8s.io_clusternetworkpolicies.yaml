@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/network-policy-api/pull/347
-    policy.networking.k8s.io/bundle-version: v0.2.0
+    policy.networking.k8s.io/bundle-version: v0.2.1
     policy.networking.k8s.io/channel: standard
   name: clusternetworkpolicies.policy.networking.k8s.io
 spec:
