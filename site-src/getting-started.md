@@ -8,10 +8,10 @@ doc for details on the supportability matrix.
 
 **2. Install the Network Policy API CRDs**
 
-To install the latest released version of the `ClusterNetworkPolicy` API, which is `v0.2.0`, use the following command:
+To install the latest released version of the `ClusterNetworkPolicy` API, which is `v0.2.1`, use the following command:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/network-policy-api/refs/tags/v0.2.0/config/crd/standard/policy.networking.k8s.io_clusternetworkpolicies.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/network-policy-api/refs/tags/v0.2.1/config/crd/standard/policy.networking.k8s.io_clusternetworkpolicies.yaml
 ```
 
 The latest released version of the `AdminNetworkPolicy` and `BaselineAdminNetworkPolicy` is `v0.1.7`.

@@ -27,7 +27,7 @@ const (
 
 	// BundleVersion is the value used for the "policy.networking.k8s.io/bundle-version"
 	// annotation. This value must be updated during the release process.
-	BundleVersion = "v0.2.0"
+	BundleVersion = "v0.2.1"
 
 	// ApprovalLink is the value used for the "api-approved.kubernetes.io"
 	// annotation. This value must be updated during the release process.
