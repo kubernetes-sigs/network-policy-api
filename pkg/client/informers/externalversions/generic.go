@@ -25,6 +25,7 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "sigs.k8s.io/network-policy-api/apis/v1alpha1"
 	v1alpha2 "sigs.k8s.io/network-policy-api/apis/v1alpha2"
+	v1beta1 "sigs.k8s.io/network-policy-api/apis/v1beta1"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -62,6 +63,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=policy.networking.k8s.io, Version=v1alpha2
 	case v1alpha2.SchemeGroupVersion.WithResource("clusternetworkpolicies"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Policy().V1alpha2().ClusterNetworkPolicies().Informer()}, nil
+
+		// Group=policy.networking.k8s.io, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("clusternetworkpolicies"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Policy().V1beta1().ClusterNetworkPolicies().Informer()}, nil
 
 	}
 

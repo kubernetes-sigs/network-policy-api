@@ -1,4 +1,4 @@
-apiVersion: policy.networking.k8s.io/v1alpha2
+apiVersion: policy.networking.k8s.io/v1beta1
 kind: ClusterNetworkPolicy
 metadata:
   name: pod-selector-rules
@@ -64,7 +64,7 @@ spec:
           matchLabels:
             conformance-role: blocked
 ---
-apiVersion: policy.networking.k8s.io/v1alpha2
+apiVersion: policy.networking.k8s.io/v1beta1
 kind: ClusterNetworkPolicy
 metadata:
   name: label-selected-subject-rules

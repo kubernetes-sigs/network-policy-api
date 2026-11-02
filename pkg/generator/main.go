@@ -39,6 +39,7 @@ func main() {
 	roots, err := loader.LoadRoots(
 		"k8s.io/apimachinery/pkg/runtime/schema", // Needed to parse generated register functions.
 		"sigs.k8s.io/network-policy-api/apis/v1alpha2",
+		"sigs.k8s.io/network-policy-api/apis/v1beta1",
 	)
 	if err != nil {
 		log.Fatalf("failed to load package roots: %s", err)

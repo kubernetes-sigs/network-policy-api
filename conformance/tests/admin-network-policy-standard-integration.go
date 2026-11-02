@@ -24,7 +24,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	api "sigs.k8s.io/network-policy-api/apis/v1alpha2"
+	api "sigs.k8s.io/network-policy-api/apis/v1beta1"
 	"sigs.k8s.io/network-policy-api/conformance/utils/kubernetes"
 	"sigs.k8s.io/network-policy-api/conformance/utils/suite"
 )
