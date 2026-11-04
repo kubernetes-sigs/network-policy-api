@@ -7,6 +7,7 @@
 - [v0.1.7](#v017)
 - [v0.2.0](#v020)
 - [v0.2.1](#v021)
+- [v0.3.0](#v030)
 
 # v0.1.0
 
@@ -131,5 +132,30 @@ The key changes since v0.2.0 include:
     running the suite, and the kube-network-policies v0.2.0 report.
   - Clarified hairpinning (service hairpin enforcement preferred for beta), ICMP
     handling, and the `Accept`/`Deny`/`Pass` action descriptions.
+
+Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
+
+# v0.3.0
+
+API Version: v1beta1
+
+This is a minor release of the network-policy-api that graduates
+`ClusterNetworkPolicy` (CNP) to the `v1beta1` API version:
+
+- ClusterNetworkPolicy (CNP)
+
+`v1beta1` is now the **storage version** and is served alongside `v1alpha2`,
+which remains served for backward compatibility. The `v1beta1` and `v1alpha2`
+schemas are identical, so no conversion webhook is required and existing
+`v1alpha2` objects are readable and writable through `v1beta1`.
+
+The key changes since v0.2.1 include:
+
+- **ClusterNetworkPolicy graduated to v1beta1** - Both the standard and
+  experimental channel CRDs now serve `v1alpha2` and `v1beta1`, with `v1beta1`
+  as the storage version. There are no changes to the shape of the API.
+  Deprecation of `v1alpha2` is deferred to a future release once `v1beta1` has
+  soaked.
+- Conformance tests and manifests migrated to the `v1beta1` API.
 
 Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
