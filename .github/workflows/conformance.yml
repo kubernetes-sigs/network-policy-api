@@ -16,7 +16,7 @@ env:
   KIND_VERSION: "v0.33.0"
   IMAGE_NAME: registry.k8s.io/networking/kube-network-policies
   KIND_CLUSTER_NAME: kind
-  NPAPI_VERSION: "v1alpha2"
+  NPAPI_VERSION: "v1beta1"
 
 permissions: write-all
 
