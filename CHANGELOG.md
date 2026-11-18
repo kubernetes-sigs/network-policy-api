@@ -8,6 +8,7 @@
 - [v0.2.0](#v020)
 - [v0.2.1](#v021)
 - [v0.3.0](#v030)
+- [v0.3.1](#v031)
 
 # v0.1.0
 
@@ -159,3 +160,18 @@ The key changes since v0.2.1 include:
 - Conformance tests and manifests migrated to the `v1beta1` API.
 
 Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
+
+# v0.3.1
+
+API Version: v1beta1
+
+This is a patch release of the network-policy-api on top of v0.3.0.
+There are no changes to the shape of the API in this release.
+
+The key changes since v0.3.0 include:
+
+- **Removed the `cnp` short name** - The `ClusterNetworkPolicy` CRD no longer
+  registers the `cnp` short name in either channel, for both `v1alpha2` and
+  `v1beta1`. `kubectl get cnp` no longer resolves to this resource; use
+  `kubectl get clusternetworkpolicy` or `kubectl get clusternetworkpolicies`
+  instead.
