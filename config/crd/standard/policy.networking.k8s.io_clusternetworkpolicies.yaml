@@ -12,8 +12,6 @@ spec:
     kind: ClusterNetworkPolicy
     listKind: ClusterNetworkPolicyList
     plural: clusternetworkpolicies
-    shortNames:
-    - cnp
     singular: clusternetworkpolicy
   scope: Cluster
   versions:

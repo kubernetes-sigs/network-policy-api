@@ -30,7 +30,7 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:storageversion
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:shortName=cnp,scope=Cluster
+// +kubebuilder:resource:scope=Cluster
 // +kubebuilder:printcolumn:name="Tier",type=string,JSONPath=".spec.tier"
 // +kubebuilder:printcolumn:name="Priority",type=string,JSONPath=".spec.priority"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
