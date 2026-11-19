@@ -1,5 +1,7 @@
 # Changelog
 
+Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
+
 ## Table of Contents
 
 - [v0.1.0](#v010)
@@ -8,6 +10,7 @@
 - [v0.2.0](#v020)
 - [v0.2.1](#v021)
 - [v0.3.0](#v030)
+- [v0.3.1](#v031)
 
 # v0.1.0
 
@@ -18,8 +21,6 @@ main resources geared towards cluster admins:
 
 - AdminNetworkPolicy
 - BaselineAdminNetworkPolicy
-
-Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
 
 # v0.1.1
 
@@ -38,8 +39,6 @@ Additionally it includes many conformance test updates and fixes:
 - Variable renaming and comment improvements
 - Increased default timeout
 - Removal of K8s.io/kubernetes dependency
-
-Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
 
 # v0.1.7
 
@@ -65,8 +64,6 @@ the selected subject of the policy. Given the selection based on sameness and no
 could compound to many possible ways of expressing relations that would exceed cardinality, the
 community is working on a better API proposal for tenancy. See [NPEP-122](https://github.com/kubernetes-sigs/network-policy-api/pull/178)
 for more details.
-
-Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
 
 # v0.2.0
 
@@ -94,8 +91,6 @@ The key changes since v0.1.7 include:
 - Updated conformance tests for the new v1alpha2 API
 - Reduced MaxItems from 100 to 25 for rules and peers
 - Updated documentation and user stories for ClusterNetworkPolicy
-
-Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
 
 # v0.2.1
 
@@ -133,8 +128,6 @@ The key changes since v0.2.0 include:
   - Clarified hairpinning (service hairpin enforcement preferred for beta), ICMP
     handling, and the `Accept`/`Deny`/`Pass` action descriptions.
 
-Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
-
 # v0.3.0
 
 API Version: v1beta1
@@ -158,4 +151,17 @@ The key changes since v0.2.1 include:
   soaked.
 - Conformance tests and manifests migrated to the `v1beta1` API.
 
-Please check out the [network-policy-api website](https://network-policy-api.sigs.k8s.io/) for more information.
+# v0.3.1
+
+API Version: v1beta1
+
+This is a patch release of the network-policy-api on top of v0.3.0.
+There are no changes to the shape of the API in this release.
+
+The key changes since v0.3.0 include:
+
+- **Removed the `cnp` short name** - The `ClusterNetworkPolicy` CRD no longer
+  registers the `cnp` short name in either channel, for both `v1alpha2` and
+  `v1beta1`. `kubectl get cnp` no longer resolves to this resource; use
+  `kubectl get clusternetworkpolicy` or `kubectl get clusternetworkpolicies`
+  instead.
