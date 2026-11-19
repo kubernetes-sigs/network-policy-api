@@ -26,6 +26,19 @@ import (
 // conformanceRoleLabel is the pod label the pod selector tests add and remove to exercise label changes.
 const conformanceRoleLabel = "conformance-role"
 
+// conformanceSelectedLabel is the pod label the pod selector tests use to select individual pods.
+const conformanceSelectedLabel = "conformance-selected"
+
+// setConformanceSelectedLabel sets conformanceSelectedLabel on the given pod and removes it again
+// when the test finishes, as the base pods are shared by every test.
+func setConformanceSelectedLabel(t *testing.T, s *suite.ConformanceTestSuite, namespace, name string) {
+	t.Helper()
+	kubernetes.SetPodLabel(t, s.Client, namespace, name, conformanceSelectedLabel, "true", s.TimeoutConfig.GetTimeout)
+	t.Cleanup(func() {
+		kubernetes.RemovePodLabel(t, s.Client, namespace, name, conformanceSelectedLabel, s.TimeoutConfig.GetTimeout)
+	})
+}
+
 func init() {
 	ConformanceTests = append(ConformanceTests,
 		CNPAdminTierPodSelector,
@@ -40,6 +53,11 @@ var CNPAdminTierPodSelector = suite.ConformanceTest{
 	},
 	Manifests: []string{"base/admin_tier/standard-pod-selector-rules.yaml"},
 	Test: func(t *testing.T, s *suite.ConformanceTestSuite) {
+		// Select luna-lovegood-0 and draco-malfoy-0 individually by a label set by the test rather
+		// than by the statefulset.kubernetes.io/pod-name label, which is unique per pod and which
+		// implementations may therefore exclude from pod identity.
+		setConformanceSelectedLabel(t, s, "network-policy-conformance-ravenclaw", "luna-lovegood-0")
+		setConformanceSelectedLabel(t, s, "network-policy-conformance-slytherin", "draco-malfoy-0")
 
 		t.Run("Should support pod selectors in egress peers", func(t *testing.T) {
 			// This test uses `pod-selector-rules` admin CNP whose subject selects gryffindor pods
@@ -51,7 +69,7 @@ var CNPAdminTierPodSelector = suite.ConformanceTest{
 			// the egress rule at index 1 (deny-to-ravenclaw-pods) applies -> DENIED
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
 				serverPod.Status.PodIP, int32(8080), s.TimeoutConfig, false)
-			// egress rule at index 0 accepts luna-lovegood-0 (selected by pod name) on TCP port 80, taking
+			// egress rule at index 0 accepts luna-lovegood-0 (selected by the conformance-selected label) on TCP port 80, taking
 			// precedence over the deny at index 1 -> ALLOWED
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-gryffindor", "harry-potter-0", "tcp",
 				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, true)
@@ -76,7 +94,7 @@ var CNPAdminTierPodSelector = suite.ConformanceTest{
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-1", "tcp",
 				serverPod.Status.PodIP, int32(80), s.TimeoutConfig, false)
 
-			// ingress rule at index 0 (allow-from-draco-malfoy-0) accepts draco-malfoy-0 (selected by pod name),
+			// ingress rule at index 0 (allow-from-draco-malfoy-0) accepts draco-malfoy-0 (selected by the conformance-selected label),
 			// taking precedence over the deny at index 1 -> ALLOWED
 			serverPod = kubernetes.GetPod(t, s.Client, "network-policy-conformance-gryffindor", "harry-potter-0", s.TimeoutConfig.GetTimeout)
 			kubernetes.PokeServer(t, s.ClientSet, &s.KubeConfig, "network-policy-conformance-slytherin", "draco-malfoy-0", "tcp",

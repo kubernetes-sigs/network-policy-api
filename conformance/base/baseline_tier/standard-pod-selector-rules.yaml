@@ -22,7 +22,7 @@ spec:
             conformance-house: ravenclaw
         podSelector:
           matchLabels:
-            statefulset.kubernetes.io/pod-name: luna-lovegood-0
+            conformance-selected: "true"
     protocols:
       - tcp:
           destinationPort:
@@ -44,7 +44,7 @@ spec:
             conformance-house: slytherin
         podSelector:
           matchLabels:
-            statefulset.kubernetes.io/pod-name: draco-malfoy-0
+            conformance-selected: "true"
   - name: "deny-from-slytherin-pods"
     action: "Deny"
     from:
