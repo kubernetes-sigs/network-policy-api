@@ -1,0 +1,17 @@
+# Invalid: CIDR must not use a host-range style value (OTP 73604).
+apiVersion: policy.networking.k8s.io/v1alpha2
+kind: ClusterNetworkPolicy
+metadata:
+  name: cidr-malformed-range
+spec:
+  tier: Admin
+  priority: 10
+  subject:
+    namespaces:
+      matchLabels:
+        kubernetes.io/metadata.name: sensitive-ns
+  egress:
+    - action: Deny
+      to:
+        - networks:
+            - "10.10.10.1-10.10.10.1"
