@@ -57,6 +57,7 @@ nav:
     - Implementations: implementations.md
   - Guides:
     - Getting started: getting-started.md
+    - AdminNetworkPolicy recipes: recipes.md
   - Reference:
     - Examples: reference/examples.md
     - API Reference: reference/spec.md
