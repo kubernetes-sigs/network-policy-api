@@ -1,4 +1,4 @@
-# Invalid: malformed IPv6 CIDR (OTP 73604).
+# Invalid: malformed IPv6 CIDR in networks peer.
 apiVersion: policy.networking.k8s.io/v1alpha2
 kind: ClusterNetworkPolicy
 metadata:

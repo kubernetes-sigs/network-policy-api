@@ -1,4 +1,4 @@
-# Invalid: duplicate CIDR entries in the same peer (OTP 73604).
+# Invalid: duplicate CIDR entries in the same peer networks list.
 apiVersion: policy.networking.k8s.io/v1alpha2
 kind: ClusterNetworkPolicy
 metadata:

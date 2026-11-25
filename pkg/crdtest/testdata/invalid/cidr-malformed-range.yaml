@@ -1,4 +1,4 @@
-# Invalid: CIDR must not use a host-range style value (OTP 73604).
+# Invalid: networks peer must be a CIDR, not a host-range style value.
 apiVersion: policy.networking.k8s.io/v1alpha2
 kind: ClusterNetworkPolicy
 metadata:

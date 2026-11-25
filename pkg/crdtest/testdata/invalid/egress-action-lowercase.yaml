@@ -1,4 +1,4 @@
-# Invalid: rule actions are case-sensitive enums (OTP 73604).
+# Invalid: rule actions are case-sensitive enums (Deny/Allow/Pass).
 apiVersion: policy.networking.k8s.io/v1alpha2
 kind: ClusterNetworkPolicy
 metadata:
